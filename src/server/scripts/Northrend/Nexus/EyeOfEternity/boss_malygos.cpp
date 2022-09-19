@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -347,7 +347,7 @@ public:
         boss_malygosAI(Creature* creature) : BossAI(creature, DATA_MALYGOS_EVENT)
         {
             Initialize();
-            _despawned = false; // We determine if Malygos will be realocated to spawning position on reset triggered by boss despawn on evade
+            _despawned = instance->GetBossState(DATA_MALYGOS_EVENT) == FAIL;
             _flySpeed = me->GetSpeed(MOVE_FLIGHT); // Get initial fly speed, otherwise on each wipe fly speed would add up if we get it
             _phase = PHASE_NOT_STARTED;
         }
@@ -380,9 +380,9 @@ public:
             Initialize();
 
             me->SetDisableGravity(true);
-            me->SetByteFlag(UNIT_FIELD_BYTES_1, UNIT_BYTES_1_OFFSET_ANIM_TIER, UNIT_BYTE1_FLAG_ALWAYS_STAND | UNIT_BYTE1_FLAG_HOVER);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->SetAnimTier(UnitBytes1_Flags(UNIT_BYTE1_FLAG_ALWAYS_STAND | UNIT_BYTE1_FLAG_HOVER), true);
+            me->AddUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC));
+            me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
             // TO DO: find what in core is making boss slower than in retail (when correct speed data) or find missing movement flag update or forced spline change
             me->SetSpeedRate(MOVE_FLIGHT, _flySpeed * 0.25f);
             if (_despawned)
@@ -391,6 +391,7 @@ public:
             SetPhase(PHASE_NOT_STARTED, true);
             me->SetReactState(REACT_PASSIVE);
             instance->DoStopCriteriaTimer(CRITERIA_TIMED_TYPE_EVENT, ACHIEV_TIMED_START_EVENT);
+            instance->SetBossState(DATA_MALYGOS_EVENT, NOT_STARTED);
         }
 
         uint32 GetData(uint32 data) const override
@@ -471,7 +472,7 @@ public:
                         pos.m_positionZ = alexstraszaBunny->GetPositionZ();
                         alexstraszaBunny->GetNearPoint2D(pos.m_positionX, pos.m_positionY, 30.0f, alexstraszaBunny->GetAngle(me));
                         me->GetMotionMaster()->MoveLand(POINT_LAND_P_ONE, pos);
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
+                        me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC));
                         me->SetReactState(REACT_AGGRESSIVE);
                         me->SetInCombatWithZone();
                         events.ScheduleEvent(EVENT_LAND_START_ENCOUNTER, 7*IN_MILLISECONDS, 1, PHASE_NOT_STARTED);
@@ -631,8 +632,6 @@ public:
                 else if (_phase == PHASE_THREE)
                     summons.DespawnAll();
             }
-
-            instance->SetBossState(DATA_MALYGOS_EVENT, NOT_STARTED);
         }
 
         void KilledUnit(Unit* victim) override
@@ -722,7 +721,7 @@ public:
                     if (!_firstCyclicMovementStarted)
                     {
                         _firstCyclicMovementStarted = true;
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                         if (Creature* alexstraszaBunny = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_ALEXSTRASZA_BUNNY_GUID)))
                             me->SetFacingToObject(alexstraszaBunny);
                         events.ScheduleEvent(EVENT_SUMMON_ARCANE_BOMB, 1*IN_MILLISECONDS, 0, PHASE_TWO);
@@ -954,7 +953,7 @@ public:
                         DoCast(me, SPELL_IMMUNE_CURSES);
                         _canAttack = true;
                         UpdateVictim();
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                         SetPhase(PHASE_THREE, true);
                         break;
                     case EVENT_SURGE_OF_POWER_P_THREE:
@@ -1204,7 +1203,7 @@ public:
                 {
 
                     me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     me->SetDisableGravity(false);
                     me->SetCanFly(false);
                 }
@@ -1214,7 +1213,7 @@ public:
                     me->SetCanFly(false);
                 }
 
-                me->setFaction(FACTION_FRIENDLY);
+                me->SetFaction(FACTION_FRIENDLY);
                 me->RemoveAllAuras();
             }
         }
@@ -1234,7 +1233,7 @@ public:
                 if (vehicleTemp->GetPassenger(0) && vehicleTemp->GetPassenger(0)->GetTypeId() == TYPEID_PLAYER)
                 {
                     vehicleTemp->RemoveAllPassengers();
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                 }
             }
 
@@ -1985,7 +1984,7 @@ class spell_scion_of_eternity_arcane_barrage : public SpellScriptLoader
 
             bool Load() override
             {
-                return GetCaster()->GetTypeId() == TYPEID_UNIT && GetCaster()->GetInstanceScript() != NULL;
+                return GetCaster()->GetTypeId() == TYPEID_UNIT && GetCaster()->GetInstanceScript() != nullptr;
             }
 
             void FilterMeleeHoverDiskPassangers(std::list<WorldObject*>& targets)
@@ -2149,12 +2148,12 @@ class spell_alexstrasza_bunny_destroy_platform_event : public SpellScriptLoader
                 Creature* caster = GetCaster()->ToCreature();
                 if (InstanceScript* instance = caster->GetInstanceScript())
                     if (GameObject* platform = caster->GetMap()->GetGameObject(instance->GetGuidData(DATA_PLATFORM)))
-                        platform->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_DESTROYED);
+                        platform->AddFlag(GO_FLAG_DESTROYED);
             }
 
             void HandleScript(SpellEffIndex /*effIndex*/)
             {
-                GetCaster()->CastSpell((Unit*)NULL, SPELL_SUMMON_RED_DRAGON_BUDDY_F_CAST);
+                GetCaster()->CastSpell(nullptr, SPELL_SUMMON_RED_DRAGON_BUDDY_F_CAST);
             }
 
             void Register() override
@@ -2283,7 +2282,7 @@ class spell_malygos_surge_of_power_warning_selector_25 : public SpellScriptLoade
 
             void ExecuteMainSpell()
             {
-                GetCaster()->ToCreature()->CastSpell((Unit*)NULL, SPELL_SURGE_OF_POWER_PHASE_3_25);
+                GetCaster()->ToCreature()->CastSpell(nullptr, SPELL_SURGE_OF_POWER_PHASE_3_25);
             }
 
             void Register() override
@@ -2431,13 +2430,13 @@ class spell_alexstrasza_gift_beam_visual : public SpellScriptLoader
                 if (Creature* target = GetTarget()->ToCreature())
                     if (InstanceScript* instance = GetCaster()->GetInstanceScript())
                     {
-                        _alexstraszaGift->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        _alexstraszaGift->RemoveFlag(GO_FLAG_NOT_SELECTABLE);
                         if (GameObject* heartMagic = target->GetMap()->GetGameObject(instance->GetGuidData(DATA_HEART_OF_MAGIC_GUID)))
                         {
-                            heartMagic->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            heartMagic->RemoveFlag(GO_FLAG_NOT_SELECTABLE);
                             // TO DO: This is hack, core doesn't have support for these flags,
                             // remove line below if it ever gets supported otherwise object won't be accessible.
-                            heartMagic->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
+                            heartMagic->RemoveFlag(GO_FLAG_INTERACT_COND);
                         }
                     }
             }

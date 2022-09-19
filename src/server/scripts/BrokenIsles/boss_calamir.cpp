@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
+* Copyright (C) 2021 BfaCore Reforged
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -458,6 +458,8 @@ public:
 
             if (!caster)
                 return;
+
+            at->SetDecalPropertiesID(13);
 
             for (auto guid : at->GetInsideUnits())
                 if (Unit* unit = ObjectAccessor::GetUnit(*caster, guid))

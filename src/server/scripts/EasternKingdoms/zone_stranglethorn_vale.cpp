@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -73,7 +72,7 @@ public:
         void Reset() override
         {
             Initialize();
-            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
+            me->SetEmoteState(EMOTE_STATE_NONE);
         }
 
         void SpellHit(Unit* caster, const SpellInfo* spell) override
@@ -85,10 +84,10 @@ public:
             {
                 if (player->GetQuestStatus(QUEST_SAVING_YENNIKU) == QUEST_STATUS_INCOMPLETE) // Yenniku's Release
                 {
-                    me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STUN);
+                    me->SetEmoteState(EMOTE_STATE_STUN);
                     me->CombatStop();                      // stop combat
                     me->DeleteThreatList();                // unsure of this
-                    me->setFaction(FACTION_HORDE_GENERIC); // horde generic
+                    me->SetFaction(FACTION_HORDE_GENERIC); // horde generic
 
                     bReset = true;
                     Reset_Timer = 60000;
@@ -106,7 +105,7 @@ public:
                 {
                     EnterEvadeMode();
                     bReset = false;
-                    me->setFaction(FACTION_TROLL_BLOODSCALP); // troll, bloodscalp
+                    me->SetFaction(FACTION_TROLL_BLOODSCALP); // troll, bloodscalp
                     return;
                 }
 

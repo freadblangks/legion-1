@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -35,7 +35,7 @@ class instance_halls_of_stone : public InstanceMapScript
 
         struct instance_halls_of_stone_InstanceMapScript : public InstanceScript
         {
-            instance_halls_of_stone_InstanceMapScript(Map* map) : InstanceScript(map)
+            instance_halls_of_stone_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
             {
                 SetHeaders(DataHeader);
                 SetBossNumber(EncounterCount);
@@ -92,7 +92,7 @@ class instance_halls_of_stone : public InstanceMapScript
                     case GO_TRIBUNAL_CHEST_HERO:
                         TribunalChestGUID = go->GetGUID();
                         if (GetBossState(DATA_TRIBUNAL_OF_AGES) == DONE)
-                            go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                            go->RemoveFlag(GO_FLAG_NOT_SELECTABLE);
                         break;
                     case GO_TRIBUNAL_SKY_FLOOR:
                         TribunalSkyFloorGUID = go->GetGUID();
@@ -161,7 +161,7 @@ class instance_halls_of_stone : public InstanceMapScript
                         if (state == DONE)
                         {
                             if (GameObject* go = instance->GetGameObject(TribunalChestGUID))
-                                go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                                go->RemoveFlag(GO_FLAG_NOT_SELECTABLE);
                         }
                         break;
                     default:

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -499,8 +498,8 @@ public:
     {
         if (quest->GetQuestId() == Q_ALMABTRIEB)
         {
-            creature->setFaction(113);
-            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            creature->SetFaction(113);
+            creature->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             ENSURE_AI(npc_escortAI, (creature->AI()))->Start(true, false, player->GetGUID());
         }
         return true;
@@ -665,7 +664,7 @@ public:
         {
             if (npc_maxx_a_million_escortAI* pEscortAI = CAST_AI(npc_maxx_a_million_escort::npc_maxx_a_million_escortAI, creature->AI()))
             {
-                creature->setFaction(113);
+                creature->SetFaction(113);
                 pEscortAI->Start(false, false, player->GetGUID());
             }
         }

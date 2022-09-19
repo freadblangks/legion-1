@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -326,7 +326,7 @@ public:
             if (npc_engineer_heliceAI* pEscortAI = CAST_AI(npc_engineer_helice::npc_engineer_heliceAI, creature->AI()))
             {
                 creature->GetMotionMaster()->MoveJumpTo(0, 0.4f, 0.4f);
-                creature->setFaction(113);
+                creature->SetFaction(113);
 
                 pEscortAI->Start(false, false, player->GetGUID());
                 creature->AI()->Talk(SAY_WP_1);
@@ -772,9 +772,7 @@ public:
                     Creature* crunchy = shooter->FindNearestCreature(NPC_CRUNCHY, 30);
                     Creature* bird = shooter->FindNearestCreature(NPC_THICKBIRD, 30);
 
-                    if (!bird || !crunchy)
-                        ; // fall to EVENT_MISS
-                    else
+                    if (bird && crunchy)
                     {
                         shooter->CastSpell(bird, SPELL_MISS_BIRD_APPLE);
                         bird->CastSpell(bird, SPELL_BIRD_FALL);
@@ -783,7 +781,7 @@ public:
 
                         bird->KillSelf();
                         crunchy->GetMotionMaster()->MovePoint(0, bird->GetPositionX(), bird->GetPositionY(),
-                            bird->GetMap()->GetWaterOrGroundLevel(bird->GetPhases(), bird->GetPositionX(), bird->GetPositionY(), bird->GetPositionZ()));
+                            bird->GetMap()->GetWaterOrGroundLevel(bird->GetPhaseShift(), bird->GetPositionX(), bird->GetPositionY(), bird->GetPositionZ()));
                         /// @todo Make crunchy perform emote eat when he reaches the bird
 
                         break;
@@ -944,7 +942,7 @@ public:
                     case 25:
                         Talk(PLANE_EMOTE);
                         DoCast(SPELL_ENGINE);
-                        me->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FORCE_MOVEMENT);
+                        me->AddUnitFlag2(UNIT_FLAG2_FORCE_MOVEMENT);
                         break;
                 }
         }

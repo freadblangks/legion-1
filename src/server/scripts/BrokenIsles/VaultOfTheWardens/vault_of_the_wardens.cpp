@@ -1,20 +1,3 @@
-/*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ScriptMgr.h"
 #include "AreaTrigger.h"
 #include "AreaTriggerAI.h"
@@ -31,21 +14,6 @@ enum Spells
     SPELL_INTERACT_DUMMY = 68742,
 };
 
-struct npc_glowing_sentry_100525 : public ScriptedAI
-{
-    npc_glowing_sentry_100525(Creature* creature) : ScriptedAI(creature) {}
-
-    void OnSpellClick(Unit* clicker, bool& /*result*/)
-    {
-        if (Player* player = clicker->ToPlayer())
-        {
-            me->CastSpell(player, SPELL_ELUNES_LIGHT, true);
-            me->CastSpell(player, SPELL_ELUNES_LIGHT_2, true);
-            me->CastSpell(player, SPELL_ELUNES_LIGHT_AURA, true);
-        }
-    }
-};
-
 //AT : 9668
 //Spell : 197941
 struct at_elunes_light : AreaTriggerAI
@@ -57,7 +25,7 @@ struct at_elunes_light : AreaTriggerAI
         Unit* caster = at->GetCaster();
         if (!caster)
             return;
-        if(!unit->IsAlive())
+        if (!unit->IsAlive())
             return;
         if (!unit->IsPlayer())
         {
@@ -96,7 +64,6 @@ struct npc_glowing_sentry_120300 : public ScriptedAI
 
 void AddSC_vault_of_the_wardens()
 {
-    RegisterCreatureAI(npc_glowing_sentry_100525);
     RegisterAreaTriggerAI(at_elunes_light);
     RegisterCreatureAI(npc_glowing_sentry_120300);
 }

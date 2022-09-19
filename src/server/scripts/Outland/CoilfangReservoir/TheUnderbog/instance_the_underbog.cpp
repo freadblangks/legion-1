@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,9 +22,10 @@ Without it, the party doing random dungeon won't get satchel of spoils and
 gets instead the deserter debuff.
 */
 
+//Missing Scripts and Bosses
+
 #include "ScriptMgr.h"
 #include "InstanceScript.h"
-#include "Map.h"
 #include "the_underbog.h"
 
 class instance_the_underbog : public InstanceMapScript
@@ -39,7 +40,7 @@ public:
 
     struct instance_the_underbog_InstanceMapScript : public InstanceScript
     {
-        instance_the_underbog_InstanceMapScript(Map* map) : InstanceScript(map) { }
+        instance_the_underbog_InstanceMapScript(InstanceMap* map) : InstanceScript(map) { }
     };
 };
 

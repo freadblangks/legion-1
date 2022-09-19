@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -62,7 +62,7 @@ struct boss_smashspite_the_hateful : public BossAI
             }
             case SPELL_HATEFUL_GAZE:
             {
-                if (Unit* target = SelectTarget(SELECT_TARGET_MAXDISTANCE, 0, 0.0f, true))
+                if (Unit* target = SelectTarget(SELECT_TARGET_FARTHEST, 0, 0.0f, true))
                 {
                     me->AddAura(SPELL_HATEFUL_GAZE, target);
                     hatefulGazeTargetGUID = target->GetGUID();
@@ -117,7 +117,7 @@ class aura_smashspite_brutality : public AuraScript
 {
     PrepareAuraScript(aura_smashspite_brutality);
 
-    void OnProc(AuraEffect* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
+    void OnProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
     {
         GetTarget()->ModifyPower(POWER_ENERGY, 5);
 

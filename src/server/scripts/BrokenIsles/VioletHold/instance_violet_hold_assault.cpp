@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -152,7 +152,7 @@ class instance_violet_hold_assault : public InstanceMapScript
             {
                 if (!unit)
                     return;
-
+/*
                 switch (unit->GetEntry())
                 {
                     case NPC_PORTAL_JAILER:
@@ -200,7 +200,7 @@ class instance_violet_hold_assault : public InstanceMapScript
                     }
 
                     default : break;
-                }
+                }*/
             }
 
             void TriggerCriteria(uint32 /*entry*/)
@@ -397,7 +397,7 @@ class instance_violet_hold_assault : public InstanceMapScript
                 }
             }
 
-            void Update(uint32 diff) override
+            /*void Update(uint32 diff) override
             {
                 _events.Update(diff);
 
@@ -497,7 +497,7 @@ class instance_violet_hold_assault : public InstanceMapScript
                     }
                 }
 
-            }
+            }*/
 
             private:
                 uint8 _eliteDead;

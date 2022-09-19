@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -85,12 +85,6 @@ enum Creatures
     NPC_ASHTONGUE_CHANNELER          = 23421,
     NPC_ASHTONGUE_BROKEN             = 23319,
     NPC_CREATURE_SPAWNER_AKAMA       = 23210
-};
-
-enum Factions
-{
-    FACTION_FRIENDLY                 = 1820,
-    FACTION_COMBAT                   = 1868
 };
 
 enum Actions
@@ -228,9 +222,9 @@ public:
         {
             _Reset();
             Initialize();
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STUN);
+            me->AddUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+            me->SetEmoteState(EMOTE_STATE_STUN);
             me->SetWalk(true);
             events.ScheduleEvent(EVENT_INITIALIZE_SPAWNERS, Seconds(1));
             me->SummonCreatureGroup(SUMMON_GROUP_RESET);
@@ -241,7 +235,7 @@ public:
             events.Reset();
             summons.DespawnAll();
 
-            for (ObjectGuid const& spawnerGuid : _spawners)
+            for (ObjectGuid const spawnerGuid : _spawners)
                 if (Creature* spawner = ObjectAccessor::GetCreature(*me, spawnerGuid))
                     spawner->AI()->DoAction(ACTION_DESPAWN_ALL_SPAWNS);
 
@@ -253,7 +247,7 @@ public:
             if (spell->Id == SPELL_AKAMA_SOUL_CHANNEL)
             {
                 events.ScheduleEvent(EVENT_START_CHANNELERS_AND_SPAWNERS, Seconds(1));
-                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
+                me->SetEmoteState(EMOTE_STATE_NONE);
                 events.ScheduleEvent(EVENT_EVADE_CHECK, Seconds(10));
                 if (Creature* akama = instance->GetCreature(DATA_AKAMA_SHADE))
                     AttackStart(akama);
@@ -268,12 +262,12 @@ public:
             if (_isInPhaseOne && motionType == CHASE_MOTION_TYPE)
             {
                 _isInPhaseOne = false;
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
                 me->SetWalk(false);
                 events.ScheduleEvent(EVENT_ADD_THREAT, Milliseconds(100));
 
-                for (ObjectGuid const& spawnerGuid : _spawners)
+                for (ObjectGuid const spawnerGuid : _spawners)
                     if (Creature* spawner = ObjectAccessor::GetCreature(*me, spawnerGuid))
                         spawner->AI()->DoAction(ACTION_STOP_SPAWNING);
             }
@@ -286,7 +280,7 @@ public:
             if (Creature* akama = instance->GetCreature(DATA_AKAMA_SHADE))
                 akama->AI()->DoAction(ACTION_SHADE_OF_AKAMA_DEAD);
 
-            for (ObjectGuid const& spawnerGuid : _spawners)
+            for (ObjectGuid const spawnerGuid : _spawners)
                 if (Creature* spawner = ObjectAccessor::GetCreature(*me, spawnerGuid))
                     spawner->AI()->DoAction(ACTION_DESPAWN_ALL_SPAWNS);
 
@@ -328,11 +322,11 @@ public:
                     }
                     case EVENT_START_CHANNELERS_AND_SPAWNERS:
                     {
-                        for (ObjectGuid const& summonGuid : summons)
+                        for (ObjectGuid const summonGuid : summons)
                             if (Creature* channeler = ObjectAccessor::GetCreature(*me, summonGuid))
-                                channeler->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                                channeler->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
 
-                        for (ObjectGuid const& spawnerGuid : _spawners)
+                        for (ObjectGuid const spawnerGuid : _spawners)
                             if (Creature* spawner = ObjectAccessor::GetCreature(*me, spawnerGuid))
                                 spawner->AI()->DoAction(ACTION_START_SPAWNING);
 
@@ -354,9 +348,9 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        private:
-            GuidVector _spawners;
-            bool _isInPhaseOne;
+    private:
+        GuidVector _spawners;
+        bool _isInPhaseOne;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -390,11 +384,11 @@ public:
         void Reset() override
         {
             Initialize();
-            me->setFaction(FACTION_FRIENDLY);
+            me->SetFaction(ASHTONGUE_FACTION_FRIEND);
             DoCastSelf(SPELL_STEALTH);
 
             if (_instance->GetBossState(DATA_SHADE_OF_AKAMA) != DONE)
-                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                me->AddNpcFlag(UNIT_NPC_FLAG_GOSSIP);
         }
 
         void JustSummoned(Creature* summon) override
@@ -436,7 +430,7 @@ public:
             {
                 _isInCombat = false;
                 me->CombatStop(true);
-                me->setFaction(FACTION_FRIENDLY);
+                me->SetFaction(ASHTONGUE_FACTION_FRIEND);
                 me->SetWalk(true);
                 _events.Reset();
                 me->GetMotionMaster()->MovePoint(AKAMA_INTRO_WAYPOINT, AkamaWP[1]);
@@ -482,7 +476,7 @@ public:
                 {
                     case EVENT_SHADE_START:
                         _instance->SetBossState(DATA_SHADE_OF_AKAMA, IN_PROGRESS);
-                        me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                        me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                         me->RemoveAurasDueToSpell(SPELL_STEALTH);
                         me->SetWalk(true);
                         me->GetMotionMaster()->MovePoint(AKAMA_CHANNEL_WAYPOINT, AkamaWP[0], false);
@@ -490,7 +484,7 @@ public:
                     case EVENT_SHADE_CHANNEL:
                         me->SetFacingTo(FACE_THE_PLATFORM);
                         DoCastSelf(SPELL_AKAMA_SOUL_CHANNEL);
-                        me->setFaction(FACTION_COMBAT);
+                        me->SetFaction(AKAMA_FACTION_COMBAT);
                         _events.ScheduleEvent(EVENT_FIXATE, Seconds(5));
                         break;
                     case EVENT_FIXATE:
@@ -538,7 +532,7 @@ public:
                 }
             }
 
-            if (me->getFaction() == FACTION_COMBAT)
+            if (me->getFaction() == AKAMA_FACTION_COMBAT)
             {
                 if (!UpdateVictim())
                     return;
@@ -565,14 +559,14 @@ public:
             }
         }
 
-        private:
-            InstanceScript* _instance;
-            EventMap _events;
-            SummonList _summons;
-            DummyEntryCheckPredicate _pred;
-            ObjectGuid _chosen; //Creature that should yell the speech special.
-            bool _isInCombat;
-            bool _hasYelledOnce;
+    private:
+        InstanceScript* _instance;
+        EventMap _events;
+        SummonList _summons;
+        DummyEntryCheckPredicate _pred;
+        ObjectGuid _chosen; //Creature that should yell the speech special.
+        bool _isInCombat;
+        bool _hasYelledOnce;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -599,7 +593,7 @@ public:
             {
                 if (Creature* shade = _instance->GetCreature(DATA_SHADE_OF_AKAMA))
                 {
-                    if (shade->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
+                    if (shade->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE))
                         DoCastSelf(SPELL_SHADE_SOUL_CHANNEL);
 
                     else
@@ -608,7 +602,7 @@ public:
 
                 channel.Repeat(Seconds(2));
             });
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
         }
 
         void UpdateAI(uint32 diff) override
@@ -616,9 +610,9 @@ public:
             _scheduler.Update(diff);
         }
 
-        private:
-            InstanceScript* _instance;
-            TaskScheduler _scheduler;
+    private:
+        InstanceScript* _instance;
+        TaskScheduler _scheduler;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -713,10 +707,10 @@ public:
             }
         }
 
-        private:
-            EventMap _events;
-            SummonList _summons;
-            bool _leftSide;
+    private:
+        EventMap _events;
+        SummonList _summons;
+        bool _leftSide;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -748,7 +742,7 @@ public:
         {
             if (Creature* shade = _instance->GetCreature(DATA_SHADE_OF_AKAMA))
             {
-                if (shade->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
+                if (shade->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE))
                     me->GetMotionMaster()->MovePoint(0, shade->GetPosition());
 
                 else if (Creature* akama = _instance->GetCreature(DATA_AKAMA_SHADE))
@@ -786,7 +780,7 @@ public:
                 {
                     if (Creature* shade = _instance->GetCreature(DATA_SHADE_OF_AKAMA))
                     {
-                        if (shade->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
+                        if (shade->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE))
                         {
                             me->SetFacingToObject(shade);
                             DoCastSelf(SPELL_SHADE_SOUL_CHANNEL);
@@ -817,11 +811,11 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        private:
-            InstanceScript* _instance;
-            TaskScheduler _scheduler;
-            bool _switchToCombat;
-            bool _inBanish;
+    private:
+        InstanceScript* _instance;
+        TaskScheduler _scheduler;
+        bool _switchToCombat;
+        bool _inBanish;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -897,9 +891,9 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        private:
-            InstanceScript* _instance;
-            EventMap _events;
+    private:
+        InstanceScript* _instance;
+        EventMap _events;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -966,9 +960,9 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        private:
-            InstanceScript* _instance;
-            EventMap _events;
+    private:
+        InstanceScript* _instance;
+        EventMap _events;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -1035,9 +1029,9 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        private:
-            InstanceScript* _instance;
-            EventMap _events;
+    private:
+        InstanceScript* _instance;
+        EventMap _events;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -1134,11 +1128,11 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        private:
-            InstanceScript* _instance;
-            EventMap _events;
-            bool _spiritMend;
-            bool _chainHeal;
+    private:
+        InstanceScript* _instance;
+        EventMap _events;
+        bool _spiritMend;
+        bool _chainHeal;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
@@ -1176,11 +1170,11 @@ public:
                     Talk(SAY_BROKEN_SPECIAL);
                     break;
                 case ACTION_BROKEN_HAIL:
-                    me->setFaction(FACTION_FRIENDLY);
+                    me->SetFaction(ASHTONGUE_FACTION_FRIEND);
                     Talk(SAY_BROKEN_HAIL);
                     break;
                 case ACTION_BROKEN_EMOTE:
-                    me->SetByteValue(UNIT_FIELD_BYTES_1, UNIT_BYTES_1_OFFSET_STAND_STATE, UNIT_STAND_STATE_KNEEL);
+                    me->SetStandState(UNIT_STAND_STATE_KNEEL);
                     break;
                 default:
                     break;
@@ -1198,6 +1192,7 @@ public:
     }
 };
 
+// 40401 - Shade Soul Channel (serverside spell)
 class spell_shade_soul_channel_serverside : public SpellScriptLoader
 {
 public:
@@ -1229,6 +1224,7 @@ public:
     }
 };
 
+// 40520 - Shade Soul Channel
 class spell_shade_soul_channel : public SpellScriptLoader
 {
 public:

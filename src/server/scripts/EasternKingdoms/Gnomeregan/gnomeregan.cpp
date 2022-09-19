@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -130,7 +130,7 @@ public:
             {
                 Start(true, false, player->GetGUID());
 
-                me->setFaction(player->getFaction());
+                me->SetFaction(player->getFaction());
                 SetData(1, 0);
 
                 player->PlayerTalkClass->SendCloseGossip();
@@ -196,10 +196,7 @@ public:
                 {
                     if (Creature* summon = ObjectAccessor::GetCreature(*me, *itr))
                     {
-                        if (summon->IsAlive())
-                            summon->DisappearAndDie();
-                        else
-                            summon->RemoveCorpse();
+                        summon->DespawnOrUnsummon();
                     }
                 }
         }
@@ -229,7 +226,7 @@ public:
             //just in case
             if (GetPlayerForEscort())
                 if (me->getFaction() != GetPlayerForEscort()->getFaction())
-                    me->setFaction(GetPlayerForEscort()->getFaction());
+                    me->SetFaction(GetPlayerForEscort()->getFaction());
 
             switch (waypointId)
             {
@@ -312,7 +309,7 @@ public:
                     if (GameObject* go = me->SummonGameObject(183410, -533.140f, -105.322f, -156.016f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE); //We can't use it!
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE); //We can't use it!
                     }
                     Summon(3);
                     break;
@@ -327,7 +324,7 @@ public:
                     if (GameObject* go = me->SummonGameObject(183410, -542.199f, -96.854f, -155.790f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE);
                     }
                     break;
                 case 5:
@@ -341,7 +338,7 @@ public:
                     if (GameObject* go = me->SummonGameObject(183410, -507.820f, -103.333f, -151.353f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE); //We can't use it!
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE); //We can't use it!
                         Summon(5);
                     }
                     break;
@@ -349,7 +346,7 @@ public:
                     if (GameObject* go = me->SummonGameObject(183410, -511.829f, -86.249f, -151.431f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE); //We can't use it!
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE); //We can't use it!
                     }
                     break;
                 case 8:

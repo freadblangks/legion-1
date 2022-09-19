@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -115,7 +114,7 @@ class boss_ambassador_hellmaw : public CreatureScript
                     me->RemoveAurasDueToSpell(SPELL_BANISH);
 
                 Talk(SAY_INTRO);
-                Start(true, false, ObjectGuid::Empty, NULL, false, true);
+                Start(true, false, ObjectGuid::Empty, nullptr, false, true);
             }
 
             void EnterCombat(Unit* /*who*/) override

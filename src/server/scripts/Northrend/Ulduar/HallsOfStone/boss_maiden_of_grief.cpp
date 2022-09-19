@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -39,9 +39,9 @@ enum Spells
 enum Events
 {
     EVENT_PARTING_SORROW                = 1,
-    EVENT_STORM_OF_GRIEF,
-    EVENT_SHOCK_OF_SORROW,
-    EVENT_PILLAR_OF_WOE
+    EVENT_STORM_OF_GRIEF                = 2,
+    EVENT_SHOCK_OF_SORROW               = 3,
+    EVENT_PILLAR_OF_WOE                 = 4
 };
 
 enum Achievements
@@ -63,7 +63,7 @@ class boss_maiden_of_grief : public CreatureScript
                 _Reset();
 
                 if (IsHeroic())
-                    events.ScheduleEvent(EVENT_PARTING_SORROW, urand(25000, 30000));
+                events.ScheduleEvent(EVENT_PARTING_SORROW, urand(25000, 30000));
                 events.ScheduleEvent(EVENT_STORM_OF_GRIEF, 10000);
                 events.ScheduleEvent(EVENT_SHOCK_OF_SORROW, urand(20000, 25000));
                 events.ScheduleEvent(EVENT_PILLAR_OF_WOE, urand(5000, 15000));

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
- * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -26,46 +25,46 @@
 enum RogueClassHall
 {
     // Creatures
-    NPC_RAVENHOLDT_COURIER_102018                     = 102018,
-    NPC_LORD_JORACH_RAVENHOLDT_101513                 = 101513,
-    NPC_VALEERA_SANGUINAR_98102                       = 98102,
-    NPC_FLEET_ADMIRAL_TETHYS_94159                    = 94159,
-    NPC_PRINCESS_TESS_GREYMANE_94138                  = 94138,
-    NPC_KILL_CREDIT_ENTER_THE_HALL_OF_SHADOWS         = 102086,
-    NPC_KILL_CREDIT_PASSWORD_SPOKEN                   = 105907,
-    NPC_KILL_CREDIT_LETTER_READ                       = 102041,
-    NPC_KILL_CREDIT_FIND_THE_UNCROWNED                = 102098,
-    NPC_KILL_CREDIT_ARTIFACT_WEAPON_CHOSEN            = 105953,
-    NPC_KILL_CREDIT_TAKE_YOUR_SEAT_01                 = 102498,
-    NPC_KILL_CREDIT_TAKE_YOUR_SEAT_02                 = 102502,
+    NPC_RAVENHOLDT_COURIER_102018 = 102018,
+    NPC_LORD_JORACH_RAVENHOLDT_101513 = 101513,
+    NPC_VALEERA_SANGUINAR_98102 = 98102,
+    NPC_FLEET_ADMIRAL_TETHYS_94159 = 94159,
+    NPC_PRINCESS_TESS_GREYMANE_94138 = 94138,
+    NPC_KILL_CREDIT_ENTER_THE_HALL_OF_SHADOWS = 102086,
+    NPC_KILL_CREDIT_PASSWORD_SPOKEN = 105907,
+    NPC_KILL_CREDIT_LETTER_READ = 102041,
+    NPC_KILL_CREDIT_FIND_THE_UNCROWNED = 102098,
+    NPC_KILL_CREDIT_ARTIFACT_WEAPON_CHOSEN = 105953,
+    NPC_KILL_CREDIT_TAKE_YOUR_SEAT_01 = 102498,
+    NPC_KILL_CREDIT_TAKE_YOUR_SEAT_02 = 102502,
 
     // Spells
-    SPELL_DONT_KILL_THE_MESSENGER                     = 201212,
-    SPELL_DELIVER_MESSAGE                             = 201234,
-    SPELL_SEALED_LETTER                               = 201253,
+    SPELL_DONT_KILL_THE_MESSENGER = 201212,
+    SPELL_DELIVER_MESSAGE = 201234,
+    SPELL_SEALED_LETTER = 201253,
 
     // Actions
-    ACTION_QUEST_THE_FINAL_SHADOW_TALK_1              = 1,
+    ACTION_QUEST_THE_FINAL_SHADOW_TALK_1 = 1,
 
     // Texts
-    RAVENHOLDT_COURIER_TEXT_00                        = 0,
-    RAVENHOLDT_COURIER_TEXT_01                        = 1,
-    RED_JACK_FINDLE_TEXT_00                           = 0,
-    VALEERA_SANGUINAR_BCT_00                          = 104737,
-    VALEERA_SANGUINAR_BCT_01                          = 108901,
-    LORD_JORACH_RAVENHOLDT_BCT_00                     = 104757,
-    LORD_JORACH_RAVENHOLDT_BCT_01                     = 104648,
-    LORD_JORACH_RAVENHOLDT_BCT_02                     = 108892,
-    FLEET_ADMIRAL_TETHYS_BCT_00                       = 108898,
+    RAVENHOLDT_COURIER_TEXT_00 = 0,
+    RAVENHOLDT_COURIER_TEXT_01 = 1,
+    RED_JACK_FINDLE_TEXT_00 = 0,
+    VALEERA_SANGUINAR_BCT_00 = 104737,
+    VALEERA_SANGUINAR_BCT_01 = 108901,
+    LORD_JORACH_RAVENHOLDT_BCT_00 = 104757,
+    LORD_JORACH_RAVENHOLDT_BCT_01 = 104648,
+    LORD_JORACH_RAVENHOLDT_BCT_02 = 108892,
+    FLEET_ADMIRAL_TETHYS_BCT_00 = 108898,
 
     // Quests
-    QUEST_CALL_OF_THE_UNCROWNED                       = 40832,
-    QUEST_THE_FINAL_SHADOW                            = 40839,
-    QUEST_A_WORTHY_BLADE                              = 40840,
+    QUEST_CALL_OF_THE_UNCROWNED = 40832,
+    QUEST_THE_FINAL_SHADOW = 40839,
+    QUEST_A_WORTHY_BLADE = 40840,
 
     // Misc
-    RED_JACK_FINDLE_GOSSIP_MENU                       = 19540,
-    PLAYER_CHOICE_ROGE_SELECTION                      = 262
+    RED_JACK_FINDLE_GOSSIP_MENU = 19540,
+    PLAYER_CHOICE_ROGE_SELECTION = 262
 };
 
 /// 102018
@@ -84,7 +83,7 @@ struct npc_ravenholdt_courier_102018 : public ScriptedAI
             DoCastSelf(SPELL_DONT_KILL_THE_MESSENGER);
     }
 
-    void QuestAccept(Player* player, Quest const* quest) override
+    void sQuestAccept(Player* player, Quest const* quest) override
     {
         if (quest->GetQuestId() == QUEST_CALL_OF_THE_UNCROWNED)
         {
@@ -167,16 +166,14 @@ struct npc_red_jack_findle_97004 : public ScriptedAI
 {
     npc_red_jack_findle_97004(Creature* creature) : ScriptedAI(creature) { }
 
-    bool GossipHello(Player* player) override
+    void sGossipHello(Player* player)
     {
         ClearGossipMenuFor(player);
         player->PrepareGossipMenu(me, RED_JACK_FINDLE_GOSSIP_MENU);
         SendGossipMenuFor(player, player->GetGossipTextId(me), me->GetGUID());
-
-        return false;
     }
 
-    bool GossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId) override
+    void sGossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId)
     {
         if (player->HasQuest(QUEST_CALL_OF_THE_UNCROWNED))
         {
@@ -187,8 +184,6 @@ struct npc_red_jack_findle_97004 : public ScriptedAI
                 CloseGossipMenuFor(player);
             }
         }
-
-        return false;
     }
 };
 
@@ -201,7 +196,7 @@ public:
 
     void OnUpdate(Player* player, uint32 /*diff*/)
     {
-        if(player->HasAura(SPELL_SEALED_LETTER)&& player->HasQuest(QUEST_CALL_OF_THE_UNCROWNED))
+        if (player->HasAura(SPELL_SEALED_LETTER) && player->HasQuest(QUEST_CALL_OF_THE_UNCROWNED))
             player->KilledMonsterCredit(NPC_KILL_CREDIT_LETTER_READ);
     }
 };
@@ -227,21 +222,21 @@ struct npc_lord_jorach_ravenholdt_101513 : public ScriptedAI
     {
         switch (param)
         {
-            case ACTION_QUEST_THE_FINAL_SHADOW_TALK_1:
-                if (Creature* valeera_sanguinar = me->FindNearestCreature(NPC_VALEERA_SANGUINAR_98102, 15.0f))
+        case ACTION_QUEST_THE_FINAL_SHADOW_TALK_1:
+            if (Creature* valeera_sanguinar = me->FindNearestCreature(NPC_VALEERA_SANGUINAR_98102, 15.0f))
+            {
+                _scheduler.Schedule(Milliseconds(1000), [valeera_sanguinar](TaskContext context)
                 {
-                    _scheduler.Schedule(Milliseconds(1000), [valeera_sanguinar](TaskContext context)
-                    {
-                        valeera_sanguinar->Say(VALEERA_SANGUINAR_BCT_00);
-                    });
-                }
-
-                _scheduler.Schedule(Milliseconds(3000), [this](TaskContext context)
-                {
-                    me->Say(LORD_JORACH_RAVENHOLDT_BCT_00);
+                    valeera_sanguinar->Say(VALEERA_SANGUINAR_BCT_00);
                 });
+            }
 
-                break; // NPC_FLEET_ADMIRAL_TETHYS_94159
+            _scheduler.Schedule(Milliseconds(3000), [this](TaskContext context)
+            {
+                me->Say(LORD_JORACH_RAVENHOLDT_BCT_00);
+            });
+
+            break; // NPC_FLEET_ADMIRAL_TETHYS_94159
         }
     }
 
@@ -250,7 +245,7 @@ struct npc_lord_jorach_ravenholdt_101513 : public ScriptedAI
         _scheduler.Update(diff);
     }
 
-    void QuestAccept(Player* player, Quest const* quest) override
+    void sQuestAccept(Player* player, Quest const* quest) override
     {
         if (quest->GetQuestId() == QUEST_THE_FINAL_SHADOW)
         {
@@ -280,9 +275,9 @@ struct npc_lord_jorach_ravenholdt_101513 : public ScriptedAI
         }
     }
 
-    void QuestReward(Player* player, Quest const* quest, uint32 /*opt*/)  override
+    void sQuestReward(Player* player, Quest const* quest, uint32 /*opt*/)  override
     {
-        if (quest->GetQuestId() == QUEST_THE_FINAL_SHADOW) { }
+        if (quest->GetQuestId() == QUEST_THE_FINAL_SHADOW) {}
     }
 
 private:
@@ -327,7 +322,7 @@ struct npc_valeera_sanguinar_98102 : public ScriptedAI
         _scheduler.Update(diff);
     }
 
-    bool GossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId)
+    void sGossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId)
     {
         if (player->HasQuest(QUEST_A_WORTHY_BLADE))
         {
@@ -337,13 +332,11 @@ struct npc_valeera_sanguinar_98102 : public ScriptedAI
                 CloseGossipMenuFor(player);
             }
         }
-
-        return false;
     }
 
-    void QuestAccept(Player* player, Quest const* quest) override { }
+    void sQuestAccept(Player* player, Quest const* quest) override { }
 
-    void QuestReward(Player* player, Quest const* quest, uint32 /*opt*/) override { }
+    void sQuestReward(Player* player, Quest const* quest, uint32 /*opt*/) override { }
 
 private:
 
@@ -395,7 +388,7 @@ struct npc_fleet_admiral_tethys_94159 : public ScriptedAI
         _scheduler.Update(diff);
     }
 
-    bool GossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId)
+    void sGossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId)
     {
         if (player->HasQuest(QUEST_A_WORTHY_BLADE))
         {
@@ -405,13 +398,11 @@ struct npc_fleet_admiral_tethys_94159 : public ScriptedAI
                 CloseGossipMenuFor(player);
             }
         }
-
-        return false;
     }
 
-    void QuestAccept(Player* player, Quest const* quest) override { }
+    void sQuestAccept(Player* player, Quest const* quest) override { }
 
-    void QuestReward(Player* player, Quest const* quest, uint32 /*opt*/) override { }
+    void sQuestReward(Player* player, Quest const* quest, uint32 /*opt*/) override { }
 
 private:
 
@@ -436,11 +427,11 @@ struct npc_princess_tess_greymane_94138 : public ScriptedAI
         _scheduler.Update(diff);
     }
 
-    void QuestAccept(Player* player, Quest const* quest) override { }
+    void sQuestAccept(Player* player, Quest const* quest) override { }
 
-    void QuestReward(Player* player, Quest const* quest, uint32 /*opt*/) override { }
+    void sQuestReward(Player* player, Quest const* quest, uint32 /*opt*/) override { }
 
-    bool GossipSelect(Player* player, uint32 menuId, uint32 gossipListId)
+    void sGossipSelect(Player* player, uint32 menuId, uint32 gossipListId)
     {
         TC_LOG_ERROR("server.worldserver", "sGossipSelect %u, %u", menuId, gossipListId);
 
@@ -452,8 +443,6 @@ struct npc_princess_tess_greymane_94138 : public ScriptedAI
                 CloseGossipMenuFor(player);
             }
         }
-
-        return false;
     }
 
 private:

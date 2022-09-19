@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -27,6 +26,7 @@ EndScriptData */
 npc_wizzlecrank_shredder
 EndContentData */
 
+#include "AchievementMgr.h"
 #include "ScriptMgr.h"
 #include "MotionMaster.h"
 #include "ObjectAccessor.h"
@@ -35,6 +35,19 @@ EndContentData */
 #include "ScriptedGossip.h"
 #include "SpellInfo.h"
 #include "TemporarySummon.h"
+
+// Zone 491
+class zone_razorfen_kraul : public ZoneScript
+{
+public:
+    zone_razorfen_kraul() : ZoneScript("zone_razorfen_kraul") { }
+
+    void OnPlayerEnter(Player* player) override
+    {
+        if (AchievementEntry const* southernBarrensExploration = sAchievementStore.LookupEntry(4996))
+            player->GetAchievementMgr()->CompletedAchievement(southernBarrensExploration, player);
+    }
+};
 
 /*######
 ## npc_beaten_corpse
@@ -89,7 +102,6 @@ enum Gilthares
     SAY_GIL_FREED               = 7,
 
     QUEST_FREE_FROM_HOLD        = 898,
-    AREA_MERCHANT_COAST         = 391,
     FACTION_ESCORTEE            = 232                       //guessed, possible not needed for this quest
 };
 
@@ -102,7 +114,7 @@ public:
     {
         if (quest->GetQuestId() == QUEST_FREE_FROM_HOLD)
         {
-            creature->setFaction(FACTION_ESCORTEE);
+            creature->SetFaction(FACTION_ESCORTEE);
             creature->SetStandState(UNIT_STAND_STATE_STAND);
 
             creature->AI()->Talk(SAY_GIL_START, player);
@@ -161,7 +173,7 @@ public:
                 return;
 
             //only aggro text if not player and only in this area
-            if (who->GetTypeId() != TYPEID_PLAYER && me->GetAreaId() == AREA_MERCHANT_COAST)
+            if (who->GetTypeId() != TYPEID_PLAYER && me->GetAreaId() == AREA_BARRENS_MERCHANT_COAST)
             {
                 //appears to be pretty much random (possible only if escorter not in combat with who yet?)
                 Talk(SAY_GIL_AGGRO, who);
@@ -215,7 +227,7 @@ public:
         void Reset() override
         {
             Initialize();
-            me->setFaction(factionNorm);
+            me->SetFaction(factionNorm);
         }
 
         void DoFriend()
@@ -227,7 +239,7 @@ public:
             me->StopMoving();
             me->GetMotionMaster()->MoveIdle();
 
-            me->setFaction(FACTION_FRIENDLY_F);
+            me->SetFaction(FACTION_FRIENDLY_F);
             me->HandleEmoteCommand(EMOTE_ONESHOT_SALUTE);
         }
 
@@ -373,7 +385,7 @@ public:
         {
             if (EventInProgress)
             {
-                Player* warrior = NULL;
+                Player* warrior = nullptr;
 
                 if (!PlayerGUID.IsEmpty())
                     warrior = ObjectAccessor::GetPlayer(*me, PlayerGUID);
@@ -420,9 +432,9 @@ public:
                             Creature* creature = me->SummonCreature(NPC_AFFRAY_CHALLENGER, AffrayChallengerLoc[i], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 600000);
                             if (!creature)
                                 continue;
-                            creature->setFaction(35);
-                            creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                            creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            creature->SetFaction(35);
+                            creature->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                            creature->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                             creature->HandleEmoteCommand(EMOTE_ONESHOT_ROAR);
                             AffrayChallenger[i] = creature->GetGUID();
                         }
@@ -458,10 +470,10 @@ public:
                             Creature* creature = ObjectAccessor::GetCreature(*me, AffrayChallenger[Wave]);
                             if (creature && (creature->IsAlive()))
                             {
-                                creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                                creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                                creature->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                                creature->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                                 creature->HandleEmoteCommand(EMOTE_ONESHOT_ROAR);
-                                creature->setFaction(14);
+                                creature->SetFaction(14);
                                 creature->AI()->AttackStart(warrior);
                                 ++Wave;
                                 WaveTimer = 20000;
@@ -490,10 +502,10 @@ public:
                             }
                             else if (creature) // Makes BIG WILL attackable.
                             {
-                                creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                                creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                                creature->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                                creature->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                                 creature->HandleEmoteCommand(EMOTE_ONESHOT_ROAR);
-                                creature->setFaction(14);
+                                creature->SetFaction(14);
                                 creature->AI()->AttackStart(warrior);
                             }
                         }
@@ -654,7 +666,7 @@ public:
     {
         if (quest->GetQuestId() == QUEST_ESCAPE)
         {
-            creature->setFaction(FACTION_RATCHET);
+            creature->SetFaction(FACTION_RATCHET);
             creature->AI()->Talk(SAY_START);
             if (npc_escortAI* pEscortAI = CAST_AI(npc_wizzlecrank_shredder::npc_wizzlecrank_shredderAI, creature->AI()))
                 pEscortAI->Start(true, false, player->GetGUID());
@@ -671,5 +683,6 @@ public:
 
 void AddSC_the_barrens()
 {
+    new zone_razorfen_kraul();
     new npc_wizzlecrank_shredder();
 }

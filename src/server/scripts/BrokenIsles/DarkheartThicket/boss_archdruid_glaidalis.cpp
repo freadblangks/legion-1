@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -29,6 +29,7 @@
 #include "SpellInfo.h"
 #include "SpellScript.h"
 #include "TemporarySummon.h"
+#include <sstream>
 
 enum Spells
 {
@@ -357,7 +358,7 @@ struct at_archdruid_glaidalis_nightfall : AreaTriggerAI
 
     void OnCreate() override
     {
-        //at->SetDecalPropertiesID(34);
+        at->SetDecalPropertiesID(34);
     }
 
     void OnUnitEnter(Unit* unit) override
@@ -407,7 +408,7 @@ class spell_archdruid_glaidalis_grevious_leap_first : public SpellScript
         if (!caster || !caster->GetAI())
             return;
 
-        Unit* target = caster->GetAI()->SelectTarget(SELECT_TARGET_MAXTHREAT);
+        Unit* target = caster->GetAI()->SelectTarget(SELECT_TARGET_TOPAGGRO);
         if (!target)
             return;
 

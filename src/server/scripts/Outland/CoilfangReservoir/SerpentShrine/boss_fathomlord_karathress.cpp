@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -349,7 +348,7 @@ public:
 
             Creature* Pet = ObjectAccessor::GetCreature(*me, SummonedPet);
             if (Pet && Pet->IsAlive())
-                Pet->DealDamage(Pet, Pet->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                Pet->DealDamage(Pet, Pet->GetHealth(), nullptr, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, nullptr, false);
 
             SummonedPet.Clear();
 
@@ -668,8 +667,8 @@ public:
                 if (Creature* Cyclone = me->SummonCreature(CREATURE_CYCLONE, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), float(rand32() % 5), TEMPSUMMON_TIMED_DESPAWN, 15000))
                 {
                     Cyclone->SetObjectScale(3.0f);
-                    Cyclone->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                    Cyclone->setFaction(me->getFaction());
+                    Cyclone->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                    Cyclone->SetFaction(me->getFaction());
                     Cyclone->CastSpell(Cyclone, SPELL_CYCLONE_CYCLONE, true);
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
                         Cyclone->AI()->AttackStart(target);
@@ -682,9 +681,9 @@ public:
             if (Heal_Timer <= diff)
             {
                 // It can be cast on any of the mobs
-                Unit* unit = NULL;
+                Unit* unit = nullptr;
 
-                while (unit == NULL || !unit->IsAlive())
+                while (unit == nullptr || !unit->IsAlive())
                     unit = selectAdvisorUnit();
 
                 if (unit && unit->IsAlive())
@@ -699,7 +698,7 @@ public:
 
         Unit* selectAdvisorUnit()
         {
-            Unit* unit = NULL;
+            Unit* unit = nullptr;
             switch (rand32() % 4)
             {
             case 0:

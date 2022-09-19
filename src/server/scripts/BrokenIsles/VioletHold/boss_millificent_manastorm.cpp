@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -391,63 +391,6 @@ class npc_vha_rocket_chicken : public CreatureScript
         }
 };
 
-class spell_vha_rocket_chicken_rocket : public SpellScriptLoader
-{
-    public:
-        spell_vha_rocket_chicken_rocket() : SpellScriptLoader("spell_vha_rocket_chicken_rocket")
-        {}
-
-        class spell_rocket_chicken_rocket_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_rocket_chicken_rocket_SpellScript);
-
-                void HandleBeforeCast()
-                {
-                    GetCaster()->AddUnitState(UNIT_STATE_ROOT);
-                    _src.x = GetCaster()->GetPositionX();
-                    _src.y = GetCaster()->GetPositionY();
-                }
-
-                void FilterTargets(SpellTargets & targets)
-                {
-                    if (targets.empty())
-                        return;
-
-                    Unit* caster = GetCaster();
-
-                    targets.remove_if([&] (WorldObject*& target)
-                    {
-                        return !caster->isInFront(target, 0.08726f);
-                    });
-                }
-
-                void HandleAfterHit()
-                {
-                    if (!GetCaster())
-                        return;
-
-                    GetCaster()->ClearUnitState(UNIT_STATE_ROOT);
-                }
-
-                void Register() override
-                {
-                    BeforeCast += SpellCastFn(spell_rocket_chicken_rocket_SpellScript::HandleBeforeCast);
-                    AfterHit += SpellHitFn(spell_rocket_chicken_rocket_SpellScript::HandleAfterHit);
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_rocket_chicken_rocket_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_CONE_ENEMY_104);
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_rocket_chicken_rocket_SpellScript::FilterTargets, EFFECT_2, TARGET_UNIT_CONE_ENEMY_104);
-                }
-
-                private:
-                    G3D::Vector2 _src;
-        };
-
-        SpellScript* GetSpellScript() const override
-        {
-            return new spell_rocket_chicken_rocket_SpellScript();
-        }
-};
-
 class spell_vha_swarn_rockets : public SpellScriptLoader
 {
     public:
@@ -487,6 +430,5 @@ void AddSC_boss_millificient_manastorm()
     new npc_vha_rocket_chicken();
     new npc_vha_squirrel_bomb();
     new npc_vha_mechanical_squirrel_bomb();
-    new spell_vha_rocket_chicken_rocket();
     new spell_vha_swarn_rockets();
 }

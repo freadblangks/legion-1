@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -155,7 +155,7 @@ struct boss_nythendra : public BossAI
             }
             case SPELL_VOLATILE_ROT:
             {
-                if (Unit* target = SelectTarget(SELECT_TARGET_MAXTHREAT))
+                if (Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO))
                     me->CastSpell(target, SPELL_VOLATILE_ROT, true);
 
                 events.Repeat(25s);
@@ -210,8 +210,8 @@ private:
 
                 std::list<AreaTrigger*> ats;
                 me->GetAreaTriggerListWithSpellIDInRange(ats, SPELL_INFESTED_GROUND, 500.f);
-                //for (AreaTrigger* at : ats)
-                   // at->SetDestination(me->GetPosition(), 5000);
+                for (AreaTrigger* at : ats)
+                    at->SetDestination(me->GetPosition(), 5000);
             })
             .Schedule(31s, [this](TaskContext /*context*/)
             {

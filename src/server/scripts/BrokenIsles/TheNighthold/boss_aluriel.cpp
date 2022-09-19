@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -95,17 +95,15 @@ public:
 
         void StartMovePath()
         {
-            Movement::PointsArray path(WaypointAlurielAnomaly, WaypointAlurielAnomaly + WaypointAlurielAnomalySize);
-
             Movement::MoveSplineInit init(me);
             init.SetCyclic();
             init.SetSmooth();
             init.SetVelocity(4.0f);
-            init.MovebyPath(path, 0);
+            init.MovebyPath(WaypointAlurielAnomaly, 0);
             init.Launch();
         }
 
-        void EnterCombat(Unit* who) override
+        void EnterCombat(Unit* /*who*/) override
         {
             Talk(SAY_AGGRO);
             DoZoneInCombat();
@@ -133,11 +131,7 @@ public:
             summons.DespawnAll();
         }
 
-        void DoAction(int32 param)
-        {
-        }
-
-        void KilledUnit(Unit* who)
+        void KilledUnit(Unit* /*who*/) override
         {
             //if (who->ToPlayer())
             //   Talk(SAY_KILL);
@@ -239,7 +233,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void JustDied(Unit* killer) override
+        void JustDied(Unit* /*killer*/) override
         {
             Talk(SAY_DEATH);
             _JustDied();
@@ -250,68 +244,6 @@ public:
     CreatureAI* GetAI(Creature* creature) const override
     {
         return GetTheNightholdAI<boss_alurielAI>(creature);
-    }
-};
-
-// 212494 - annihilate
-// 7.3.5
-class spell_gen_aluriel_annihilate : public SpellScriptLoader
-{
-public:
-    spell_gen_aluriel_annihilate() : SpellScriptLoader("spell_gen_aluriel_annihilate") { }
-
-    class spell_gen_aluriel_annihilate_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_gen_aluriel_annihilate_SpellScript);
-
-        void FilterTargets(std::list<WorldObject*>& targets)
-        {
-            Unit* caster = GetCaster();
-            if (!caster)
-                return;
-
-            targetcount = targets.size();
-        }
-
-        void Damage(SpellEffIndex /*effIndex*/)
-        {
-            Unit* caster = GetCaster();
-            if (!caster || !targetcount)
-                return;
-
-            SetHitDamage(GetHitDamage() / targetcount);
-        }
-
-        void Debuff(SpellEffIndex /*effIndex*/)
-        {
-            Unit* caster = GetCaster();
-            ObjectGuid target = caster->GetTarget();
-            if (!caster || !target)
-                return;
-
-            if (Unit* t = ObjectAccessor::GetUnit(*caster, target))
-            {
-                if (Aura* aura = t->GetAura(SPELL_ANNIHILATE_DEB))
-                    if (aura->GetDuration() + 5000 > aura->GetMaxDuration())
-                        return;
-                    caster->CastSpell(t, SPELL_ANNIHILATE_DEB, true);
-            }
-        }
-
-        void Register() override
-        {
-            OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_gen_aluriel_annihilate_SpellScript::FilterTargets, EFFECT_1, TARGET_UNIT_CONE_ENEMY_104);
-            OnEffectHitTarget += SpellEffectFn(spell_gen_aluriel_annihilate_SpellScript::Damage, EFFECT_1, SPELL_EFFECT_SCHOOL_DAMAGE);
-            OnEffectHitTarget += SpellEffectFn(spell_gen_aluriel_annihilate_SpellScript::Debuff, EFFECT_0, SPELL_EFFECT_DUMMY);
-        }
-
-    private:
-        uint32 targetcount;
-    };
-
-    SpellScript* GetSpellScript() const override
-    {
-        return new spell_gen_aluriel_annihilate_SpellScript();
     }
 };
 
@@ -328,10 +260,12 @@ public:
 
         bool Validate(SpellInfo const* /*spellInfo*/) override
         {
-            return ValidateSpellInfo({ SPELL_MARK_OF_FROST });
+            if (!sSpellMgr->GetSpellInfo(SPELL_MARK_OF_FROST))
+                return false;
+            return true;
         }
 
-        void Tick(AuraEffect const* aurEff)
+        void Tick(AuraEffect const* /*aurEff*/)
         {
             if (Unit* caster = GetCaster())
             {
@@ -435,14 +369,7 @@ public:
 
         void FilterTargets(std::list<WorldObject*>& targetsList)
         {
-            if (targetsList.empty())
-                return;
-
-            Unit* caster = GetCaster();
-            if (!caster)
-                return;
-
-            targetsList.remove_if([caster](WorldObject* obj)
+            targetsList.remove_if([](WorldObject* obj)
             {
                 if (Unit* target = obj->ToUnit())
                     return !target->HasAura(SPELL_MARK_OF_FROST);
@@ -488,8 +415,8 @@ public:
 
         void OnUnitEnter(Unit* unit) override
         {
+            SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(SPELL_POOL_OF_FROST);
             Unit* caster = at->GetCaster();
-            SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(SPELL_POOL_OF_FROST, caster->GetMap()->GetDifficultyID());
             if (!caster || !unit || !spellInfo)
                 return;
 
@@ -530,14 +457,7 @@ public:
 
         void FilterTargets(std::list<WorldObject*>& targetsList)
         {
-            if (targetsList.empty())
-                return;
-
-            Unit* caster = GetCaster();
-            if (!caster)
-                return;
-
-            targetsList.remove_if([caster](WorldObject* obj)
+            targetsList.remove_if([](WorldObject* obj)
             {
                 if (Creature* target = obj->ToCreature())
                     return target->GetEntry() != 107694;
@@ -548,12 +468,8 @@ public:
 
         void Animate(SpellEffIndex /*effIndex*/)
         {
-            Unit* caster = GetCaster();
-            Unit* target = GetHitUnit();
-            if (!caster || !target)
-                return;
-
-            caster->CastSpell(target, SPELL_ANIMATE_SUMMON, true);
+            if (Unit * target = GetHitUnit())
+                GetCaster()->CastSpell(target, SPELL_ANIMATE_SUMMON, true);
         }
 
         void Register() override
@@ -572,7 +488,6 @@ public:
 void AddSC_boss_aluriel()
 {
     new boss_aluriel();
-    new spell_gen_aluriel_annihilate();
     new spell_gen_mark_of_frost();
     new spell_gen_target_mark_of_forst();
     new spell_gen_aluriel_detonate();

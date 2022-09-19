@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
+* Copyright (C) 2021 BfaCore Reforged
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -164,7 +164,7 @@ public:
                 }
                 case EVENT_BREAKSAM:
                 {
-                    me->CastSpell(SelectTarget(SELECT_TARGET_MAXTHREAT), SPELL_BREAKSAM_CAST, false);
+                    me->CastSpell(SelectTarget(SELECT_TARGET_TOPAGGRO), SPELL_BREAKSAM_CAST, false);
 
                     if (getsamCount >= 4)
                     {
@@ -177,7 +177,7 @@ public:
                 }
                 case EVENT_YAKSAM:
                 {
-                    me->CastSpell(SelectTarget(SELECT_TARGET_MAXTHREAT), SPELL_YAKSAM_CAST, false);
+                    me->CastSpell(SelectTarget(SELECT_TARGET_TOPAGGRO), SPELL_YAKSAM_CAST, false);
                     events.ScheduleEvent(EVENT_JETSAM, 5000);
                     events.ScheduleEvent(EVENT_YAKSAM_SUMMON, 200);
                     break;
@@ -446,5 +446,5 @@ void AddSC_boss_flotsam()
     new spell_flotsam_getsam_target();
     new spell_flotsam_jetsam_target();
     new spell_flotsam_oozing_bile_aura();
-    //new spell_flotsam_yaksam_target();
+    new spell_flotsam_yaksam_target();
 }

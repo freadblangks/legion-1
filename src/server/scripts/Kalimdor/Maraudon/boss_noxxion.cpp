@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -83,8 +82,8 @@ public:
             if (Invisible && InvisibleTimer <= diff)
             {
                 //Become visible again
-                me->setFaction(14);
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFaction(14);
+                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                 //Noxxion model
                 me->SetDisplayId(11172);
                 Invisible = false;
@@ -123,8 +122,8 @@ public:
                 //Interrupt any spell casting
                 //me->m_canMove = true;
                 me->InterruptNonMeleeSpells(false);
-                me->setFaction(35);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFaction(35);
+                me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                 // Invisible Model
                 me->SetDisplayId(11686);
                 SummonAdds(me->GetVictim());

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -160,7 +159,7 @@ public:
     // The array MUST be terminated by {0, 0, 0}
     DialogueHelper(DialogueEntry const* dialogueArray) :
       _dialogueArray(dialogueArray),
-          _currentEntry(NULL),
+          _currentEntry(nullptr),
           _actionTimer(0)
       { }
       // The array MUST be terminated by {0, 0, 0, 0, 0}
@@ -204,7 +203,7 @@ protected:
     /// Will be called when a dialogue step was done
     virtual void JustDidDialogueStep(int32 /*entry*/) { }
     /// Will be called to get a speaker, MUST be implemented if not used in instances
-    virtual Creature* GetSpeakerByEntry(int32 /*entry*/) { return NULL; }
+    virtual Creature* GetSpeakerByEntry(int32 /*entry*/) { return nullptr; }
 
 private:
     void DoNextDialogueStep()
@@ -300,7 +299,7 @@ public:
         if (quest->GetQuestId() == QUEST_GUARDIANS_ALTAR)
         {
             creature->AI()->Talk(SAY_QUEST_START);
-            creature->setFaction(FACTION_ESCORT_A_NEUTRAL_PASSIVE);
+            creature->SetFaction(FACTION_ESCORT_A_NEUTRAL_PASSIVE);
 
             if (npc_ranshallaAI* escortAI = dynamic_cast<npc_ranshallaAI*>(creature->AI()))
                 escortAI->Start(false, false, player->GetGUID(), quest);
@@ -362,13 +361,13 @@ public:
             {
                 if (GameObject* go = GetClosestGameObjectWithEntry(me, GO_ELUNE_ALTAR, 10.0f))
                 {
-                    go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                    go->RemoveFlag(GO_FLAG_NOT_SELECTABLE);
                     me->SetFacingToObject(go);
                     _altarGUID = go->GetGUID();
                 }
             }
             else if (GameObject* go = GetClosestGameObjectWithEntry(me, GO_ELUNE_FIRE, 10.0f))
-                go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                go->RemoveFlag(GO_FLAG_NOT_SELECTABLE);
 
             // Yell and set escort to pause
             Talk(SAY_REACH_TORCH);
@@ -566,7 +565,7 @@ public:
                 case NPC_PRIESTESS_DATA_2:
                     return ObjectAccessor::GetCreature(*me, _secondPriestessGUID);
                 default:
-                    return NULL;
+                    return nullptr;
             }
 
         }
@@ -617,7 +616,7 @@ public:
             if (npc_ranshalla::npc_ranshallaAI* escortAI = dynamic_cast<npc_ranshalla::npc_ranshallaAI*>(ranshalla->AI()))
                 escortAI->DoContinueEscort(isAltar);
         }
-        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+        go->AddFlag(GO_FLAG_NOT_SELECTABLE);
 
         return false;
     }

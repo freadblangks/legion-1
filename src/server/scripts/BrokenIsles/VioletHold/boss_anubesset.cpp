@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -193,7 +193,7 @@ class npc_vha_spitting_scarab : public CreatureScript
             _anubesset = nullptr;
             _poisonTimer = 0;
 
-            if (SpellInfo const * spell = sSpellMgr->GetSpellInfo(SPELL_BURROW, me->GetMap()->GetDifficultyID()))
+            if (SpellInfo const * spell = sSpellMgr->GetSpellInfo(SPELL_BURROW))
             {
                 Position burrow_pos = me->GetRandomNearPosition(spell->GetEffect(EFFECT_0)->RadiusEntry->Radius);
                 me->CastSpell(burrow_pos.GetPositionX(), burrow_pos.GetPositionY(), burrow_pos.GetPositionZ(), SPELL_BURROW, true);
@@ -454,53 +454,6 @@ class spell_anubesset_call_of_swarm : public SpellScriptLoader
         }
 };
 
-class spell_anubesset_summon_blistering_ooze : public SpellScriptLoader
-{
-    public:
-        spell_anubesset_summon_blistering_ooze() : SpellScriptLoader("spell_anubesset_summon_blistering_ooze")
-        {}
-
-
-        class spell_anubesset_summon_blistering_ooze_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_anubesset_summon_blistering_ooze_SpellScript);
-
-                void HandleDummy(SpellEffIndex /**/)
-                {
-                    if (!GetCaster() || !GetHitUnit())
-                        return;
-
-                    GetCaster()->CastSpell(GetHitUnit(), SPELL_SUMMON_BETTLE, true);
-                }
-
-                void FilterTargets(std::list<WorldObject*>& targets)
-                {
-                    if (targets.empty())
-                        return;
-
-                    targets.remove_if([] (WorldObject*& target)
-                    {
-                        if (target && target->ToPlayer())
-                            return false;
-
-                        return true;
-                    });
-                }
-
-                void Register()
-                {
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_anubesset_summon_blistering_ooze_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_DEST_AREA_ENEMY);
-                    OnEffectHitTarget += SpellEffectFn(spell_anubesset_summon_blistering_ooze_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
-                }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_anubesset_summon_blistering_ooze_SpellScript();
-        }
-};
-
 class at_blistering_ooze : public AreaTriggerEntityScript
 {
     public:
@@ -536,6 +489,5 @@ void AddSC_boss_anubesset()
     new npc_vha_impale_dummy();
     new spell_anubesset_impale();
     new spell_anubesset_call_of_swarm();
-    new spell_anubesset_summon_blistering_ooze();
     new at_blistering_ooze();
 }

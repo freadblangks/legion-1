@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -53,7 +53,7 @@ class instance_stonecore : public InstanceMapScript
 
         struct instance_stonecore_InstanceScript : public InstanceScript
         {
-            instance_stonecore_InstanceScript(Map* map) : InstanceScript(map)
+            instance_stonecore_InstanceScript(InstanceMap* map) : InstanceScript(map)
             {
                 SetHeaders(DataHeader);
                 SetBossNumber(MAX_ENCOUNTER);
@@ -213,7 +213,7 @@ class instance_stonecore : public InstanceMapScript
                     return;
 
                 teleporter->CastSpell(teleporter, SPELL_TELEPORTER_ACTIVE_VISUAL, true);
-                teleporter->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                teleporter->AddNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
             }
 
             GuidVector millhouseTrashGUIDs;

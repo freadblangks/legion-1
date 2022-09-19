@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -226,7 +226,7 @@ class npc_iron_roots : public CreatureScript
                 SetCombatMovement(false);
 
                 me->ApplySpellImmune(0, IMMUNITY_ID, 49560, true); // Death Grip
-                me->setFaction(14);
+                me->SetFaction(14);
                 me->SetReactState(REACT_PASSIVE);
             }
 
@@ -248,7 +248,7 @@ class npc_iron_roots : public CreatureScript
                     target->RemoveAurasDueToSpell(SPELL_ROOTS_FREYA);
                 }
 
-                me->RemoveCorpse(false);
+                me->DespawnOrUnsummon();
             }
 
         private:
@@ -603,14 +603,14 @@ class boss_freya : public CreatureScript
                     /* 25N */    {62955, 62956, 62957, 62958}
                 };
 
-                me->CastSpell((Unit*)NULL, summonSpell[me->GetMap()->GetDifficultyID() - DIFFICULTY_10_N][elderCount], true);
+                me->CastSpell(nullptr, summonSpell[me->GetMap()->GetDifficultyID() - DIFFICULTY_10_N][elderCount], true);
 
                 Talk(SAY_DEATH);
                 me->SetReactState(REACT_PASSIVE);
                 _JustDied();
                 me->RemoveAllAuras();
                 me->AttackStop();
-                me->setFaction(35);
+                me->SetFaction(35);
                 me->DeleteThreatList();
                 me->CombatStop(true);
                 me->DespawnOrUnsummon(7500);
@@ -833,7 +833,7 @@ class boss_elder_stonebark : public CreatureScript
                 if (me->HasAura(SPELL_PETRIFIED_BARK))
                 {
                     int32 reflect = damage;
-                    who->CastCustomSpell(who, SPELL_PETRIFIED_BARK_DMG, &reflect, NULL, NULL, true);
+                    who->CastCustomSpell(who, SPELL_PETRIFIED_BARK_DMG, &reflect, nullptr, nullptr, true);
                     damage = 0;
                 }
             }
@@ -1061,8 +1061,8 @@ class npc_ancient_water_spirit : public CreatureScript
             {
                 Initialize();
                 instance = me->GetInstanceScript();
-                if (Creature* Freya = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_FREYA)))
-                    waveCount = ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->trioWaveCount;
+                if (Creature* freya = instance->GetCreature(BOSS_FREYA))
+                    waveCount = ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->trioWaveCount;
                 else
                     waveCount = 0;
             }
@@ -1099,10 +1099,10 @@ class npc_ancient_water_spirit : public CreatureScript
 
             void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* Freya = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_FREYA)))
+                if (Creature* freya = instance->GetCreature(BOSS_FREYA))
                 {
-                    ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->checkElementalAlive[waveCount] = false;
-                    ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->LasherDead(1);
+                    ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->checkElementalAlive[waveCount] = false;
+                    ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->LasherDead(1);
                 }
             }
 
@@ -1129,8 +1129,8 @@ class npc_storm_lasher : public CreatureScript
             {
                 Initialize();
                 instance = me->GetInstanceScript();
-                if (Creature* Freya = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_FREYA)))
-                    waveCount = ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->trioWaveCount;
+                if (Creature* freya = instance->GetCreature(BOSS_FREYA))
+                    waveCount = ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->trioWaveCount;
                 else
                     waveCount = 0;
             }
@@ -1173,10 +1173,10 @@ class npc_storm_lasher : public CreatureScript
 
             void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* Freya = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_FREYA)))
+                if (Creature* freya = instance->GetCreature(BOSS_FREYA))
                 {
-                    ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->checkElementalAlive[waveCount] = false;
-                    ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->LasherDead(2);
+                    ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->checkElementalAlive[waveCount] = false;
+                    ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->LasherDead(2);
                 }
             }
 
@@ -1203,8 +1203,8 @@ class npc_snaplasher : public CreatureScript
             npc_snaplasherAI(Creature* creature) : ScriptedAI(creature)
             {
                 instance = me->GetInstanceScript();
-                if (Creature* Freya = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_FREYA)))
-                    waveCount = ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->trioWaveCount;
+                if (Creature* freya = instance->GetCreature(BOSS_FREYA))
+                    waveCount = ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->trioWaveCount;
                 else
                     waveCount = 0;
             }
@@ -1222,10 +1222,10 @@ class npc_snaplasher : public CreatureScript
 
             void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* Freya = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_FREYA)))
+                if (Creature* freya = instance->GetCreature(BOSS_FREYA))
                 {
-                    ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->checkElementalAlive[waveCount] = false;
-                    ENSURE_AI(boss_freya::boss_freyaAI, Freya->AI())->LasherDead(4);
+                    ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->checkElementalAlive[waveCount] = false;
+                    ENSURE_AI(boss_freya::boss_freyaAI, freya->AI())->LasherDead(4);
                 }
             }
 
@@ -1349,7 +1349,7 @@ class npc_healthy_spore : public CreatureScript
             npc_healthy_sporeAI(Creature* creature) : ScriptedAI(creature)
             {
                 SetCombatMovement(false);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC);
+                me->AddUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC));
                 me->SetReactState(REACT_PASSIVE);
                 DoCast(me, SPELL_HEALTHY_SPORE_VISUAL);
                 DoCast(me, SPELL_POTENT_PHEROMONES);

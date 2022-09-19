@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -144,7 +144,7 @@ struct boss_oakheart : public BossAI
                 }
                 case EVENT_CRUSHING_GRIP:
                 {
-                    if (Unit* target = SelectTarget(SELECT_TARGET_MAXTHREAT))
+                    if (Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO))
                         me->CastSpell(target, SPELL_CRUSHING_GRIP_CAST, false);
                     events.Repeat(29000, 32000);
                     break;
@@ -158,7 +158,7 @@ struct boss_oakheart : public BossAI
                 }
                 case EVENT_NIGHTMARE_BREATH:
                 {
-                    if (Unit* target = SelectTarget(SELECT_TARGET_MAXTHREAT))
+                    if (Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO))
                     {
                         me->CastSpell(target, SPELL_NIGHTMARE_BREATH_DAMAGE, false);
                         Talk(SAY_BREATH);
@@ -207,7 +207,7 @@ class spell_oakheart_strangling_roots_summon : public SpellScript
 
     void HandleSummon(Creature* creature)
     {
-        creature->SetFaction(GetCaster()->GetFaction());
+        creature->SetFaction(GetCaster()->getFaction());
         //creature->CastSpell(creature, SPELL_STRANGLING_ROOTS_AT, false);
     }
 

@@ -1,25 +1,27 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+* Copyright (C) 2021 BfaCore Reforged
+*
+* This program is free software; you can redistribute it and/or modify it
+* under the terms of the GNU General Public License as published by the
+* Free Software Foundation; either version 2 of the License, or (at your
+* option) any later version.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+* more details.
+*
+* You should have received a copy of the GNU General Public License along
+
+* with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "AreaTriggerAI.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "neltharions_lair.h"
 #include "CreatureTextMgr.h"
+#include "EnumFlag.h"
 #include "ObjectAccessor.h"
 #include "GameObject.h"
 #include "PhasingHandler.h"
@@ -77,7 +79,7 @@ public:
         EVENT_PLAYER_DEVOURING               = 6,
         EVENT_TO_1_PHASE                     = 7
     };
-
+    
     enum eSpells
     {
         SPELL_DEVOURING                      = 199705,
@@ -91,7 +93,7 @@ public:
 
     struct boss_naraxas_AI : public BossAI
     {
-        boss_naraxas_AI(Creature* creature) : BossAI(creature, DATA_NARAXAS)
+        boss_naraxas_AI(Creature* creature) : BossAI(creature, DATA_NARAXAS) 
         {
             me->SetReactState(REACT_DEFENSIVE);
             me->AddUnitState(UNIT_STATE_ROOT);
@@ -122,12 +124,12 @@ public:
                 instance->SetData(DATA_NARAXAS, NOT_STARTED);
         }
 
-        void EnterCombat(Unit* who) override
+        void EnterCombat(Unit* /*who*/) override
         {
             me->SetInCombatWithZone();
             me->SetPower(POWER_MANA, 0);
             me->RemoveAllAuras();
-
+            
             events.ScheduleEvent(EVENT_MANAREGEN_TICK, 1s);
             events.ScheduleEvent(EVENT_SUMMON_WORMSPEACKER_DEVOUT, 5s);
             events.ScheduleEvent(EVENT_RANCID_MAW, 4s);
@@ -277,7 +279,7 @@ public:
 
             DoMeleeAttackIfReady();
         }
-    };
+    }; 
 };
 
 // 101075
@@ -298,7 +300,7 @@ public:
         InstanceScript* instance;
         bool phraseSayd = false;
 
-        mob_wormspeaker_devout_AI(Creature* creature) : ScriptedAI(creature)
+        mob_wormspeaker_devout_AI(Creature* creature) : ScriptedAI(creature) 
         {
             me->SetReactState(REACT_PASSIVE);
             instance = me->GetInstanceScript();
@@ -328,8 +330,8 @@ public:
 
     struct mob_angry_crowd_AI : public ScriptedAI
     {
-
-        mob_angry_crowd_AI(Creature* creature) : ScriptedAI(creature)
+        
+        mob_angry_crowd_AI(Creature* creature) : ScriptedAI(creature) 
         {
             me->SetReactState(REACT_PASSIVE);
         }
@@ -349,8 +351,8 @@ public:
 
     struct mob_emberhusk_dominator_AI : public ScriptedAI
     {
-
-        mob_emberhusk_dominator_AI(Creature* creature) : ScriptedAI(creature)
+        
+        mob_emberhusk_dominator_AI(Creature* creature) : ScriptedAI(creature) 
         {
             me->SetReactState(REACT_AGGRESSIVE);
         }
@@ -470,37 +472,6 @@ public:
     }
 };
 
-// -199705, -205418
-class spell_naraxas_devourging_aura : public SpellScriptLoader
-{
-    public:
-        spell_naraxas_devourging_aura() : SpellScriptLoader("spell_naraxas_devourging_aura") { }
-
-        class spell_naraxas_devourging_aura_AuraScript : public AuraScript
-        {
-            PrepareAuraScript(spell_naraxas_devourging_aura_AuraScript);
-
-            void HandleRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-            {
-                if (Unit* target = GetTarget())
-                {
-                    if (target->ToCreature())
-                        target->ToCreature()->DespawnOrUnsummon();
-                }
-            }
-
-            void Register() override
-            {
-                AfterEffectRemove += AuraEffectRemoveFn(spell_naraxas_devourging_aura_AuraScript::HandleRemove, EFFECT_0, SPELL_AURA_PERIODIC_DAMAGE, AURA_EFFECT_HANDLE_REAL);
-            }
-        };
-
-        AuraScript* GetAuraScript() const override
-        {
-            return new spell_naraxas_devourging_aura_AuraScript();
-        }
-};
-
 void AddSC_boss_naraxas()
 {
     new boss_naraxas();
@@ -508,7 +479,6 @@ void AddSC_boss_naraxas()
     new spell_naraxas_rancid_maw();
     new spell_naraxas_toxic_retch();
     new spell_naraxas_spiked_tongue();
-    new spell_naraxas_devourging_aura();
     new at_toxic_retch();
     new at_rancid_maw();
     new mob_angry_crowd();

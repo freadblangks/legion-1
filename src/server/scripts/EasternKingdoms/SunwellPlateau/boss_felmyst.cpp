@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -147,8 +147,8 @@ public:
             events.Reset();
 
             me->SetDisableGravity(true);
-            me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
-            me->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
+            me->SetBoundingRadius(10);
+            me->SetCombatReach(10);
 
             DespawnSummons(NPC_VAPOR_TRAIL);
             me->setActive(false);
@@ -217,7 +217,7 @@ public:
                     summon->CastSpell(summon, SPELL_FOG_CHARM, true);
                     summon->CastSpell(summon, SPELL_FOG_CHARM2, true);
                 }
-                me->DealDamage(caster, caster->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                me->DealDamage(caster, caster->GetHealth(), nullptr, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, nullptr, false);
             }
         }
 
@@ -362,7 +362,7 @@ public:
                 }
                 case 6:
                     me->SetFacingTo(me->GetAngle(breathX, breathY));
-                    //DoTextEmote("takes a deep breath.", NULL);
+                    //DoTextEmote("takes a deep breath.", nullptr);
                     events.ScheduleEvent(EVENT_FLIGHT_SEQUENCE, 10000);
                     break;
                 case 7:
@@ -499,9 +499,7 @@ public:
                     me->SummonCreature(NPC_DEAD, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
                 }
                 (*i)->SetVisible(false);
-                (*i)->setDeathState(JUST_DIED);
-                if ((*i)->getDeathState() == CORPSE)
-                    (*i)->RemoveCorpse();
+                (*i)->DespawnOrUnsummon();
             }
         }
     };
@@ -526,7 +524,7 @@ public:
     {
         npc_felmyst_vaporAI(Creature* creature) : ScriptedAI(creature)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
             me->SetSpeedRate(MOVE_RUN, 0.8f);
         }
 
@@ -560,10 +558,10 @@ public:
     {
         npc_felmyst_trailAI(Creature* creature) : ScriptedAI(creature)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
             DoCast(me, SPELL_TRAIL_TRIGGER, true);
             me->SetTarget(me->GetGUID());
-            me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01f); // core bug
+            me->SetBoundingRadius(0.01f); // core bug
         }
 
         void Reset() override { }

@@ -1,5 +1,5 @@
 /*
-* Copyright 2021 KyrianCore
+* Copyright (C) 2021 BfaCore Reforged
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -85,7 +85,7 @@ public:
                 return;
 
             std::list<Unit*> list;
-         //   me->GetAttackableUnitListInRange(list, 70.0f);
+            me->GetAttackableUnitListInRange(list, 70.0f);
             for (auto enemy : list)
             {
                 if (enemy->ToPlayer())
@@ -95,7 +95,7 @@ public:
             }
         }
 
-        void JustEngagedWith(Unit* who) override
+        void EnterCombat(Unit* who) override
         {
             if (me->GetEntry() == 92782)
                 events.RescheduleEvent(1, 15000);
@@ -192,7 +192,7 @@ public:
                 return;
 
             std::list<Unit*> list;
-         //   me->GetAttackableUnitListInRange(list, 70.0f);
+            me->GetAttackableUnitListInRange(list, 70.0f);
             for (auto enemy : list)
             {
                 if (enemy->ToPlayer())
@@ -202,7 +202,7 @@ public:
             }
         }
 
-        void JustEngagedWith(Unit* who) override
+        void EnterCombat(Unit* who) override
         {
             if (me->GetEntry() == 92990)
                 events.RescheduleEvent(1, 20000);
@@ -291,9 +291,9 @@ public:
         return new npc_99443AI(creature);
     }
 
-    struct npc_99443AI : public EscortAI
+    struct npc_99443AI : public npc_escortAI
     {
-        npc_99443AI(Creature* creature) : EscortAI(creature)
+        npc_99443AI(Creature* creature) : npc_escortAI(creature)
         {
             me->SetCanFly(true);
             me->SetSpeed(MOVE_FLIGHT, 26);
@@ -358,7 +358,7 @@ public:
             me->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
         }
 
-        void JustEngagedWith(Unit* /*who*/) override
+        void EnterCombat(Unit* /*who*/) override
         {
             return;
         }
@@ -513,9 +513,9 @@ public:
         return new npc_q38672AI(creature);
     }
 
-    struct npc_q38672AI : public ScriptedAI
+    struct npc_q38672AI : public Scripted_NoMovementAI
     {
-        npc_q38672AI(Creature* creature) : ScriptedAI(creature) {}
+        npc_q38672AI(Creature* creature) : Scripted_NoMovementAI(creature) {}
 
         void OnSpellClick(Unit* Clicker, bool& /*result*/) override
         {
@@ -564,7 +564,7 @@ public:
         if (quest->GetQuestId() == 38672)
         {
             /* vaultdoors "animation" */
-            if (GameObject* vaultdoors = player->SummonGameObject(399999, 4325.98f, -578.061f, -281.808f, 1.62673f, QuaternionData(-0.0f, -0.0f, -0.726604f, -0.687056f), 0))
+            if (GameObject* vaultdoors = player->SummonGameObject(399999, 4325.98f, -578.061f, -281.808f, 1.62673f, QuaternionData(-0.0f, -0.0f, -0.726604f, -0.687056f), 0, true))
             {
                 vaultdoors->GetScheduler()
                     .Schedule(0s, [](TaskContext context)
@@ -668,13 +668,13 @@ public:
         {
             std::list<Player*> list;
             list.clear();
-          //  go->GetPlayerListInGrid(list, 50.0f);
+            go->GetPlayerListInGrid(list, 50.0f);
             if (!list.empty())
             {
                 for (std::list<Player*>::const_iterator itr = list.begin(); itr != list.end(); ++itr)
                 {
-                  //  if ((*itr)->IsQuestRewarded(38672))
-                      //  go->DestroyForPlayer(*itr);
+                    if ((*itr)->IsQuestRewarded(38672))
+                        go->DestroyForPlayer(*itr);
                 }
             }
         }
@@ -715,13 +715,13 @@ public:
         {
             std::list<Player*> list;
             list.clear();
-         //   go->GetPlayerListInGrid(list, 50.0f);
+            go->GetPlayerListInGrid(list, 50.0f);
             if (!list.empty())
             {
                 for (std::list<Player*>::const_iterator itr = list.begin(); itr != list.end(); ++itr)
                 {
-                 //   if ((*itr)->IsActiveQuest(38723) || (*itr)->IsQuestRewarded(38723))
-                    //    go->DestroyForPlayer(*itr);
+                    if ((*itr)->IsActiveQuest(38723) || (*itr)->IsQuestRewarded(38723))
+                        go->DestroyForPlayer(*itr);
                 }
             }
         }
@@ -833,12 +833,12 @@ public:
         {
             // adjust starting health
             me->SetHealth(me->CountPctFromMaxHealth(21));
-          //  me->setRegeneratingHealth(false);
+            me->setRegeneratingHealth(false);
 
             events.Reset();
         }
 
-        void JustEngagedWith(Unit* victim) override
+        void EnterCombat(Unit* victim) override
         {
             //Talk(0);
             events.RescheduleEvent(1, 15000);
@@ -895,8 +895,6 @@ public:
 
             DoMeleeAttackIfReady();
         }
-    private:
-        EventMap events;
     };
 };
 
@@ -943,7 +941,7 @@ public:
             events.Reset();
         }
 
-        void JustEngagedWith(Unit* victim) override
+        void EnterCombat(Unit* victim) override
         {
             //Talk(0);
             events.RescheduleEvent(1, 45000);
@@ -1013,8 +1011,6 @@ public:
 
             DoMeleeAttackIfReady();
         }
-        private:
-            EventMap events;
     };
 };
 

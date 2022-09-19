@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -482,7 +482,7 @@ class spell_betrug_seed_of_destruction : public SpellScriptLoader
                     Unit* caster = GetCaster();
                     Unit* owner = GetUnitOwner();
                     Position pos = owner->GetPosition();
-                    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(SPELL_WAKE_OF_DESTRUCTION, caster->GetMap()->GetDifficultyID());
+                    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(SPELL_WAKE_OF_DESTRUCTION);
 
                     for (uint8 i = 0; i < 4; ++i)
                     {

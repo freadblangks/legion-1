@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -15,10 +15,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
- /*
-scenario_artifact_ursocslair
-lyosky
-*/
 #include "Log.h"
 #include "Scenario.h"
 #include "GameObject.h"
@@ -80,7 +76,7 @@ enum DataTypes
     TEST_EVENT = 9999,
 };
 
-struct CustomSpawnData
+struct SpawnData
 {
     uint32 event, npcId;
     float X;
@@ -89,7 +85,7 @@ struct CustomSpawnData
     float orientation;
 };
 
-CustomSpawnData const spawnData[] =
+SpawnData const spawnData[] =
 {
     { EVENT_STEP_1, NPC_ROTHOOF_SHADOWSTALKER_101388, -12224.7998f, -13092.7f,      326.7f,     5.703f },
     { EVENT_STEP_1, NPC_ROTHOOF_SHADOWSTALKER_101388, -12214.0f,    -13129.0f,      326.56f,    0.872626f },
@@ -189,7 +185,7 @@ struct scenario_artifact_ursocslair : public InstanceScript
         }
     }
 
-    void LoadNPC(uint32 event, const CustomSpawnData* data)
+    void LoadNPC(uint32 event, const SpawnData* data)
     {
         while (data->event)
         {
@@ -616,7 +612,7 @@ struct npc_lea_stonepaw_105243 : public ScriptedAI
             isSayHi = true;
             me->Say(104079);
             me->SetOwnerGUID(player->GetGUID());
-            me->SetFaction(player->GetFaction());
+            me->SetFaction(player->getFaction());
             //PhasingHandler::InheritPhaseShift(tempSumm, caster);
             //me->GetMotionMaster()->MoveFollow(player, PET_FOLLOW_DIST, me->GetFollowAngle());
         }

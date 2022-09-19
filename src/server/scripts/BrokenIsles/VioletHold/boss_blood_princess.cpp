@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -373,52 +373,6 @@ class spell_thalena_blood_swarn : public SpellScriptLoader
         }
 };
 
-class spell_thalena_shroud_of_sorrow_dmg : public SpellScriptLoader
-{
-    public:
-        spell_thalena_shroud_of_sorrow_dmg() : SpellScriptLoader("spell_thalena_shroud_of_sorrow_dmg")
-        {}
-
-        class spell_shroud_of_sorrow_dmg_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_shroud_of_sorrow_dmg_SpellScript);
-
-                void FilterTargets(SpellTargets & targets)
-                {
-                    if (targets.empty())
-                        return;
-
-                    targets.remove_if([] (WorldObject* target)
-                    {
-                        if (target->ToUnit()->HasAura(SPELL_ESSENCE_OF_BLOOD_PRINCESS))
-                            return true;
-
-                        return false;
-                    });
-                }
-
-                void HandleDummy(SpellEffIndex /**/)
-                {
-                    if (!GetCaster() || !GetHitUnit())
-                        return;
-
-                    GetCaster()->CastSpell(GetHitUnit(), SPELL_SHROUD_OF_SORROW_DMG, true);
-                }
-
-                void Register() override
-                {
-                    OnEffectHitTarget += SpellEffectFn(spell_shroud_of_sorrow_dmg_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_shroud_of_sorrow_dmg_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
-                }
-        };
-
-        SpellScript* GetSpellScript() const override
-        {
-            return new spell_shroud_of_sorrow_dmg_SpellScript();
-        }
-};
-
 class spell_thalena_frenzied_bloodthirst : public SpellScriptLoader
 {
     public:
@@ -499,7 +453,6 @@ void AddSC_boss_blood_princess_thalena()
 {
     new boss_blood_princess_thalena();
     new npc_vha_congealing_blood();
-    new spell_thalena_shroud_of_sorrow_dmg();
     new spell_thalena_blood_swarn();
     new spell_thalena_frenzied_bloodthirst();
     new spell_thalena_vampiric_kiss();

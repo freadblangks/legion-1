@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,11 +23,11 @@
 DoorData const doorData[] =
 {
     { GO_WALL_OF_SOULS,     DATA_HARBARON, DOOR_TYPE_ROOM },
-    { GO_WALL_OF_SOULS_2,   DATA_HARBARON, DOOR_TYPE_ROOM },
-    { GO_WALL_OF_SOULS_3,   DATA_HARBARON, DOOR_TYPE_ROOM },
-    { GO_MURKY_FOG,         DATA_HARBARON, DOOR_TYPE_ROOM },
-    { GO_COLLISION_WALL,    DATA_HARBARON, DOOR_TYPE_ROOM },
-    { 0, 0, DOOR_TYPE_ROOM}
+{ GO_WALL_OF_SOULS_2,   DATA_HARBARON, DOOR_TYPE_ROOM },
+{ GO_WALL_OF_SOULS_3,   DATA_HARBARON, DOOR_TYPE_ROOM },
+{ GO_MURKY_FOG,         DATA_HARBARON, DOOR_TYPE_ROOM },
+{ GO_COLLISION_WALL,    DATA_HARBARON, DOOR_TYPE_ROOM },
+{ 0, 0, DOOR_TYPE_ROOM }
 };
 
 
@@ -52,15 +52,15 @@ public:
 
             switch (go->GetEntry())
             {
-                case GO_WALL_OF_SOULS:
-                case GO_WALL_OF_SOULS_2:
-                case GO_WALL_OF_SOULS_3:
-                case GO_MURKY_FOG:
-                case GO_COLLISION_WALL:
-                    AddDoor(go, true);
-                    break;
+            case GO_WALL_OF_SOULS:
+            case GO_WALL_OF_SOULS_2:
+            case GO_WALL_OF_SOULS_3:
+            case GO_MURKY_FOG:
+            case GO_COLLISION_WALL:
+                AddDoor(go, true);
+                break;
 
-                default : break;
+            default: break;
             }
         }
 
@@ -71,15 +71,15 @@ public:
 
             switch (go->GetEntry())
             {
-                case GO_WALL_OF_SOULS:
-                case GO_WALL_OF_SOULS_2:
-                case GO_WALL_OF_SOULS_3:
-                case GO_MURKY_FOG:
-                case GO_COLLISION_WALL:
-                    AddDoor(go, false);
-                    break;
+            case GO_WALL_OF_SOULS:
+            case GO_WALL_OF_SOULS_2:
+            case GO_WALL_OF_SOULS_3:
+            case GO_MURKY_FOG:
+            case GO_COLLISION_WALL:
+                AddDoor(go, false);
+                break;
 
-                default : break;
+            default: break;
             }
         }
     };
@@ -94,3 +94,4 @@ void AddSC_instance_maw_of_souls()
 {
     new instance_maw_of_souls();
 }
+

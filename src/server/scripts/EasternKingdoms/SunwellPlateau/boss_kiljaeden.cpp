@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -263,7 +263,7 @@ public:
         {
             Initialize();
             me->SetDisableGravity(true);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
             me->setActive(true);
 
             for (uint8 i = 0; i < 4; ++i)
@@ -285,7 +285,7 @@ public:
                     return ObjectAccessor::GetGameObject(*me, instance->GetGuidData(DATA_ORB_OF_THE_BLUE_DRAGONFLIGHT_4));
             }
 
-            return NULL;
+            return nullptr;
         }
 
         void ResetOrbs()
@@ -293,7 +293,7 @@ public:
             me->RemoveDynObject(SPELL_RING_OF_BLUE_FLAMES);
             for (uint8 i = 0; i < 4; ++i)
                 if (GameObject* pOrb = GetOrb(i))
-                    pOrb->SetUInt32Value(GAMEOBJECT_FACTION, 0);
+                    pOrb->SetFaction(0);
         }
 
         void EmpowerOrb(bool all)
@@ -310,7 +310,7 @@ public:
                     if (GameObject* pOrb = GetOrb(i))
                     {
                         pOrb->CastSpell(me, SPELL_RING_OF_BLUE_FLAMES);
-                        pOrb->SetUInt32Value(GAMEOBJECT_FACTION, 35);
+                        pOrb->SetFaction(35);
                         pOrb->setActive(true);
                         pOrb->Refresh();
                     }
@@ -322,7 +322,7 @@ public:
                 if (GameObject* pOrb = GetOrb(urand(0, 3)))
                 {
                     pOrb->CastSpell(me, SPELL_RING_OF_BLUE_FLAMES);
-                    pOrb->SetUInt32Value(GAMEOBJECT_FACTION, 35);
+                    pOrb->SetFaction(35);
                     pOrb->setActive(true);
                     pOrb->Refresh();
 
@@ -351,7 +351,7 @@ public:
             {
                 if (GameObject* pOrb = GetOrb(i))
                 {
-                    if (pOrb->GetUInt32Value(GAMEOBJECT_FACTION) == 35)
+                    if (pOrb->GetFaction() == 35)
                     {
                         pOrb->CastSpell(me, SPELL_RING_OF_BLUE_FLAMES);
                         pOrb->setActive(true);
@@ -370,12 +370,12 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        if (go->GetUInt32Value(GAMEOBJECT_FACTION) == 35)
+        if (go->GetFaction() == 35)
         {
             InstanceScript* instance = go->GetInstanceScript();
             player->SummonCreature(NPC_POWER_OF_THE_BLUE_DRAGONFLIGHT, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 121000);
             player->CastSpell(player, SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT, false);
-            go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
+            go->SetFaction(0);
 
             if (Creature* pKalec = ObjectAccessor::GetCreature(*player, instance->GetGuidData(DATA_KALECGOS_KJ)))
                 ENSURE_AI(boss_kalecgos_kj::boss_kalecgos_kjAI, pKalec->AI())->SetRingOfBlueFlames();
@@ -428,8 +428,8 @@ public:
 
         void InitializeAI() override
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+            me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             me->AddUnitState(UNIT_STATE_STUNNED);
 
             ScriptedAI::InitializeAI();
@@ -454,7 +454,7 @@ public:
                 case NPC_ANVEENA:
                     summoned->SetDisableGravity(true);
                     summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
-                    summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    summoned->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     break;
                 case NPC_KILJAEDEN:
                     summoned->CastSpell(summoned, SPELL_REBIRTH, false);
@@ -576,7 +576,7 @@ public:
             if (Creature* pKalec = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_KALECGOS_KJ)))
                 pKalec->RemoveDynObject(SPELL_RING_OF_BLUE_FLAMES);
 
-            me->SetFloatValue(UNIT_FIELD_COMBATREACH, 12);
+            me->SetCombatReach(12);
             summons.DespawnAll();
         }
 
@@ -603,14 +603,14 @@ public:
         {
             if (summoned->GetEntry() == NPC_ARMAGEDDON_TARGET)
             {
-                summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                summoned->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                summoned->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
         //      summoned->SetVisibility(VISIBILITY_OFF);  //with this we cant see the armageddon visuals
             }
             else
                 summoned->SetLevel(me->getLevel());
 
-            summoned->setFaction(me->getFaction());
+            summoned->SetFaction(me->getFaction());
             summons.Summon(summoned);
         }
 
@@ -738,7 +738,7 @@ public:
                         case TIMER_LEGION_LIGHTNING:
                             if (!me->IsNonMeleeSpellCast(false))
                             {
-                                Unit* pRandomPlayer = NULL;
+                                Unit* pRandomPlayer = nullptr;
 
                                 me->RemoveAurasDueToSpell(SPELL_SOUL_FLAY);
                                 for (uint8 z = 0; z < 6; ++z)
@@ -833,7 +833,7 @@ public:
                             TimerIsDeactivated[TIMER_ORBS_EMPOWER] = true;
                             break;
                         case TIMER_ARMAGEDDON: //Phase 4
-                            Unit* target = NULL;
+                            Unit* target = nullptr;
                             for (uint8 z = 0; z < 6; ++z)
                             {
                                 target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true);
@@ -936,7 +936,7 @@ public:
 
         void JustSummoned(Creature* summoned) override
         {
-            summoned->setFaction(me->getFaction());
+            summoned->SetFaction(me->getFaction());
             summoned->SetLevel(me->getLevel());
         }
 
@@ -1031,12 +1031,12 @@ public:
         void Reset() override
         {
             Initialize();
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE|UNIT_FLAG_NON_ATTACKABLE);
+            me->AddUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE|UNIT_FLAG_NON_ATTACKABLE));
         }
 
         void JustSummoned(Creature* summoned) override
         {
-            summoned->setFaction(me->getFaction());
+            summoned->SetFaction(me->getFaction());
             summoned->SetLevel(me->getLevel());
         }
 
@@ -1174,8 +1174,7 @@ public:
                         uiTimer = 5000;
                         break;
                     case 3:
-                        me->KillSelf();
-                        me->RemoveCorpse();
+                        me->DespawnOrUnsummon();
                         break;
                 }
             } else uiTimer -=diff;

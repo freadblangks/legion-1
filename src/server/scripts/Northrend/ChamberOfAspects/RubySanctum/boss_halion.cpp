@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,6 +22,7 @@
 #include "InstanceScript.h"
 #include "Map.h"
 #include "ObjectAccessor.h"
+#include "PhasingHandler.h"
 #include "Player.h"
 #include "ruby_sanctum.h"
 #include "ScriptedCreature.h"
@@ -53,7 +54,7 @@ enum Texts
     EMOTE_CORPOREALITY_TIT             = 3, // Your companions' efforts force %s further into the twilight realm!
     EMOTE_CORPOREALITY_TOT             = 4, // Your efforts force %s further out of the twilight realm!
 
-    EMOTE_WARN_LASER                   = 0, // The orbiting spheres pulse with dark energy!
+    EMOTE_WARN_LASER                   = 0  // The orbiting spheres pulse with dark energy!
 };
 
 enum Spells
@@ -143,7 +144,8 @@ enum Events
     EVENT_SHADOW_PULSARS_SHOOT  = 14,
     EVENT_TRIGGER_BERSERK       = 15,
     EVENT_TWILIGHT_MENDING      = 16,
-    EVENT_ACTIVATE_EMBERS       = 17
+    EVENT_ACTIVATE_EMBERS       = 17,
+    EVENT_EVADE_CHECK           = 18
 };
 
 enum Actions
@@ -176,7 +178,7 @@ enum Misc
     DATA_MATERIAL_DAMAGE_TAKEN   = 2,
     DATA_STACKS_DISPELLED        = 3,
     DATA_FIGHT_PHASE             = 4,
-    DATA_SPAWNED_FLAMES          = 5,
+    DATA_SPAWNED_FLAMES          = 5
 };
 
 enum OrbCarrierSeats
@@ -206,7 +208,8 @@ struct CorporealityEntry
     uint32 materialRealmSpell;
 };
 
-CorporealityEntry const _corporealityReference[MAX_CORPOREALITY_STATE] = {
+CorporealityEntry const _corporealityReference[MAX_CORPOREALITY_STATE] =
+{
     {74836, 74831},
     {74835, 74830},
     {74834, 74829},
@@ -284,7 +287,7 @@ class boss_halion : public CreatureScript
                     Talk(SAY_PHASE_TWO);
 
                     me->CastStop();
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     DoCast(me, SPELL_TWILIGHT_PHASING);
 
                     if (Creature* controller = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_HALION_CONTROLLER)))
@@ -406,9 +409,9 @@ class boss_twilight_halion : public CreatureScript
                 DoCast(me, SPELL_DUSK_SHROUD, true);
 
                 me->SetHealth(halion->GetHealth());
-                me->SetInPhase(174, false, true);
+                PhasingHandler::AddPhase(me, 174, false);
                 me->SetReactState(REACT_DEFENSIVE);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
+                me->AddUnitFlag(UNIT_FLAG_IN_COMBAT);
                 events.ScheduleEvent(EVENT_TAIL_LASH, Seconds(12));
                 events.ScheduleEvent(EVENT_SOUL_CONSUMPTION, Seconds(15));
             }
@@ -566,7 +569,7 @@ class npc_halion_controller : public CreatureScript
 
             void JustRespawned() override
             {
-                if (!_instance->GetGuidData(DATA_HALION).IsEmpty())
+                if (!_instance->GetGuidData(DATA_HALION).IsEmpty() || _instance->GetBossState(DATA_GENERAL_ZARITHRIAN) != DONE)
                     return;
 
                 Reset();
@@ -601,6 +604,7 @@ class npc_halion_controller : public CreatureScript
                 _materialDamageTaken = 0;
 
                 _events.ScheduleEvent(EVENT_TRIGGER_BERSERK, Minutes(8));
+                _events.ScheduleEvent(EVENT_EVADE_CHECK, Seconds(5));
             }
 
             void EnterEvadeMode(EvadeReason /*why*/) override
@@ -665,7 +669,7 @@ class npc_halion_controller : public CreatureScript
                                 continue;
 
                             halion->RemoveAurasDueToSpell(SPELL_TWILIGHT_PHASING);
-                            halion->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                            halion->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                         }
 
                         // Summon Twilight portals
@@ -749,10 +753,25 @@ class npc_halion_controller : public CreatureScript
                         case EVENT_ACTIVATE_EMBERS:
                             _summons.DoZoneInCombat(NPC_LIVING_EMBER);
                             break;
+                        case EVENT_EVADE_CHECK:
+                            DoCheckEvade();
+                            _events.Repeat(Seconds(5));
+                            break;
                         default:
                             break;
                     }
                 }
+            }
+
+            void DoCheckEvade()
+            {
+                Map::PlayerList const &players = me->GetMap()->GetPlayers();
+                for (Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
+                    if (Player* player = i->GetSource())
+                        if (player->IsAlive() && CheckBoundary(player) && !player->IsGameMaster())
+                            return;
+
+                EnterEvadeMode(EVADE_REASON_NO_HOSTILES);
             }
 
             void SetData(uint32 id, uint32 value) override
@@ -897,15 +916,13 @@ class npc_orb_carrier : public CreatureScript
                 ASSERT(creature->GetVehicleKit());
             }
 
-            void UpdateAI(uint32 diff) override
+            void UpdateAI(uint32 /*diff*/) override
             {
                 /// According to sniffs this spell is cast every 1 or 2 seconds.
                 /// However, refreshing it looks bad, so just cast the spell if
                 /// we are not channeling it.
                 if (!me->HasUnitState(UNIT_STATE_CASTING))
                     me->CastSpell((Unit*)nullptr, SPELL_TRACK_ROTATION, false);
-
-                scheduler.Update(diff);
 
                 /// Workaround: This is here because even though the above spell has SPELL_ATTR1_CHANNEL_TRACK_TARGET,
                 /// we are having two creatures involded here. This attribute is handled clientside, meaning the client
@@ -926,7 +943,7 @@ class npc_orb_carrier : public CreatureScript
                         if (northOrb && northOrb->GetTypeId() == TYPEID_UNIT)
                             northOrb->ToCreature()->AI()->Talk(EMOTE_WARN_LASER);
 
-                        scheduler.Schedule(Seconds(5), [this](TaskContext /*context*/)
+                        me->GetScheduler().Schedule(Seconds(5), [this](TaskContext /*context*/)
                         {
                             DoAction(ACTION_SHOOT);
                         });
@@ -958,7 +975,6 @@ class npc_orb_carrier : public CreatureScript
             }
         private:
             InstanceScript* _instance;
-            TaskScheduler scheduler;
 
             void TriggerCutter(Unit* caster, Unit* target)
             {
@@ -1193,16 +1209,16 @@ class npc_combustion_consumption : public CreatureScript
                     case NPC_COMBUSTION:
                         _explosionSpell = SPELL_FIERY_COMBUSTION_EXPLOSION;
                         _damageSpell = SPELL_COMBUSTION_DAMAGE_AURA;
-                        creature->SetInPhase(DEFAULT_PHASE, false, true);
+                        PhasingHandler::AddPhase(creature, DEFAULT_PHASE, false);
                         if (IsHeroic())
-                            creature->SetInPhase(174, false, true);
+                            PhasingHandler::AddPhase(creature, 174, false);
                         break;
                     case NPC_CONSUMPTION:
                         _explosionSpell = SPELL_SOUL_CONSUMPTION_EXPLOSION;
                         _damageSpell = SPELL_CONSUMPTION_DAMAGE_AURA;
-                        creature->SetInPhase(174, false, true);
+                        PhasingHandler::AddPhase(creature, 174, false);
                         if (IsHeroic())
-                            creature->SetInPhase(DEFAULT_PHASE, false, true);
+                            PhasingHandler::AddPhase(creature, DEFAULT_PHASE, false);
                         break;
                     default: // Should never happen
                         _explosionSpell = 0;
@@ -1265,7 +1281,7 @@ class npc_living_inferno : public CreatureScript
 
                 // SMSG_SPELL_GO for the living ember stuff isn't even sent to the client - Blizzard on drugs.
                 if (me->GetMap()->GetDifficultyID() == DIFFICULTY_25_HC)
-                    scheduler.Schedule(Seconds(3), [this](TaskContext /*context*/)
+                    me->GetScheduler().Schedule(Seconds(3), [this](TaskContext /*context*/)
                     {
                         me->CastSpell(me, SPELL_SPAWN_LIVING_EMBERS, true);
                     });
@@ -1281,15 +1297,6 @@ class npc_living_inferno : public CreatureScript
             {
                 me->DespawnOrUnsummon(1);
             }
-
-            void UpdateAI(uint32 diff) override
-            {
-                scheduler.Update(diff);
-                ScriptedAI::UpdateAI(diff);
-            }
-
-        private:
-            TaskScheduler scheduler;
         };
 
         CreatureAI* GetAI(Creature* creature) const override
@@ -1339,12 +1346,12 @@ class go_twilight_portal : public GameObjectScript
                 switch (gameobject->GetEntry())
                 {
                     case GO_HALION_PORTAL_EXIT:
-                        gameobject->SetInPhase(174, false, true);
+                        PhasingHandler::AddPhase(gameobject, 174, false);
                         _spellId = gameobject->GetGOInfo()->goober.spell;
                         break;
                     case GO_HALION_PORTAL_1:
                     case GO_HALION_PORTAL_2:
-                        gameobject->SetInPhase(DEFAULT_PHASE, false, true);
+                        PhasingHandler::AddPhase(gameobject, DEFAULT_PHASE, false);
                         /// Because WDB template has non-existent spell ID, not seen in sniffs either, meh
                         _spellId = SPELL_TWILIGHT_REALM;
                         break;
@@ -1354,10 +1361,8 @@ class go_twilight_portal : public GameObjectScript
                 }
             }
 
-            bool GossipHello(Player* player, bool isUse) override
+            bool GossipHello(Player* player, bool /*reportUse*/) override
             {
-                if (!isUse)
-                    return true;
                 if (_spellId != 0)
                     player->CastSpell(player, _spellId, true);
                 return true;
@@ -1736,7 +1741,7 @@ class spell_halion_twilight_cutter : public SpellScriptLoader
                     return;
 
                 Unit* caster = GetCaster();
-                DynamicFieldStructuredView<ObjectGuid> channelObjects = caster->GetChannelObjects();
+                auto const& channelObjects = caster->GetChannelObjects();
                 if (Unit* channelTarget = (channelObjects.size() == 1 ? ObjectAccessor::GetUnit(*caster, *channelObjects.begin()) : nullptr))
                 {
                     unitList.remove_if(TwilightCutterSelector(caster, channelTarget));
@@ -1767,6 +1772,11 @@ class spell_halion_twilight_phasing : public SpellScriptLoader
         class spell_halion_twilight_phasing_SpellScript : public SpellScript
         {
             PrepareSpellScript(spell_halion_twilight_phasing_SpellScript);
+
+            bool Validate(SpellInfo const* /*spell*/) override
+            {
+                return ValidateSpellInfo({ SPELL_SUMMON_TWILIGHT_PORTAL });
+            }
 
             void Phase()
             {

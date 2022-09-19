@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -153,6 +152,8 @@ public:
 
         void Reset() override
         {
+            instance->SetBossState(DATA_DELRISSA, NOT_STARTED);
+
             Initialize();
 
             InitializeLackeys();
@@ -208,7 +209,7 @@ public:
                 //summon all the remaining in vector
                 for (std::vector<uint32>::const_iterator itr = LackeyEntryList.begin(); itr != LackeyEntryList.end(); ++itr)
                 {
-                    if (Creature* pAdd = me->SummonCreature((*itr), LackeyLocations[j][0], LackeyLocations[j][1], fZLocation, fOrientation, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    if (Creature* pAdd = me->SummonCreature((*itr), LackeyLocations[j][0], LackeyLocations[j][1], fZLocation, fOrientation, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000))
                         m_auiLackeyGUID[j] = pAdd->GetGUID();
 
                     ++j;
@@ -223,7 +224,7 @@ public:
                     //object already removed, not exist
                     if (!pAdd)
                     {
-                        pAdd = me->SummonCreature((*itr), LackeyLocations[j][0], LackeyLocations[j][1], fZLocation, fOrientation, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                        pAdd = me->SummonCreature((*itr), LackeyLocations[j][0], LackeyLocations[j][1], fZLocation, fOrientation, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000);
                         if (pAdd)
                             m_auiLackeyGUID[j] = pAdd->GetGUID();
                     }
@@ -251,8 +252,8 @@ public:
                 instance->SetBossState(DATA_DELRISSA, DONE);
             else
             {
-                if (me->HasFlag(OBJECT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE))
-                    me->RemoveFlag(OBJECT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+                if (me->HasDynamicFlag(UNIT_DYNFLAG_LOOTABLE))
+                    me->RemoveDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
             }
         }
 
@@ -318,7 +319,7 @@ public:
 
             if (DispelTimer <= diff)
             {
-                Unit* target = NULL;
+                Unit* target = nullptr;
 
                 if (urand(0, 1))
                     target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true);
@@ -444,8 +445,8 @@ struct boss_priestess_lackey_commonAI : public ScriptedAI
             //time to make her lootable and complete event if she died before lackeys
             if (!pDelrissa->IsAlive())
             {
-                if (!pDelrissa->HasFlag(OBJECT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE))
-                    pDelrissa->SetFlag(OBJECT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+                if (!pDelrissa->HasDynamicFlag(UNIT_DYNFLAG_LOOTABLE))
+                    pDelrissa->AddDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
 
                 instance->SetBossState(DATA_DELRISSA, DONE);
             }

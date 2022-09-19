@@ -1,811 +1,759 @@
-/*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "AreaTriggerTemplate.h"
 #include "AreaTriggerAI.h"
 #include "GameObjectAI.h"
 #include "GameObject.h"
-#include "eye_of_azshara.h"
 
 enum Spells
 {
-    SPELL_ARCANE_SHIELDING          = 197868,
-    SPELL_STATIC_NOVA               = 193597,
-    SPELL_BECKON_STORM              = 193682,
-    SPELL_BECKON_STORM_SUMMON       = 193683,
-    SPELL_FOCUSED_LIGHTNING         = 193611,
-    SPELL_EXCESS_LIGHTING_PLAYER    = 193624,
-    SPELL_EXCESS_LIGHTING_SAND      = 193625,
-    SPELL_CRACKLING_THUNDER         = 197326,
-    SPELL_CURSE_OF_WITCH_AURA       = 193698,
-    SPELL_CURSE_OF_WITCH_KNOCK      = 193700,
-    SPELL_CURSE_OF_WITCH_ROOT       = 194197,
-    SPELL_CURSE_OF_WITCH_KILL       = 193720,
-    SPELL_MONSOON                   = 196630,
+	SPELL_ARCANE_SHIELDING = 197868,
+	SPELL_STATIC_NOVA = 193597,
+	SPELL_BECKON_STORM = 193682,
+	SPELL_BECKON_STORM_SUMMON = 193683,
+	SPELL_FOCUSED_LIGHTNING = 193611,
+	SPELL_EXCESS_LIGHTING_PLAYER = 193624,
+	SPELL_EXCESS_LIGHTING_SAND = 193625,
+	SPELL_CRACKLING_THUNDER = 197326,
+	SPELL_CURSE_OF_WITCH_AURA = 193698,
+	SPELL_CURSE_OF_WITCH_KNOCK = 193700,
+	SPELL_CURSE_OF_WITCH_KILL = 193720,
+	SPELL_MONSOON = 196630,
 
-    SPELL_WATERY_SPLASH             = 193636,
+	SPELL_WATERY_SPLASH = 193636,
 
-    SPELL_SAND_DUNE                 = 193060,
-    SPELL_SAND_DUNE_SUMMON          = 193061,
+	SPELL_SAND_DUNE = 193060,
+	SPELL_SAND_DUNE_SUMMON = 193061,
 
-    // Monsoon
-    SPELL_MONSOON_VISAL             = 196609,
-    SPELL_MONSOON_DMG               = 196610,
+	// Monsoon
+	SPELL_MONSOON_VISAL = 196609,
+	SPELL_MONSOON_DMG = 196610,
 
-    // Hatecoil Arcanist
-    SPELL_AQUA_SPOT                 = 196027,
-    SPELL_ARCANE_REBOUND            = 196028,
-    SPELL_POLYMORPH                 = 197105,
-    SPELL_ARCANE_ALIGNMENT          = 197115,
-    SPELL_ARCANE_FORTIFICATION      = 199865,
+	// Hatecoil Arcanist
+	SPELL_AQUA_SPOT = 196027,
+	SPELL_ARCANE_REBOUND = 196028,
+	SPELL_POLYMORPH = 197105,
+	SPELL_ARCANE_ALIGNMENT = 197115,
+	SPELL_ARCANE_FORTIFICATION = 199865,
 };
 
 enum Npcs
 {
-    NPC_SALTSEA_GLOBULE = 98293,
-    NPC_SAND_DUNE       = 97853,
-    NPC_MONSOON         = 99852,
+	BOSS_LADY_HATECOIL = 91789,
+
+	NPC_SALTSEA_GLOBULE = 98293,
+	NPC_SAND_DUNE = 97853,
+	NPC_MONSOON = 99852,
 };
+
+enum Objects
+{
+	GO_SAND_DUNE = 244690,
+};
+
+enum Timers
+{
+	TIMER_BECKON_STORM = 19 * IN_MILLISECONDS,
+	TIMER_BECKON_STORM_AFTER = 40 * IN_MILLISECONDS,
+	TIMER_CURSE_OF_WITCH = 16 * IN_MILLISECONDS,
+	TIMER_CURSE_OF_WITCH_AFTER = 25 * IN_MILLISECONDS,
+	TIMER_STATIC_NOVA = 11 * IN_MILLISECONDS,
+	TIMER_CRACKLING_THUNDER_CHECK = 2 * IN_MILLISECONDS,
+
+	TIMER_MONSOON_AFTER = 25 * IN_MILLISECONDS,
+	TIMER_MONSOON = 50 * IN_MILLISECONDS,
+};
+
+enum Sounds
+{
+	SOUND_1 = 54194, // aggro
+	SOUND_2 = 54201, // static nova
+	SOUND_3 = 54204, // beckon storm
+	SOUND_4 = 54203, // focused lightning 
+	SOUND_5 = 54202, // cuse of witch
+	SOUND_6 = 54195, // death
+	SOUND_7 = 54199, // kilL
+};
+
+#define AGGRO_TEXT "Continue the rituals! I will handle these fools"
+#define STATIC_NOVA_TEXT "Just you wait..."
+#define BECKON_STORM_TEXT "The waters rise..."
+#define FOCUSED_LIGHTNING_TEXT "A storm is gathering..."
+#define CURSE_OF_WITCH_TEXT "There is no escape!"
+#define DEATH_TEXT "Can you feel the winds? They come for you"
+#define KILL_TEXT "The Hatecoil proves superior!"
 
 enum Events
 {
-    EVENT_STATIC_NOVA       = 1,
-    EVENT_BECKON_STORM      = 2,
-    EVENT_FOCUSED_LIGHTING  = 3,
-    EVENT_CRACKLING_THUNDER = 4,
-    EVENT_CURSE_OF_WITCH    = 5,
-    EVENT_MONSOON           = 6,
+	EVENT_STATIC_NOVA = 1,
+	EVENT_BECKON_STORM = 2,
+	EVENT_FOCUSED_LIGHTING = 3,
+	EVENT_CRACKLING_THUNDER = 4,
+	EVENT_CURSE_OF_WITCH = 5,
+	EVENT_MONSOON = 6,
 
-    // Hatecoil Arcanist
-    EVENT_AQUA_SPOT         = 7,
-    EVENT_ARCANE_REBOUND    = 8,
-    EVENT_POLYMORPH         = 9,
+	// Hatecoil Arcanist
+	EVENT_AQUA_SPOT = 7,
+	EVENT_ARCANE_REBOUND = 8,
+	EVENT_POLYMORPH = 9,
 };
 
-enum Says
+const Position ArenaCenter = { -3439.963f, 4589.192f, -0.4387f }; //cheaters check aswell
+
+// dune gob destroyed proper visual
+
+class bfa_boss_lady_hatecoil : public CreatureScript
 {
-    SAY_AGGRO               = 0,
-    SAY_INTRO               = 1,
-    SAY_STATIC_NOVA         = 2,
-    SAY_BECKON_STORM        = 3,
-    SAY_FOCUSED_LIGHTING    = 4,
-    SAY_CURSE_OF_WITCH      = 5,
-    SAY_KILL                = 6,
-    SAY_DEATH               = 7,
-    SAY_DEATH_LAST          = 8,
+public:
+	bfa_boss_lady_hatecoil() : CreatureScript("bfa_boss_lady_hatecoil")
+	{}
+
+	struct bfa_boss_lady_hatecoil_AI : public ScriptedAI
+	{
+		bfa_boss_lady_hatecoil_AI(Creature* creature) : ScriptedAI(creature), summons(me)
+		{
+			instance = me->GetInstanceScript();
+		}
+
+		SummonList summons;
+		EventMap events;
+		InstanceScript* instance;
+
+		void Reset()
+		{
+			instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
+
+			events.Reset();
+			summons.DespawnAll();
+			RespawnDunes();
+			DespawnCreature(NPC_SALTSEA_GLOBULE);
+			DespawnCreature(NPC_MONSOON);
+		}
+
+		void EnterEvadeMode(EvadeReason reason) 
+		{
+			me->NearTeleportTo(me->GetHomePosition());
+			Reset();
+		}
+
+		void KilledUnit(Unit* target) 
+		{
+			SelectSoundAndText(me, 6);
+		}
+
+		void JustDied(Unit* /**/) 
+		{
+			DespawnCreature(NPC_SALTSEA_GLOBULE);
+			DespawnCreature(NPC_MONSOON);
+			SelectSoundAndText(me, 2);
+			instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
+		}
+
+		bool CheckCheaters()
+		{
+			Map::PlayerList const& playerList = me->GetMap()->GetPlayers();
+			for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
+				if (Player* player = i->GetSource())
+				{
+					if (!player->IsGameMaster()) //gm check
+					{
+						if (player->GetDistance(ArenaCenter.GetPositionX(), ArenaCenter.GetPositionY(), ArenaCenter.GetPositionZ()) >= 55.0f)
+						{
+							me->Kill(player, false);
+							std::ostringstream str;
+							str << "CHEATERS!";
+							me->TextEmote(str.str().c_str(), 0, true);
+							return false;
+						}
+					}
+
+				}
+
+			return true;
+		}
+
+		void EnterCombat(Unit*)
+		{
+			SelectSoundAndText(me, 1);
+			instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me);
+
+			events.ScheduleEvent(EVENT_BECKON_STORM, TIMER_BECKON_STORM);
+			events.ScheduleEvent(EVENT_CURSE_OF_WITCH, TIMER_CURSE_OF_WITCH);
+			events.ScheduleEvent(EVENT_STATIC_NOVA, TIMER_STATIC_NOVA);
+			events.ScheduleEvent(EVENT_CRACKLING_THUNDER, TIMER_CRACKLING_THUNDER_CHECK);
+
+			if (me->GetMap()->IsHeroic() || me->GetMap()->IsMythic())
+				events.ScheduleEvent(EVENT_MONSOON, 50 * IN_MILLISECONDS);
+		}
+
+		void RespawnDunes()
+		{
+			std::list<GameObject*> dunesGob;
+
+			me->GetGameObjectListWithEntryInGrid(dunesGob, GO_SAND_DUNE, 500.0f);
+
+			if (!dunesGob.empty())
+			{
+				for (auto & it : dunesGob)
+					it->SetGoState(GO_STATE_READY);
+			}
+
+			std::list<Creature*> creatureList;
+			GetCreatureListWithEntryInGrid(creatureList, me, NPC_SAND_DUNE, 500.0f);
+			if (!creatureList.empty())
+				for (auto NowCreature : creatureList)
+					NowCreature->Respawn();
+		}
+
+		void DespawnCreature(uint32 entry)
+		{
+			std::list<Creature*> creatureList;
+			GetCreatureListWithEntryInGrid(creatureList, me, entry, 500.0f);
+			if (!creatureList.empty())
+				for (auto NowCreature : creatureList)
+					NowCreature->DespawnOrUnsummon();
+		}
+
+		void CheckPlayersFar()
+		{
+			Map::PlayerList const & players = me->GetMap()->GetPlayers();
+
+			if (players.isEmpty())
+				return;
+
+			for (auto & it : players)
+			{
+				if (Player* player = it.GetSource())
+				{
+					if (player->GetDistance(ArenaCenter.GetPositionX(), ArenaCenter.GetPositionY(), ArenaCenter.GetPositionZ()) >= 50.0f)
+						me->CastSpell(player, SPELL_CRACKLING_THUNDER, true);
+				}
+			}
+		}
+
+		void ExcessLightHandler()
+		{
+			std::list<Player*> players;
+			Map::PlayerList const& playerList = me->GetMap()->GetPlayers();
+			for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
+				if (Player* player = i->GetSource())
+					if (player->IsAlive())
+						players.push_back(player);
+			Player* validTarget = NULL;
+			uint32 expectedPlayers = 2;
+			if (players.size())
+			{
+				for (auto initialPlayer : players)
+				{
+					uint32 count = 1; // initial player
+					for (auto otherPlayer : players)
+					{
+						if (initialPlayer == otherPlayer)
+							continue;
+						if (initialPlayer->GetDistance2d(otherPlayer) <= 5.0f)
+							count++;
+					}
+					if (count >= expectedPlayers)
+					{
+						validTarget = initialPlayer;
+						break;
+					}
+				}
+			}
+			if (validTarget)
+			{
+				me->CastSpell(validTarget, SPELL_EXCESS_LIGHTING_PLAYER);
+			}
+		}
+
+		void SpellHitTarget(Unit* target, SpellInfo const* spell) override
+		{
+			if (spell->Id == SPELL_FOCUSED_LIGHTNING)
+			{
+				ExcessLightHandler();
+
+				std::list<Creature*> creatureList;
+				GetCreatureListWithEntryInGrid(creatureList, target, NPC_SAND_DUNE, 6.5f);
+				if (!creatureList.empty())
+					for (auto NowCreature : creatureList)
+					{
+						if (GameObject* dune = NowCreature->FindNearestGameObject(GO_SAND_DUNE, 6.5f))
+							dune->SetGoState(GO_STATE_ACTIVE);
+						me->Kill(NowCreature, false);
+					}
+			}
+		}
+
+		void SelectSoundAndText(Creature* me, uint32  selectedTextSound = 0)
+		{
+			if (!me)
+				return;
+
+			if (me)
+			{
+				switch (selectedTextSound)
+				{
+				case 1: // Aggro
+					me->PlayDirectSound(SOUND_1);
+					me->Yell(AGGRO_TEXT, LANG_UNIVERSAL, NULL);
+					break;
+				case 2: // Death
+					me->PlayDirectSound(SOUND_6);
+					me->Yell(DEATH_TEXT, LANG_UNIVERSAL, NULL);
+					break;
+				case 3: // static nova
+					me->PlayDirectSound(SOUND_2);
+					me->Yell(STATIC_NOVA_TEXT, LANG_UNIVERSAL, NULL);
+					break;
+				case 4: // beckon storm
+					me->PlayDirectSound(SOUND_3);
+					me->Yell(BECKON_STORM_TEXT, LANG_UNIVERSAL, NULL);
+					break;
+				case 5: // curse
+					me->PlayDirectSound(SOUND_5);
+					me->Yell(CURSE_OF_WITCH_TEXT, LANG_UNIVERSAL, NULL);
+					break;
+				case 6: // Kill
+					me->PlayDirectSound(SOUND_7);
+					me->Yell(KILL_TEXT, LANG_UNIVERSAL, NULL);
+					break;
+				case 7:
+					me->PlayDirectSound(SOUND_4);
+					me->Yell(FOCUSED_LIGHTNING_TEXT, LANG_UNIVERSAL, NULL);
+					break;
+				}
+			}
+		}
+		void CalculateCurseOfWitchTargets()
+		{
+			uint32 targets = 0; // 0 targets init
+
+			//we get all players
+			std::list<Player*> targetList;
+			Map::PlayerList const& playerList = me->GetMap()->GetPlayers();
+			for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
+				if (Player* player = i->GetSource())
+					if (player->IsAlive() && !player->IsGameMaster())
+						targetList.push_back(player);
+
+			// with each cast, randomize from 1 to 5 players at once
+			if (!targetList.empty())
+			{
+				switch (rand() % 5)
+				{
+				case 0:
+					targets = 1;
+					break;
+				case 1:
+					targets = 2;
+					break;
+				case 2:
+					targets = 3;
+					break;
+				case 3:
+					targets = 4;
+					break;
+				case 4:
+					targets = 5;
+					break;
+				}
+				targetList.resize(targets);
+
+				for (auto validTarget : targetList)
+					me->CastSpell(validTarget, SPELL_CURSE_OF_WITCH_AURA);
+			}
+		}
+
+		void UpdateAI(uint32 diff)
+		{
+			if (!UpdateVictim())
+				return;
+
+			events.Update(diff);
+
+			if (me->HasUnitState(UNIT_STATE_CASTING))
+				return;
+
+			if (me->IsInCombat())
+				CheckCheaters();
+
+
+			while (uint32 eventId = events.ExecuteEvent())
+			{
+				switch (eventId)
+				{
+				case EVENT_MONSOON:
+				{
+					me->CastSpell(me->GetVictim(), SPELL_MONSOON, true);
+
+					events.ScheduleEvent(EVENT_MONSOON, TIMER_MONSOON_AFTER);
+					break;
+				}
+				case EVENT_CRACKLING_THUNDER:
+				{
+					CheckPlayersFar();
+					events.ScheduleEvent(EVENT_CRACKLING_THUNDER, TIMER_CRACKLING_THUNDER_CHECK);
+					break;
+				}
+
+				case EVENT_CURSE_OF_WITCH:
+				{
+					SelectSoundAndText(me, 5);
+					CalculateCurseOfWitchTargets();
+					events.ScheduleEvent(EVENT_CURSE_OF_WITCH, TIMER_CURSE_OF_WITCH_AFTER);
+					break;
+				}
+				case EVENT_STATIC_NOVA:
+				{
+					std::ostringstream str;
+					str << "Lady Hatecoil starts to invoke a |cFFF00000|h[Static Nova]|h|r. Get out of the water!";
+					me->TextEmote(str.str().c_str(), 0, true);
+					SelectSoundAndText(me, 3);
+					DoCast(me, SPELL_STATIC_NOVA);
+					events.ScheduleEvent(EVENT_FOCUSED_LIGHTING, 15 * IN_MILLISECONDS);
+					break;
+				}
+				case EVENT_FOCUSED_LIGHTING:
+				{
+					SelectSoundAndText(me, 7);
+					DoCast(me, SPELL_FOCUSED_LIGHTNING);
+					events.ScheduleEvent(EVENT_STATIC_NOVA, 20 * IN_MILLISECONDS);
+					break;
+				}
+
+				case EVENT_BECKON_STORM:
+				{
+					SelectSoundAndText(me, 4);
+					std::ostringstream str;
+					str << "Lady Hatecoil begins to cast |cFFF00000|h[Beckon Storm]|h|r!";
+					me->TextEmote(str.str().c_str(), 0, true);
+
+					std::list<Unit*> targets;
+					SelectTargetList(targets, 5, SELECT_TARGET_RANDOM, 500.0f, true);
+
+					if (!targets.empty())
+						for (std::list<Unit*>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
+							me->CastSpell((*itr), SPELL_BECKON_STORM);
+					events.ScheduleEvent(EVENT_BECKON_STORM, 45 * IN_MILLISECONDS);
+					break;
+				}
+				}
+			}
+
+			DoMeleeAttackIfReady();
+		}
+	};
+
+	CreatureAI* GetAI(Creature* creature) const override
+	{
+		return new bfa_boss_lady_hatecoil_AI(creature);
+	}
 };
 
-enum Actions
+class bfa_go_sand_dune : public GameObjectScript
 {
-    ACTION_SPAWN_DUNE       = 1,
-    ACTION_REMOVE_SHIELD    = 2,
+public:
+	bfa_go_sand_dune() : GameObjectScript("bfa_go_sand_dune")
+	{}
+
+	struct bfa_go_sand_dune_AI : public GameObjectAI
+	{
+		bfa_go_sand_dune_AI(GameObject* go) : GameObjectAI(go)
+		{}
+
+		void Reset()
+		{
+			go->HasFlag(GO_FLAG_NOT_SELECTABLE);
+		}
+	};
+
+	GameObjectAI* GetAI(GameObject* go) const override
+	{
+		return new bfa_go_sand_dune_AI(go);
+	}
 };
 
-const uint32 CurseOfWitchSpells [] =
+class bfa_npc_saltsea_globule : public CreatureScript
 {
-    193712, // SPELL_CURSE_OF_WITCH_1_TARGET
-    193716, // SPELL_CURSE_OF_WITCH_3_TARGET
-    193717, // SPELL_CURSE_OF_WITCH_5_TARGET
+public:
+	bfa_npc_saltsea_globule() : CreatureScript("bfa_npc_saltsea_globule")
+	{}
+
+	struct bfa_npc_saltsea_globule_AI : public ScriptedAI
+	{
+		bfa_npc_saltsea_globule_AI(Creature* creature) : ScriptedAI(creature)
+		{}
+
+		void JustDied(Unit*)
+		{
+			DoCast(me, SPELL_WATERY_SPLASH, true);
+		}
+
+		void UpdateAI(uint32 diff)
+		{
+			if (!me->IsInCombat())
+				me->SetInCombatWithZone();
+
+			DoMeleeAttackIfReady();
+		}
+	};
+
+	CreatureAI* GetAI(Creature* creature) const override
+	{
+		return new bfa_npc_saltsea_globule_AI(creature);
+	}
 };
 
-const Position ArenaCenter = {-3439.963f, 4589.192f, -0.4387f};
-
-class boss_lady_hatecoil : public CreatureScript
+enum MonsmoonEvents
 {
-    public:
-        boss_lady_hatecoil() : CreatureScript("boss_lady_hatecoil")
-        {}
-
-        struct boss_lady_hatecoil_AI : public BossAI
-        {
-            boss_lady_hatecoil_AI(Creature* creature) : BossAI(creature, DATA_LADY_HATECOIL)
-            {
-                CheckIntro();
-                RespawnDunes();
-            }
-
-            void Reset()
-            {
-                _Reset();
-            }
-
-            void CheckIntro()
-            {
-                if (instance->GetData(DATA_LADY_INTRO) == DONE)
-                {
-                    _intro = true;
-                    me->RemoveAurasDueToSpell(SPELL_ARCANE_SHIELDING);
-                }
-                else
-                {
-                    for (uint8 i  = 0; i < 2; ++i)
-                        me->CastSpell(me, SPELL_ARCANE_SHIELDING, true);
-
-                    _intro = false;
-                    _arcanistDead = 0;
-                }
-            }
-
-            void EnterEvadeMode(EvadeReason reason) override
-            {
-                CreatureAI::EnterEvadeMode(reason);
-            }
-
-            void JustReachedHome() override
-            {
-                RespawnDunes();
-                CheckIntro();
-                _JustReachedHome();
-            }
-
-            void JustDied(Unit* /**/) override
-            {
-                Talk(SAY_DEATH);
-                _JustDied();
-            }
-
-            void EnterCombat(Unit* ) override
-            {
-                Talk(SAY_AGGRO);
-                _EnterCombat();
-                events.ScheduleEvent(EVENT_BECKON_STORM, 19 * IN_MILLISECONDS);
-                events.ScheduleEvent(EVENT_CURSE_OF_WITCH, 16 * IN_MILLISECONDS);
-                events.ScheduleEvent(EVENT_STATIC_NOVA, 11 * IN_MILLISECONDS);
-                events.ScheduleEvent(EVENT_CRACKLING_THUNDER, IN_MILLISECONDS);
-
-                if (IsHeroic())
-                    events.ScheduleEvent(EVENT_MONSOON, 50 * IN_MILLISECONDS);
-            }
-
-            void RespawnDunes()
-            {
-                std::list<GameObject*> dunesGob;
-
-                me->GetGameObjectListWithEntryInGrid(dunesGob, GO_SAND_DUNE, 500.0f);
-
-                if (!dunesGob.empty())
-                {
-                    for (auto & it : dunesGob)
-                        it->SetGoState(GO_STATE_READY);
-                }
-            }
-
-            void KilledUnit(Unit* target) override
-            {
-                if (target && target->GetTypeId() == TYPEID_PLAYER)
-                    Talk(SAY_KILL);
-            }
-
-            void DoAction(int32 action) override
-            {
-                if (action == ACTION_REMOVE_SHIELD)
-                {
-                    _arcanistDead++;
-
-                    if (_arcanistDead >= 2 && !_intro)
-                    {
-                        instance->SetData(DATA_LADY_INTRO, DONE);
-                        me->RemoveAurasDueToSpell(SPELL_ARCANE_SHIELDING);
-                        _intro = true;
-                        Talk(SAY_INTRO);
-                    }
-                }
-            }
-
-            void CheckPlayersFar()
-            {
-                Map::PlayerList const & players = me->GetMap()->GetPlayers();
-
-                if (players.isEmpty())
-                    return;
-
-                for (auto & it : players)
-                {
-                    if (Player* player = it.GetSource())
-                    {
-                        if (player->GetDistance2d(ArenaCenter.GetPositionX(), ArenaCenter.GetPositionY()) >= 50.0f)
-                            me->CastSpell(player, SPELL_CRACKLING_THUNDER, true);
-                    }
-                }
-            }
-
-            void UpdateAI(uint32 diff)
-            {
-                if (!UpdateVictim())
-                    return;
-
-                events.Update(diff);
-
-                if (me->HasUnitState(UNIT_STATE_CASTING))
-                    return;
-
-                while (uint32 eventId = events.ExecuteEvent())
-                {
-                    switch (eventId)
-                    {
-                        case EVENT_MONSOON:
-                        {
-                            uint32 castTimes = urand(1,3);
-
-                            for (uint32 i = 0; i < castTimes; ++i)
-                                DoCast(SPELL_MONSOON);
-
-                            events.ScheduleEvent(EVENT_MONSOON, 25 * IN_MILLISECONDS);
-                            break;
-                        }
-
-                        case EVENT_STATIC_NOVA:
-                        {
-                            Talk(SAY_STATIC_NOVA);
-                            DoCast(me, SPELL_STATIC_NOVA);
-                            events.ScheduleEvent(EVENT_FOCUSED_LIGHTING, 15 * IN_MILLISECONDS);
-                            break;
-                        }
-
-                        case EVENT_CRACKLING_THUNDER:
-                        {
-                            CheckPlayersFar();
-                            events.ScheduleEvent(EVENT_CRACKLING_THUNDER, 500);
-                            break;
-                        }
-
-                        case EVENT_CURSE_OF_WITCH:
-                        {
-                            Talk(SAY_CURSE_OF_WITCH);
-                            uint32 spellId = CurseOfWitchSpells[urand(0,2)];
-                            DoCast(me, spellId);
-                            events.ScheduleEvent(EVENT_CURSE_OF_WITCH, 23 * IN_MILLISECONDS);
-                            break;
-                        }
-
-                        case EVENT_FOCUSED_LIGHTING:
-                        {
-                            Talk(SAY_FOCUSED_LIGHTING);
-                            DoCast(me, SPELL_FOCUSED_LIGHTNING);
-                            events.ScheduleEvent(EVENT_STATIC_NOVA, 20 * IN_MILLISECONDS);
-                            break;
-                        }
-
-                        case EVENT_BECKON_STORM:
-                        {
-                            Talk(SAY_BECKON_STORM);
-                            DoCast(me, SPELL_BECKON_STORM);
-                            events.ScheduleEvent(EVENT_BECKON_STORM, 45 * IN_MILLISECONDS);
-                            break;
-                        }
-                    }
-                }
-
-                DoMeleeAttackIfReady();
-            }
-
-            private:
-                uint32 _arcanistDead;
-                bool _intro;
-        };
-
-        CreatureAI* GetAI(Creature* creature) const override
-        {
-            return new boss_lady_hatecoil_AI(creature);
-        }
+	EVENT_FIXATE = 1,
+	EVENT_CHECK_PLAYER_DISTANCE,
+	EVENT_CHECK_DUNE_DISTANCE,
 };
 
-class go_sand_dune : public GameObjectScript
+class bfa_npc_mosoon : public CreatureScript
 {
-    public:
-        go_sand_dune() : GameObjectScript("go_sand_dune")
-        {}
+public:
+	bfa_npc_mosoon() : CreatureScript("bfa_npc_mosoon")
+	{}
 
-        struct go_sand_dune_AI : public GameObjectAI
-        {
-            go_sand_dune_AI(GameObject* go) : GameObjectAI(go)
-            {}
+	struct bfa_npc_mosoon_AI : public ScriptedAI
+	{
+		bfa_npc_mosoon_AI(Creature* creature) : ScriptedAI(creature)
+		{
 
-            void Reset()
-            {
-                me->AddFlag(GameObjectFlags(GO_FLAG_LOCKED | GO_FLAG_NOT_SELECTABLE));
-            }
-        };
+		}
 
-        GameObjectAI* GetAI(GameObject* go) const override
-        {
-            return new go_sand_dune_AI(go);
-        }
+		EventMap events;
+
+		void Reset() override
+		{
+			events.Reset();
+			me->CastSpell(me, SPELL_MONSOON_VISAL, true);
+			me->SetWalk(true);
+			me->SetWaterWalking(true);
+			me->SetSpeed(MOVE_WALK, 0.25f);
+			me->SetSpeed(MOVE_RUN, 0.05f);
+			HandleEvents();
+		}
+
+		void HandleEvents()
+		{
+			events.ScheduleEvent(EVENT_FIXATE, 1000);
+			events.ScheduleEvent(EVENT_CHECK_PLAYER_DISTANCE, 3000);
+			events.ScheduleEvent(EVENT_CHECK_DUNE_DISTANCE, 2000);
+		}
+
+		void UpdateAI(uint32 diff) override
+		{
+			events.Update(diff);
+
+			while (uint32 eventId = events.ExecuteEvent())
+			{
+				switch (eventId)
+				{
+				case EVENT_CHECK_PLAYER_DISTANCE:
+				{
+					Map::PlayerList const& playerList = me->GetMap()->GetPlayers();
+					for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
+						if (Player* player = i->GetSource())
+						{
+							if (!player->IsGameMaster()) //gm check
+							{
+								if (me->GetDistance(player) <= 3.0f)
+								{
+									me->CastSpell(player, SPELL_MONSOON_DMG, true);
+									me->DespawnOrUnsummon();
+								}
+							}
+						}
+					events.ScheduleEvent(EVENT_CHECK_PLAYER_DISTANCE, 1500);
+					break;
+				}
+				case EVENT_CHECK_DUNE_DISTANCE:
+				{
+					if (GameObject* dune = me->FindNearestGameObject(GO_SAND_DUNE, 6.5f))
+					{
+						dune->SetGoState(GO_STATE_ACTIVE);
+						me->DespawnOrUnsummon();
+					}
+					events.ScheduleEvent(EVENT_CHECK_DUNE_DISTANCE, 2000);
+					break;
+				}
+				case EVENT_FIXATE:
+				{
+					me->SetWalk(true);
+					me->SetWaterWalking(true);
+					me->SetSpeed(MOVE_WALK, 0.25f);
+					me->SetSpeed(MOVE_RUN, 0.05f);
+
+					std::list<Player*> targetList;
+					Map::PlayerList const& playerList = me->GetMap()->GetPlayers();
+					for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
+						if (Player* player = i->GetSource())
+							if (player->IsAlive() && !player->IsGameMaster())
+								targetList.push_back(player);
+					if(targetList.size() >= 1)
+						targetList.resize(1);
+
+					for (auto validTarget : targetList)
+					{
+						me->AI()->AttackStart(validTarget);
+						me->AddThreat(validTarget, 999999999.9f);
+					}
+
+					break;
+				}
+				}
+			}
+		}
+	};
+
+	CreatureAI* GetAI(Creature* creature) const override
+	{
+		return new bfa_npc_mosoon_AI(creature);
+	}
 };
 
-class npc_eoa_hatecoil_arcanist : public CreatureScript
+class bfa_spell_beckon_storm : public SpellScriptLoader
 {
-    public:
-        npc_eoa_hatecoil_arcanist() : CreatureScript("npc_eoa_hatecoil_arcanist")
-        {}
+public:
+	bfa_spell_beckon_storm() : SpellScriptLoader("bfa_spell_beckon_storm")
+	{}
 
-        struct npc_eoa_hatecoil_arcanist_AI : public ScriptedAI
-        {
-            npc_eoa_hatecoil_arcanist_AI(Creature* creature) : ScriptedAI(creature)
-            {
-                _instance = nullptr;
-            }
+	class bfa_spell_beckon_storm_SpellScript : public SpellScript
+	{
+	public:
+		PrepareSpellScript(bfa_spell_beckon_storm_SpellScript);
 
-            void Reset() override
-            {
-                if (!_instance)
-                    _instance = me->GetInstanceScript();
+		void FilterTargets(std::list<WorldObject*>& targets)
+		{
+			if (targets.empty())
+				return;
 
-                _events.Reset();
+			targets.remove_if([](WorldObject*& target)
+			{
+				if (target && target->ToPlayer())
+					return false;
 
-                if (!_instance)
-                    return;
+				return true;
+			});
+		}
 
-                if (_instance->GetData(DATA_LADY_INTRO) == DONE)
-                    me->RemoveAurasDueToSpell(SPELL_ARCANE_ALIGNMENT);
-                else
-                    me->CastSpell(me, SPELL_ARCANE_ALIGNMENT, true);
-            }
+		void HandleDummy(SpellEffIndex /**/)
+		{
+			if (!GetCaster() || !GetHitUnit())
+				return;
 
-            void EnterCombat(Unit* /**/) override
-            {
-                _events.ScheduleEvent(EVENT_ARCANE_REBOUND, 2 * IN_MILLISECONDS);
-                _events.ScheduleEvent(EVENT_POLYMORPH, 12 * IN_MILLISECONDS);
-                _events.ScheduleEvent(EVENT_AQUA_SPOT, 16 * IN_MILLISECONDS);
-            }
+			GetCaster()->CastSpell(GetHitUnit(), SPELL_BECKON_STORM_SUMMON, true);
+		}
 
-            void UpdateAI(uint32 diff) override
-            {
-                if (!UpdateVictim())
-                    return;
+		void Register()
+		{
+			OnEffectHitTarget += SpellEffectFn(bfa_spell_beckon_storm_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+			OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(bfa_spell_beckon_storm_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
+		}
+	};
 
-                _events.Update(diff);
-
-                if (me->HasUnitState(UNIT_STATE_CASTING))
-                    return;
-
-                while (uint32 eventId = _events.ExecuteEvent())
-                {
-                    switch (eventId)
-                    {
-                        case EVENT_AQUA_SPOT:
-                            DoCast(me, SPELL_AQUA_SPOT);
-                            _events.ScheduleEvent(EVENT_AQUA_SPOT, 20 * IN_MILLISECONDS);
-                            break;
-
-                        case EVENT_POLYMORPH:
-                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true))
-                                DoCast(target, SPELL_POLYMORPH);
-                            _events.ScheduleEvent(EVENT_POLYMORPH, urand(12, 15) * IN_MILLISECONDS);
-                            break;
-
-                        case EVENT_ARCANE_REBOUND:
-                            DoCastVictim(SPELL_ARCANE_REBOUND);
-                            _events.ScheduleEvent(EVENT_ARCANE_REBOUND, 6 * IN_MILLISECONDS);
-                            break;
-                    }
-                }
-
-                DoMeleeAttackIfReady();
-            }
-
-            private:
-                InstanceScript* _instance;
-                EventMap _events;
-
-        };
-
-        CreatureAI* GetAI(Creature* creature) const override
-        {
-            return new npc_eoa_hatecoil_arcanist_AI(creature);
-        }
+	SpellScript* GetSpellScript() const
+	{
+		return new bfa_spell_beckon_storm_SpellScript();
+	}
 };
 
-class npc_eoa_saltsea_globule : public CreatureScript
+class bfa_spell_curse_of_witch : public SpellScriptLoader
 {
-    public:
-        npc_eoa_saltsea_globule() : CreatureScript("npc_eoa_saltsea_globule")
-        {}
+public:
+	bfa_spell_curse_of_witch() : SpellScriptLoader("bfa_spell_curse_of_witch")
+	{}
 
-        struct npc_eoa_saltsea_globule_AI : public ScriptedAI
-        {
-            npc_eoa_saltsea_globule_AI(Creature* creature) : ScriptedAI(creature)
-            {}
+	class bfa_spell_curse_of_witch_AuraScript : public AuraScript
+	{
+	public:
+		PrepareAuraScript(bfa_spell_curse_of_witch_AuraScript);
 
-            void JustDied(Unit* ) override
-            {
-                DoCast(me, SPELL_WATERY_SPLASH, true);
-            }
-        };
+		void HandleEffectRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
+		{
+			if (!GetUnitOwner() || !GetCaster())
+				return;
 
-        CreatureAI* GetAI(Creature* creature) const override
-        {
-            return new npc_eoa_saltsea_globule_AI(creature);
-        }
+			Unit* target = GetUnitOwner();
+
+			target->CastSpell(target, SPELL_CURSE_OF_WITCH_KNOCK, true);
+			//target->CastSpell(target, SPELL_CURSE_OF_WITCH_KILL, true);
+			KillSaltsea();
+			//target->CastSpell(target, SPELL_CURSE_OF_WITCH_ROOT, true);
+		}
+
+		void KillSaltsea()
+		{
+			Unit* caster = GetUnitOwner();
+
+			std::list<Creature*> creatureList;
+			GetCreatureListWithEntryInGrid(creatureList, caster, NPC_SALTSEA_GLOBULE, 500.0f);
+			if (!creatureList.empty())
+				for (auto NowCreature : creatureList)
+					if (caster->isInFront(NowCreature, 3.14f / 2.0f)) // m_pi would have gave warning, handled this way,its the same
+						NowCreature->Kill(NowCreature, false);
+		}
+
+		void Register()
+		{
+			AfterEffectRemove += AuraEffectRemoveFn(bfa_spell_curse_of_witch_AuraScript::HandleEffectRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+		}
+	};
+
+	AuraScript* GetAuraScript() const
+	{
+		return new bfa_spell_curse_of_witch_AuraScript();
+	}
 };
 
-class npc_eoa_moonson : public CreatureScript
+class bfa_spell_static_nova : public SpellScriptLoader
 {
-    public:
-        npc_eoa_moonson() : CreatureScript("npc_eoa_moonson")
-        {}
+public:
+	bfa_spell_static_nova() : SpellScriptLoader("bfa_spell_static_nova")
+	{}
 
-        struct npc_eoa_moonson_AI : public ScriptedAI
-        {
-            npc_eoa_moonson_AI(Creature* creature) : ScriptedAI(creature)
-            {
+	class bfa_spell_static_nova_SpellScript : public SpellScript
+	{
+	public:
+		PrepareSpellScript(bfa_spell_static_nova_SpellScript);
 
-            }
+		void FilterTargets(std::list<WorldObject*> & targets)
+		{
+			targets.remove_if([](WorldObject*& target)
+			{
+				if (target && target->GetPositionZ() > 0 && target->ToPlayer())
+					return true;
 
-            void Reset() override
-            {
-                _target = nullptr;
-                _timeBorn = 0;
-                me->CastSpell(me, SPELL_MONSOON_VISAL, true);
-                me->SetWalk(true);
-                me->SetWaterWalking(true);
-                me->SetSpeed(MOVE_WALK, 0.25f);
-                me->SetSpeed(MOVE_RUN, 0.05f);
+				return false;
+			});
+		}
 
-                _dunes.clear();
-                me->GetGameObjectListWithEntryInGrid(_dunes, GO_SAND_DUNE, 500.0f);
-            }
+		void Register()
+		{
+			OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(bfa_spell_static_nova_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
+			OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(bfa_spell_static_nova_SpellScript::FilterTargets, EFFECT_1, TARGET_UNIT_SRC_AREA_ENEMY);
+		}
+	};
 
-
-            void FindTargetToFollow()
-            {
-                _target = SelectTarget(SELECT_TARGET_MINDISTANCE, 0, 0, true);
-
-                if (_target)
-                {
-                    me->GetMotionMaster()->MoveFollow(_target, 0, 0);
-                }
-            }
-
-            void JustDied(Unit* /**/) override
-            {
-                _dunes.clear();
-            }
-
-            void CheckDistanceToTarget()
-            {
-                if (!_target)
-                    return;
-
-                me->GetMotionMaster()->MoveFollow(_target, 0, 0);
-
-                if (me->GetDistance2d(_target) <= 3.0f)
-                {
-                    me->CastSpell(_target, SPELL_MONSOON_DMG, true);
-                    _dunes.clear();
-                    me->DespawnOrUnsummon(500);
-                }
-            }
-
-            void CheckDunesNear()
-            {
-                if (_dunes.empty())
-                   return;
-
-                for (auto & it : _dunes)
-                {
-                    if (it == nullptr)
-                        continue;
-
-                    if (me->GetDistance2d(it) <= 5.0f)
-                    {
-                        it->SetGoState(GO_STATE_ACTIVE);
-                        it = nullptr;
-                   }
-                }
-            }
-
-            void UpdateAI(uint32 diff) override
-            {
-                _timeBorn += diff;
-                _timerDunes += diff;
-                _timerPlayer += diff;
-
-                if (_timeBorn >= 10 * IN_MILLISECONDS)
-                {
-                    if (_timerPlayer >= 5 * IN_MILLISECONDS)
-                    {
-                        if (!_target)
-                        {
-                            FindTargetToFollow();
-                        }
-                        else if (_target && _target->IsAlive())
-                        {
-                            CheckDistanceToTarget();
-                        }
-                        else if (_target && _target->isDead())
-                        {
-                            FindTargetToFollow();
-                        }
-
-                        _timerPlayer = 0;
-                    }
-                    else if (_timerDunes >= 250)
-                    {
-                        CheckDunesNear();
-                        _timerDunes = 0;
-                    }
-                }
-            }
-
-            private:
-                uint32 _timeBorn;
-                uint32 _timerPlayer;
-                uint32 _timerDunes;
-                Unit* _target;
-                std::list<GameObject*> _dunes;
-
-        };
-
-        CreatureAI* GetAI(Creature* creature) const override
-        {
-            return new npc_eoa_moonson_AI(creature);
-        }
+	SpellScript* GetSpellScript() const
+	{
+		return new bfa_spell_static_nova_SpellScript();
+	}
 };
-
-class spell_lady_hatecoil_beckon_storm : public SpellScriptLoader
-{
-    public:
-        spell_lady_hatecoil_beckon_storm() : SpellScriptLoader("spell_lady_hatecoil_beckon_storm")
-        {}
-
-        class spell_lady_hatecoil_beckon_storm_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_lady_hatecoil_beckon_storm_SpellScript);
-
-                void FilterTargets(std::list<WorldObject*>& targets)
-                {
-                    if (targets.empty())
-                        return;
-
-                    targets.remove_if([] (WorldObject*& target)
-                    {
-                        if (target && target->ToPlayer())
-                            return false;
-
-                        return true;
-                    });
-                }
-
-                void HandleDummy(SpellEffIndex /**/)
-                {
-                    if (!GetCaster() || !GetHitUnit())
-                        return;
-
-                    GetCaster()->CastSpell(GetHitUnit(), SPELL_BECKON_STORM_SUMMON, true);
-                }
-
-                void Register()
-                {
-                    OnEffectHitTarget += SpellEffectFn(spell_lady_hatecoil_beckon_storm_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_lady_hatecoil_beckon_storm_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
-                }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_lady_hatecoil_beckon_storm_SpellScript();
-        }
-};
-
-class spell_lady_hatecoil_curse_of_witch : public SpellScriptLoader
-{
-    public:
-        spell_lady_hatecoil_curse_of_witch() : SpellScriptLoader("spell_lady_hatecoil_curse_of_witch")
-        {}
-
-        class spell_lady_hatecoil_curse_of_witch_AuraScript : public AuraScript
-        {
-            public:
-                PrepareAuraScript(spell_lady_hatecoil_curse_of_witch_AuraScript);
-
-                void HandleEffectRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
-                {
-                    if (!GetUnitOwner() || !GetCaster())
-                        return;
-
-                    Unit* target = GetUnitOwner();
-
-                    target->CastSpell(target, SPELL_CURSE_OF_WITCH_KNOCK, true);
-                    target->CastSpell(target, SPELL_CURSE_OF_WITCH_KILL, true);
-                    target->CastSpell(target, SPELL_CURSE_OF_WITCH_ROOT, true);
-                }
-
-                void Register()
-                {
-                    AfterEffectRemove += AuraEffectRemoveFn(spell_lady_hatecoil_curse_of_witch_AuraScript::HandleEffectRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
-                }
-        };
-
-        AuraScript* GetAuraScript() const
-        {
-            return new spell_lady_hatecoil_curse_of_witch_AuraScript();
-        }
-};
-
-class spell_lady_hatecoil_curse_of_witch_kill : public SpellScriptLoader
-{
-    public:
-        spell_lady_hatecoil_curse_of_witch_kill() : SpellScriptLoader("spell_lady_hatecoil_curse_of_witch_kill")
-        {}
-
-        class spell_lady_hatecoil_curse_of_witch_kill_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_lady_hatecoil_curse_of_witch_kill_SpellScript);
-
-                void FilterTargets(std::list<WorldObject*> & targets)
-                {
-                    if (targets.empty())
-                        return;
-
-                    targets.remove_if([] (WorldObject*& target)
-                    {
-                        if (target && target->GetEntry() == NPC_SALTSEA_GLOBULE)
-                            return false;
-
-                        return true;
-                    });
-                }
-
-                void Register()
-                {
-                    // OnEffectHitTarget += SpellEffectFn(spell_lady_hatecoil_excess_lighting_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
-                }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_lady_hatecoil_curse_of_witch_kill_SpellScript();
-        }
-};
-
-class spell_lady_hatecoil_curse_of_witch_trigger : public SpellScriptLoader
-{
-    public:
-        spell_lady_hatecoil_curse_of_witch_trigger() : SpellScriptLoader("spell_lady_hatecoil_curse_of_witch_trigger")
-        {}
-
-        class spell_lady_hatecoil_curse_of_witch_trigger_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_lady_hatecoil_curse_of_witch_trigger_SpellScript);
-
-                void FilterTargets(std::list<WorldObject*> & targets)
-                {
-                    if (targets.empty())
-                        return;
-
-                    targets.remove_if([] (WorldObject* & target)
-                    {
-                        if (target && target->ToPlayer())
-                            return false;
-
-                        return true;
-                    });
-                }
-
-                void HandleDummy(SpellEffIndex /**/)
-                {
-                    if (!GetCaster() || !GetHitUnit())
-                        return;
-
-                    GetCaster()->CastSpell(GetHitUnit(), SPELL_CURSE_OF_WITCH_AURA, true);
-                }
-
-                void Register()
-                {
-                    OnEffectHitTarget += SpellEffectFn(spell_lady_hatecoil_curse_of_witch_trigger_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_lady_hatecoil_curse_of_witch_trigger_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
-                }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_lady_hatecoil_curse_of_witch_trigger_SpellScript();
-        }
-};
-
-class spell_lady_hatecoil_static_nova : public SpellScriptLoader
-{
-    public:
-        spell_lady_hatecoil_static_nova() : SpellScriptLoader("spell_lady_hatecoil_static_nova")
-        {}
-
-        class spell_lady_hatecoil_static_nova_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_lady_hatecoil_static_nova_SpellScript);
-
-                void FilterTargets(std::list<WorldObject*> & targets)
-                {
-                    targets.remove_if([] (WorldObject*& target)
-                    {
-                        if (target && target->GetPositionZ() > 0 && target->ToPlayer())
-                            return true;
-
-                        return false;
-                    });
-                }
-
-                void Register()
-                {
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_lady_hatecoil_static_nova_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
-                    OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_lady_hatecoil_static_nova_SpellScript::FilterTargets, EFFECT_1, TARGET_UNIT_SRC_AREA_ENEMY);
-                }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_lady_hatecoil_static_nova_SpellScript();
-        }
-};
-
-class spell_lady_hatecoil_excess_lighting : public SpellScriptLoader
-{
-    public:
-        spell_lady_hatecoil_excess_lighting() : SpellScriptLoader("spell_lady_hatecoil_excess_lighting")
-        {}
-
-        class spell_lady_hatecoil_excess_lighting_SpellScript : public SpellScript
-        {
-            public:
-                PrepareSpellScript(spell_lady_hatecoil_excess_lighting_SpellScript);
-
-                void HandleDummy(SpellEffIndex)
-                {
-                    if (!GetCaster() || !GetHitUnit())
-                        return;
-
-                    Unit* target = GetHitUnit();
-
-                    if (target->GetEntry() == NPC_SAND_DUNE)
-                    {
-                        if (GameObject* Cage = target->FindNearestGameObject(GO_SAND_DUNE, 10.0f))
-                            Cage->SetGoState(GO_STATE_ACTIVE);
-                    }
-                }
-
-                void Register()
-                {
-                    OnEffectHitTarget += SpellEffectFn(spell_lady_hatecoil_excess_lighting_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
-                }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_lady_hatecoil_excess_lighting_SpellScript();
-        }
-};
+          
 
 void AddSC_boss_lady_hatecoil()
 {
-    new boss_lady_hatecoil();
-    new npc_eoa_moonson();
-    new npc_eoa_saltsea_globule();
-    new npc_eoa_hatecoil_arcanist();
-    new go_sand_dune();
-    new spell_lady_hatecoil_beckon_storm();
-    new spell_lady_hatecoil_curse_of_witch();
-    new spell_lady_hatecoil_curse_of_witch_trigger();
-    new spell_lady_hatecoil_curse_of_witch_kill();
-    new spell_lady_hatecoil_excess_lighting();
-    new spell_lady_hatecoil_static_nova();
+	new bfa_boss_lady_hatecoil();
+	new bfa_npc_mosoon();
+	new bfa_npc_saltsea_globule();
+
+	new bfa_go_sand_dune();
+
+	new bfa_spell_beckon_storm();
+	new bfa_spell_curse_of_witch();
+	new bfa_spell_static_nova();
 }

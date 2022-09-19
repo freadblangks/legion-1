@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,6 +31,8 @@ npc_kservant
 EndContentData */
 
 #include "ScriptMgr.h"
+#include "Group.h"
+#include "LFGMgr.h"
 #include "Player.h"
 #include "ScriptedGossip.h"
 #include "ScriptedEscortAI.h"
@@ -63,7 +64,7 @@ public:
         if (action == GOSSIP_ACTION_INFO_DEF+1)
         {
             CloseGossipMenuFor(player);
-            creature->setFaction(FACTION_OGRE_HOSTILE);
+            creature->SetFaction(FACTION_OGRE_HOSTILE);
             creature->AI()->Talk(SAY_RALIQ_ATTACK, player);
             creature->AI()->AttackStart(player);
         }
@@ -153,7 +154,7 @@ public:
         if (action == GOSSIP_ACTION_INFO_DEF+1)
         {
             CloseGossipMenuFor(player);
-            creature->setFaction(FACTION_DEMON_HOSTILE);
+            creature->SetFaction(FACTION_DEMON_HOSTILE);
             creature->AI()->Talk(SAY_DEMONIC_AGGRO, player);
             creature->AI()->AttackStart(player);
         }
@@ -461,7 +462,6 @@ public:
         }
 
         void MoveInLineOfSight(Unit* who) override
-
         {
             if (HasEscortState(STATE_ESCORT_ESCORTING))
                 return;
@@ -481,6 +481,19 @@ public:
     };
 };
 
+struct npc_vormu : public ScriptedAI
+{
+    npc_vormu(Creature* creature) : ScriptedAI(creature) { }
+
+    void sGossipSelect(Player* player, uint32 /*sender*/, uint32 /*action*/) override
+    {
+        ClearGossipMenuFor(player);
+
+        if (!player->GetGroup() || player->GetGroup()->GetLeaderGUID() == player->GetGUID())
+            sLFGMgr->JoinLfg(player, LFG_DUNGEON_TIME_WALKING_BLACK_TEMPLE);
+    }
+};
+
 void AddSC_shattrath_city()
 {
     new npc_raliq_the_drunk();
@@ -488,4 +501,5 @@ void AddSC_shattrath_city()
     new npc_shattrathflaskvendors();
     new npc_zephyr();
     new npc_kservant();
+    RegisterCreatureAI(npc_vormu);
 }

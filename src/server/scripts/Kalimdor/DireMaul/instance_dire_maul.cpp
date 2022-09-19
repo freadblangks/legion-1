@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,9 +22,10 @@ Without it, the party doing random dungeon won't get satchel of spoils and
 gets instead the deserter debuff.
 */
 
+//Missing scripts and bosses
+
 #include "ScriptMgr.h"
 #include "InstanceScript.h"
-#include "Map.h"
 
 // Bosses (East)
 // 0 - Pusillin
@@ -58,7 +59,7 @@ public:
 
     struct instance_dire_maul_InstanceMapScript : public InstanceScript
     {
-        instance_dire_maul_InstanceMapScript(Map* map) : InstanceScript(map)
+        instance_dire_maul_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
         {
             SetBossNumber(EncounterCount);
         }

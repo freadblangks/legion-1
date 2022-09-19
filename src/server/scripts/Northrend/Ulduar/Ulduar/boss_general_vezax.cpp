@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -203,7 +203,7 @@ class boss_general_vezax : public CreatureScript
                                 summons.DespawnAll();
                                 DoCast(me, SPELL_SARONITE_BARRIER);
                                 DoCast(SPELL_SUMMON_SARONITE_ANIMUS);
-                                me->AddLootMode(LOOT_MODE_HARD_MODE_1);
+                                me->AddLootMode(LOOT_MODE_HEROIC);
                                 events.CancelEvent(EVENT_SARONITE_VAPORS);
                                 events.CancelEvent(EVENT_SEARING_FLAMES);
                             }
@@ -299,11 +299,11 @@ class boss_general_vezax : public CreatureScript
                 }
 
                 if (PlayerList.empty())
-                    return NULL;
+                    return nullptr;
 
                 size_t size = PlayerList.size();
                 if (size < playersMin)
-                    return NULL;
+                    return nullptr;
 
                 return Trinity::Containers::SelectRandomContainerElement(PlayerList);
             }
@@ -336,8 +336,8 @@ class boss_saronite_animus : public CreatureScript
 
             void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* Vezax = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_VEZAX)))
-                    Vezax->AI()->DoAction(ACTION_ANIMUS_DIE);
+                if (Creature* vezax = instance->GetCreature(BOSS_VEZAX))
+                    vezax->AI()->DoAction(ACTION_ANIMUS_DIE);
             }
 
             void UpdateAI(uint32 diff) override
@@ -426,7 +426,7 @@ class npc_saronite_vapors : public CreatureScript
                 if (damage >= me->GetHealth())
                 {
                     damage = 0;
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                    me->AddUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE));
                     me->SetControlled(true, UNIT_STATE_ROOT);
                     me->SetStandState(UNIT_STAND_STATE_DEAD);
                     me->SetHealth(me->GetMaxHealth());
@@ -434,8 +434,8 @@ class npc_saronite_vapors : public CreatureScript
                     DoCast(me, SPELL_SARONITE_VAPORS);
                     me->DespawnOrUnsummon(30000);
 
-                    if (Creature* Vezax = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_VEZAX)))
-                        Vezax->AI()->DoAction(ACTION_VAPORS_DIE);
+                    if (Creature* vezax = instance->GetCreature(BOSS_VEZAX))
+                        vezax->AI()->DoAction(ACTION_VAPORS_DIE);
                 }
             }
 
@@ -531,8 +531,8 @@ class spell_general_vezax_saronite_vapors : public SpellScriptLoader
                 {
                     int32 mana = int32(aurEff->GetAmount() * std::pow(2.0f, GetStackAmount())); // mana restore - bp * 2^stackamount
                     int32 damage = mana * 2;
-                    caster->CastCustomSpell(GetTarget(), SPELL_SARONITE_VAPORS_ENERGIZE, &mana, NULL, NULL, true);
-                    caster->CastCustomSpell(GetTarget(), SPELL_SARONITE_VAPORS_DAMAGE, &damage, NULL, NULL, true);
+                    caster->CastCustomSpell(GetTarget(), SPELL_SARONITE_VAPORS_ENERGIZE, &mana, nullptr, nullptr, true);
+                    caster->CastCustomSpell(GetTarget(), SPELL_SARONITE_VAPORS_DAMAGE, &damage, nullptr, nullptr, true);
                 }
             }
 

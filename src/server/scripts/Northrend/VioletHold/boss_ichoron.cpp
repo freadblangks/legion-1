@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -137,7 +137,7 @@ class boss_ichoron : public CreatureScript
                         me->LowerPlayerDamageReq(damage);
                         me->ModifyHealth(-std::min<int32>(damage, me->GetHealth() - 1));
 
-                        scheduler.DelayAll(Seconds(15));
+                        me->GetScheduler().DelayAll(Seconds(15));
                         break;
                     }
                     case ACTION_DRAINED:
@@ -187,7 +187,7 @@ class boss_ichoron : public CreatureScript
                     me->RemoveAurasDueToSpell(SPELL_DRAINED, ObjectGuid::Empty, 0, AURA_REMOVE_BY_EXPIRE);
             }
 
-            void UpdateAI(uint32 diff) override
+            void UpdateAI(uint32 /*diff*/) override
             {
                 if (!UpdateVictim())
                     return;
@@ -199,25 +199,24 @@ class boss_ichoron : public CreatureScript
                     _isFrenzy = true;
                 }
 
-                scheduler.Update(diff,
-                    std::bind(&BossAI::DoMeleeAttackIfReady, this));
+                DoMeleeAttackIfReady();
             }
 
             void ScheduleTasks() override
             {
-                scheduler.Async([this]
+                me->GetScheduler().Async([this]
                 {
                     DoCast(me, SPELL_SHRINK);
                     DoCast(me, SPELL_PROTECTIVE_BUBBLE);
                 });
 
-                scheduler.Schedule(Seconds(10), Seconds(15), [this](TaskContext task)
+                me->GetScheduler().Schedule(Seconds(10), Seconds(15), [this](TaskContext task)
                 {
                     DoCastAOE(SPELL_WATER_BOLT_VOLLEY);
                     task.Repeat(Seconds(10), Seconds(15));
                 });
 
-                scheduler.Schedule(Seconds(6), Seconds(9), [this](TaskContext task)
+                me->GetScheduler().Schedule(Seconds(6), Seconds(9), [this](TaskContext task)
                 {
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 50.0f))
                         DoCast(target, SPELL_WATER_BLAST);
@@ -254,7 +253,7 @@ class npc_ichor_globule : public CreatureScript
                 if (spellInfo->Id == SPELL_WATER_GLOBULE_VISUAL)
                 {
                     DoCast(me, SPELL_WATER_GLOBULE_TRANSFORM);
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     me->GetMotionMaster()->MoveFollow(caster, 0.0f, 0.0f);
                 }
             }
@@ -308,14 +307,14 @@ class spell_ichoron_drained : public SpellScriptLoader
 
             void HandleApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
-                GetTarget()->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_31);
-                GetTarget()->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
+                GetTarget()->AddUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_31));
+                GetTarget()->AddUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
             }
 
             void HandleRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
-                GetTarget()->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_31);
-                GetTarget()->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
+                GetTarget()->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_31));
+                GetTarget()->RemoveUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
 
                 if (GetTargetApplication()->GetRemoveMode() == AURA_REMOVE_BY_EXPIRE)
                     if (GetTarget()->IsAIEnabled)

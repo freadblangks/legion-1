@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 AshamaneProject <https://github.com/AshamaneProject>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "SpellAuras.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "AreaTriggerTemplate.h"
@@ -680,6 +681,28 @@ class spell_harbaron_fragment_dmg : public SpellScriptLoader
         }
 };
 
+class spell_mos_void_snap : public SpellScript
+{
+public:
+    PrepareSpellScript(spell_mos_void_snap);
+
+    void CalculateDamage(SpellEffIndex)
+    {
+        if (!GetCaster())
+            return;
+
+        Aura* snap = GetCaster()->GetAura(SPELL_VOID_SNAP);
+
+        if (snap)
+            SetHitDamage(GetEffectInfo(EFFECT_0)->BasePoints * (1.0f + (snap->GetStackAmount() * 0.15f)));
+    }
+
+    void Register()
+    {
+        OnEffectLaunchTarget += SpellEffectFn(spell_mos_void_snap::CalculateDamage, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+    }
+};
+
 void AddSC_boss_harbaron_maw()
 {
     new boss_harbaron();
@@ -691,4 +714,5 @@ void AddSC_boss_harbaron_maw()
     new spell_harbaron_cosmic_scythe();
     new spell_harbaron_fragment();
     new spell_harbaron_fragment_dmg();
+    RegisterSpellScript(spell_mos_void_snap);
 }

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -75,7 +74,7 @@ public:
             switch (waypointId)
             {
                 case 0:
-                    me->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
+                    me->SetStandState(UNIT_STAND_STATE_STAND);
                     if (GameObject* Cage = me->FindNearestGameObject(GO_CAGE, 20))
                         Cage->SetGoState(GO_STATE_ACTIVE);
                     Talk(SAY_START, player);
@@ -134,7 +133,7 @@ public:
     {
         if (quest->GetQuestId() == QUEST_ESCAPE_FROM_THE_CATACOMBS)
         {
-            creature->setFaction(FACTION_QUEST_ESCAPE);
+            creature->SetFaction(FACTION_QUEST_ESCAPE);
 
             if (npc_escortAI* pEscortAI = CAST_AI(npc_ranger_lilatha::npc_ranger_lilathaAI, creature->AI()))
                 pEscortAI->Start(true, false, player->GetGUID());
@@ -149,7 +148,42 @@ public:
 
 };
 
+/*######
+## npc_rathis_tomber
+######*/
+
+class npc_rathis_tomber : public CreatureScript
+{
+public:
+    npc_rathis_tomber() : CreatureScript("npc_rathis_tomber") {}
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) override
+    {
+        player->PlayerTalkClass->ClearMenus();
+        if (action == GOSSIP_ACTION_TRADE)
+            player->GetSession()->SendListInventory(creature->GetGUID());
+        return true;
+    }
+
+    bool OnGossipHello(Player* player, Creature* creature) override
+    {
+        if (creature->IsQuestGiver())
+            player->PrepareQuestMenu(creature->GetGUID());
+
+        if (creature->IsVendor() && player->GetQuestRewardStatus(9152))
+        {
+            AddGossipItemFor(player, GOSSIP_ICON_VENDOR, GOSSIP_TEXT_BROWSE_GOODS, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
+            SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
+        }
+        else
+            SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
+
+        return true;
+    }
+};
+
 void AddSC_ghostlands()
 {
+    new npc_rathis_tomber();
     new npc_ranger_lilatha();
 }

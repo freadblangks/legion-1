@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2022 BfaCore Reforged
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -218,8 +218,8 @@ class npc_wg_spirit_guide : public CreatureScript
                 GraveyardVect gy = wintergrasp->GetGraveyardVector();
                 for (uint8 i = 0; i < gy.size(); i++)
                     if (action - GOSSIP_ACTION_INFO_DEF == i && gy[i]->GetControlTeamId() == player->GetTeamId())
-                        if (WorldSafeLocsEntry const* safeLoc = sWorldSafeLocsStore.LookupEntry(gy[i]->GetGraveyardId()))
-                            player->TeleportTo(safeLoc->MapID, safeLoc->Loc.X, safeLoc->Loc.Y, safeLoc->Loc.Z, 0);
+                        if (WorldSafeLocsEntry const* safeLoc = sObjectMgr->GetWorldSafeLoc(gy[i]->GetGraveyardId()))
+                            player->TeleportTo(safeLoc->Loc);
             }
             return true;
         }
@@ -302,7 +302,7 @@ class npc_wg_queue : public CreatureScript
             else
             {
                 uint32 timer = wintergrasp->GetTimer() / 1000;
-                player->SendUpdateWorldState(4354, time(NULL) + timer);
+                player->SendUpdateWorldState(4354, time(nullptr) + timer);
                 if (timer < 15 * MINUTE)
                 {
                     AddGossipItemFor(player, GOSSIP_ICON_CHAT, player->GetSession()->GetTrinityString(WG_NPCQUEUE_TEXTOPTION_JOIN), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
@@ -345,8 +345,8 @@ class go_wg_vehicle_teleporter : public GameObjectScript
 
             bool IsFriendly(Unit* passenger)
             {
-                return ((go->GetUInt32Value(GAMEOBJECT_FACTION) == WintergraspFaction[TEAM_HORDE] && passenger->getFaction() == HORDE) ||
-                        (go->GetUInt32Value(GAMEOBJECT_FACTION) == WintergraspFaction[TEAM_ALLIANCE] && passenger->getFaction() == ALLIANCE));
+                return ((go->GetFaction() == WintergraspFaction[TEAM_HORDE] && passenger->getFaction() == HORDE) ||
+                        (go->GetFaction() == WintergraspFaction[TEAM_ALLIANCE] && passenger->getFaction() == ALLIANCE));
             }
 
             Creature* GetValidVehicle(Creature* cVeh)
@@ -361,7 +361,8 @@ class go_wg_vehicle_teleporter : public GameObjectScript
                 return nullptr;
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(uint32 diff) override
+
             {
                 _checkTimer += diff;
                 if (_checkTimer >= 1000)
@@ -520,7 +521,7 @@ public:
             if (Battlefield* wg = sBattlefieldMgr->GetBattlefieldByBattleId(BATTLEFIELD_BATTLEID_WG))
                 if (Player* target = GetExplTargetUnit()->ToPlayer())
                     // check if we are in Wintergrasp at all, SotA uses same teleport spells
-                    if ((target->GetZoneId() == 4197 && target->GetTeamId() != wg->GetDefenderTeam()) || target->HasAura(SPELL_WINTERGRASP_TELEPORT_TRIGGER))
+                    if ((target->GetZoneId() == ZONE_WINTERGRASP && target->GetTeamId() != wg->GetDefenderTeam()) || target->HasAura(SPELL_WINTERGRASP_TELEPORT_TRIGGER))
                         return SPELL_FAILED_BAD_TARGETS;
             return SPELL_CAST_OK;
         }
