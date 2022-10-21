@@ -107,13 +107,13 @@ local z_crc_t x2nmodp OF((z_off64_t n, unsigned k));
 #  define ARMCRC32
 #endif
 
-#if defined(W) && (!defined(ARMCRC32) || defined(DYNAMIC_CRC_TABLE))
+//#if defined(W) && (!defined(ARMCRC32) || defined(DYNAMIC_CRC_TABLE))
 /*
   Swap the bytes in a z_word_t to convert between little and big endian. Any
   self-respecting compiler will optimize this to a single machine byte-swap
   instruction, if one is available. This assumes that word_t is either 32 bits
   or 64 bits.
- */
+ 
 local z_word_t byte_swap(word)
     z_word_t word;
 {
@@ -128,14 +128,14 @@ local z_word_t byte_swap(word)
         (word & 0xff00) << 40 |
         (word & 0xff) << 56;
 #  else   /* W == 4 */
-    return
+/*    return
         (word & 0xff000000) >> 24 |
         (word & 0xff0000) >> 8 |
         (word & 0xff00) << 8 |
         (word & 0xff) << 24;
 #  endif
 }
-#endif
+#endif*/
 
 /* CRC polynomial. */
 #define POLY 0xedb88320         /* p(x) reflected, with x^32 implied */

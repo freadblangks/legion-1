@@ -77,12 +77,12 @@ protected:
 private:
 
     Random& operator=(const Random&) {
-        alwaysAssertM(false,
+/*        alwaysAssertM(false,
             "There is no copy constructor or assignment operator for Random because you "
             "probably didn't actually want to copy the state--it would "
             "be slow and duplicate the state of a pseudo-random sequence.  Maybe you could "
             "provide arguments to a member variable in the constructor, "
-            "or pass the Random by reference?");
+            "or pass the Random by reference?");*/
         return *this;
     }
 

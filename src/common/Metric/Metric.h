@@ -22,7 +22,7 @@
 #include "Duration.h"
 #include "MPSCQueue.h"
 #include "Optional.h"
-#include <boost/container/small_vector.hpp>
+//#include <boost/container/small_vector.hpp>
 #include <functional>
 #include <iosfwd>
 #include <memory>
@@ -46,8 +46,7 @@ enum MetricDataType
 };
 
 using MetricTag = std::pair<std::string, std::string>;
-using MetricTagsVector = boost::container::small_vector<MetricTag, 2>;
-
+using MetricTagsVector = std::pair<std::string, std::string>;
 struct MetricData
 {
     std::string Category;
@@ -124,7 +123,7 @@ public:
         data->Type = METRIC_DATA_VALUE;
         data->ValueOrEventText = FormatInfluxDBValue(value);
         if constexpr (sizeof...(tags) > 0)
-            (data->Tags.emplace_back(std::move(tags)), ...);
+           // (data->Tags.emplace_back(std::move(tags)), ...);
 
         _queuedData.Enqueue(data);
     }
