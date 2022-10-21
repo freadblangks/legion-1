@@ -18,8 +18,10 @@
 #include "DynamicTree.h"
 #include "BoundingIntervalHierarchyWrapper.h"
 #include "GameObjectModel.h"
+#include "Log.h"
 #include "MapTree.h"
 #include "ModelIgnoreFlags.h"
+#include "ModelInstance.h"
 #include "RegularGrid.h"
 #include "Timer.h"
 #include "VMapFactory.h"
@@ -101,7 +103,7 @@ struct DynTreeImpl : public ParentTree/*, public Intersectable*/
         }
     }
 
-    TimeTracker rebalance_timer;
+    TimeTrackerSmall rebalance_timer;
     int unbalanced_times;
 };
 
@@ -291,11 +293,11 @@ void DynamicMapTree::getAreaAndLiquidData(float x, float y, float z, PhaseShift 
         data.floorZ = intersectionCallBack.GetLocationInfo().ground_Z;
         uint32 liquidType = intersectionCallBack.GetLocationInfo().hitModel->GetLiquidType();
         float liquidLevel;
-        if (!reqLiquidType || VMAP::VMapFactory::createOrGetVMapManager()->GetLiquidFlagsPtr(liquidType) & reqLiquidType)
+        if (!reqLiquidType || (dynamic_cast<VMAP::VMapManager2*>(VMAP::VMapFactory::createOrGetVMapManager())->GetLiquidFlagsPtr(liquidType) & reqLiquidType))
             if (intersectionCallBack.GetHitModel()->GetLiquidLevel(v, intersectionCallBack.GetLocationInfo(), liquidLevel))
-                data.liquidInfo.emplace(liquidType, liquidLevel);
+                data.liquidInfo = boost::in_place(liquidType, liquidLevel);
 
-        data.areaInfo.emplace(intersectionCallBack.GetHitModel()->GetNameSetId(),
+        data.areaInfo = boost::in_place(intersectionCallBack.GetHitModel()->GetNameSetId(),
             intersectionCallBack.GetLocationInfo().rootId,
             intersectionCallBack.GetLocationInfo().hitModel->GetWmoID(),
             intersectionCallBack.GetLocationInfo().hitModel->GetMogpFlags());

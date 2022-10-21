@@ -23,18 +23,10 @@
 namespace Trinity
 {
     /// Default TC string format function.
-    template<typename... Args>
-    std::string StringFormat(std::string_view fmt, Args&&... args)
+    template<typename Format, typename... Args>
+    inline std::string StringFormat(Format&& fmt, Args&&... args)
     {
-        try
-        {
-            return fmt::sprintf(fmt, std::forward<Args>(args)...);
-        }
-        catch (fmt::format_error const& formatError)
-        {
-            std::string error = "An error occurred formatting string \"" + std::string(fmt) + "\" : " + formatError.what();
-            return error;
-        }
+        return fmt::sprintf(std::forward<Format>(fmt), std::forward<Args>(args)...);
     }
 
     /// Returns true if the given char pointer is null.
@@ -45,12 +37,6 @@ namespace Trinity
 
     /// Returns true if the given std::string is empty.
     inline bool IsFormatEmptyOrNull(std::string const& fmt)
-    {
-        return fmt.empty();
-    }
-
-    /// Returns true if the given std::string_view is empty.
-    inline bool IsFormatEmptyOrNull(std::string_view const& fmt)
     {
         return fmt.empty();
     }

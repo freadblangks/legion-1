@@ -18,7 +18,12 @@ if(WIN32)
 
   set(Boost_USE_STATIC_LIBS        ON)
   set(Boost_USE_MULTITHREADED      ON)
-  set(Boost_USE_STATIC_RUNTIME     OFF)
+  set(Boost_USE_STATIC_RUNTIME     ON)
+endif()
+
+if (CMAKE_VERSION VERSION_LESS "3.16.0")
+  # boost's own cmake file adds extra compile definitions that cotire fails to pick up
+  set(Boost_NO_BOOST_CMAKE ON)
 endif()
 
 include (CheckCXXSourceCompiles)

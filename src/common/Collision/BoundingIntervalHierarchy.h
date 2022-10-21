@@ -28,26 +28,30 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
-#include "string.h"
+#include <cmath>
 
 #define MAX_STACK_SIZE 64
 
-// https://stackoverflow.com/a/4328396
-
 static inline uint32 floatToRawIntBits(float f)
 {
-    static_assert(sizeof(float) == sizeof(uint32), "Size of uint32 and float must be equal for this to work");
-    uint32 ret;
-    memcpy(&ret, &f, sizeof(float));
-    return ret;
+    union
+    {
+        uint32 ival;
+        float fval;
+    } temp;
+    temp.fval=f;
+    return temp.ival;
 }
 
 static inline float intBitsToFloat(uint32 i)
 {
-    static_assert(sizeof(float) == sizeof(uint32), "Size of uint32 and float must be equal for this to work");
-    float ret;
-    memcpy(&ret, &i, sizeof(uint32));
-    return ret;
+    union
+    {
+        uint32 ival;
+        float fval;
+    } temp;
+    temp.ival=i;
+    return temp.fval;
 }
 
 struct AABound
@@ -117,11 +121,12 @@ class TC_COMMON_API BIH
         {
             float intervalMin = -1.f;
             float intervalMax = -1.f;
-            G3D::Vector3 const& org = r.origin();
-            G3D::Vector3 const& dir = r.direction();
-            G3D::Vector3 const& invDir = r.invDirection();
+            G3D::Vector3 org = r.origin();
+            G3D::Vector3 dir = r.direction();
+            G3D::Vector3 invDir;
             for (int i=0; i<3; ++i)
             {
+                invDir[i] = 1.f / dir[i];
                 if (G3D::fuzzyNe(dir[i], 0.0f))
                 {
                     float t1 = (bounds.low()[i]  - org[i]) * invDir[i];

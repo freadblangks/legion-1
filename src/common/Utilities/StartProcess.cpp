@@ -20,19 +20,12 @@
 #include "Log.h"
 #include "Optional.h"
 
-#include "Hacks/boost_1_73_process_windows_nopch.h"
-
 #include <boost/algorithm/string/join.hpp>
 #include <boost/iostreams/copy.hpp>
-#include <boost/process/args.hpp>
-#include <boost/process/child.hpp>
-#include <boost/process/env.hpp>
-#include <boost/process/exe.hpp>
-#include <boost/process/io.hpp>
-#include <boost/process/pipe.hpp>
-#include <boost/process/search_path.hpp>
+#include <boost/process.hpp>
 
 using namespace boost::process;
+using namespace boost::process::initializers;
 using namespace boost::iostreams;
 
 namespace Trinity
@@ -53,19 +46,8 @@ public:
 
     std::streamsize write(char const* str, std::streamsize size)
     {
-        std::string_view consoleStr(str, size);
-        size_t lineEnd = consoleStr.find_first_of("\r\n");
-        std::streamsize processedCharacters = size;
-        if (lineEnd != std::string_view::npos)
-        {
-            consoleStr = consoleStr.substr(0, lineEnd);
-            processedCharacters = lineEnd + 1;
-        }
-
-        if (!consoleStr.empty())
-            callback_(consoleStr);
-
-        return processedCharacters;
+        callback_(std::string(str, size));
+        return size;
     }
 };
 
@@ -78,67 +60,62 @@ auto MakeTCLogSink(T&& callback)
 
 template<typename T>
 static int CreateChildProcess(T waiter, std::string const& executable,
-                              std::vector<std::string> const& argsVector,
+                              std::vector<std::string> const& args,
                               std::string const& logger, std::string const& input,
                               bool secure)
 {
-    ipstream outStream;
-    ipstream errStream;
+    auto outPipe = create_pipe();
+    auto errPipe = create_pipe();
+
+    Optional<file_descriptor_source> inputSource;
 
     if (!secure)
     {
         TC_LOG_TRACE(logger, "Starting process \"%s\" with arguments: \"%s\".",
-                executable.c_str(), boost::algorithm::join(argsVector, " ").c_str());
+                executable.c_str(), boost::algorithm::join(args, " ").c_str());
     }
 
-    // prepare file with only read permission (boost process opens with read_write)
-    std::shared_ptr<FILE> inputFile(!input.empty() ? fopen(input.c_str(), "rb") : nullptr, [](FILE* ptr)
-    {
-        if (ptr != nullptr)
-            fclose(ptr);
-    });
-
     // Start the child process
-    child c = [&]()
+    child c = [&]
     {
-        if (inputFile)
+        if (!input.empty())
         {
+            inputSource = file_descriptor_source(input);
+
             // With binding stdin
-            return child{
-                exe = boost::filesystem::absolute(executable).string(),
-                args = argsVector,
-                env = environment(boost::this_process::environment()),
-                std_in = inputFile.get(),
-                std_out = outStream,
-                std_err = errStream
-            };
+            return execute(run_exe(boost::filesystem::absolute(executable)),
+                set_args(args),
+                inherit_env(),
+                bind_stdin(*inputSource),
+                bind_stdout(file_descriptor_sink(outPipe.sink, close_handle)),
+                bind_stderr(file_descriptor_sink(errPipe.sink, close_handle)));
         }
         else
         {
             // Without binding stdin
-            return child{
-                exe = boost::filesystem::absolute(executable).string(),
-                args = argsVector,
-                env = environment(boost::this_process::environment()),
-                std_in = boost::process::close,
-                std_out = outStream,
-                std_err = errStream
-            };
+            return execute(run_exe(boost::filesystem::absolute(executable)),
+                set_args(args),
+                inherit_env(),
+                bind_stdout(file_descriptor_sink(outPipe.sink, close_handle)),
+                bind_stderr(file_descriptor_sink(errPipe.sink, close_handle)));
         }
     }();
 
-    auto outInfo = MakeTCLogSink([&](std::string_view msg)
+    file_descriptor_source outFd(outPipe.source, close_handle);
+    file_descriptor_source errFd(errPipe.source, close_handle);
+
+    auto outInfo = MakeTCLogSink([&](std::string msg)
     {
-        TC_LOG_INFO(logger, STRING_VIEW_FMT, STRING_VIEW_FMT_ARG(msg));
+        TC_LOG_INFO(logger, "%s", msg.c_str());
     });
 
-    auto outError = MakeTCLogSink([&](std::string_view msg)
+    auto outError = MakeTCLogSink([&](std::string msg)
     {
-        TC_LOG_ERROR(logger, STRING_VIEW_FMT, STRING_VIEW_FMT_ARG(msg));
+        TC_LOG_ERROR(logger, "%s", msg.c_str());
     });
 
-    copy(outStream, outInfo);
-    copy(errStream, outError);
+    copy(outFd, outInfo);
+    copy(errFd, outError);
 
     // Call the waiter in the current scope to prevent
     // the streams from closing too early on leaving the scope.
@@ -150,6 +127,9 @@ static int CreateChildProcess(T waiter, std::string const& executable,
                 executable.c_str(), result);
     }
 
+    if (inputSource)
+        inputSource->close();
+
     return result;
 }
 
@@ -160,8 +140,7 @@ int StartProcess(std::string const& executable, std::vector<std::string> const& 
     {
         try
         {
-            c.wait();
-            return c.exit_code();
+            return wait_for_exit(c);
         }
         catch (...)
         {
@@ -209,8 +188,7 @@ public:
 
             try
             {
-                c.wait();
-                result = c.exit_code();
+                result = wait_for_exit(c);
             }
             catch (...)
             {
@@ -239,12 +217,12 @@ public:
     /// Tries to terminate the process
     void Terminate() override
     {
-        if (my_child)
+        if (!my_child)
         {
             was_terminated = true;
             try
             {
-                my_child->get().terminate();
+                terminate(my_child->get());
             }
             catch(...)
             {
@@ -269,7 +247,7 @@ std::string SearchExecutableInPath(std::string const& filename)
 {
     try
     {
-        return search_path(filename).string();
+        return search_path(filename);
     }
     catch (...)
     {

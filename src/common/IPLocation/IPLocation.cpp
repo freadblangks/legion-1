@@ -22,6 +22,7 @@
 #include "IpAddress.h"
 #include "Log.h"
 #include <fstream>
+#include <iostream>
 
 IpLocationStore::IpLocationStore()
 {

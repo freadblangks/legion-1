@@ -31,13 +31,20 @@ This is the minimum interface to the VMapMamager.
 
 namespace VMAP
 {
+
+    enum VMAP_LOAD_RESULT
+    {
+        VMAP_LOAD_RESULT_ERROR,
+        VMAP_LOAD_RESULT_OK,
+        VMAP_LOAD_RESULT_IGNORED
+    };
+
     enum class LoadResult : uint8
     {
         Success,
         FileNotFound,
         VersionMismatch,
-        ReadFromFileFailed,
-        DisabledInConfig
+        ReadFromFileFailed
     };
 
     #define VMAP_INVALID_HEIGHT       -100000.0f            // for check
@@ -76,7 +83,7 @@ namespace VMAP
 
             virtual ~IVMapManager(void) { }
 
-            virtual LoadResult loadMap(char const* pBasePath, unsigned int pMapId, int x, int y) = 0;
+            virtual int loadMap(char const* pBasePath, unsigned int pMapId, int x, int y) = 0;
 
             virtual LoadResult existsMap(char const* pBasePath, unsigned int pMapId, int x, int y) = 0;
 
@@ -115,8 +122,8 @@ namespace VMAP
             Query world model area info.
             \param z gets adjusted to the ground height for which this are info is valid
             */
-            virtual bool getAreaInfo(uint32 mapId, float x, float y, float &z, uint32 &flags, int32 &adtId, int32 &rootId, int32 &groupId) const=0;
-            virtual bool GetLiquidLevel(uint32 mapId, float x, float y, float z, uint8 reqLiquidType, float& level, float& floor, uint32& type, uint32& mogpFlags) const=0;
+            virtual bool getAreaInfo(unsigned int pMapId, float x, float y, float &z, uint32 &flags, int32 &adtId, int32 &rootId, int32 &groupId) const=0;
+            virtual bool GetLiquidLevel(uint32 pMapId, float x, float y, float z, uint8 ReqLiquidType, float &level, float &floor, uint32 &type) const=0;
             // get both area + liquid data in a single vmap lookup
             virtual void getAreaAndLiquidData(unsigned int mapId, float x, float y, float z, uint8 reqLiquidType, AreaAndLiquidData& data) const=0;
     };
