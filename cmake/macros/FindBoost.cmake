@@ -1228,7 +1228,7 @@ if(Boost_FOUND)
   endforeach()
 else()
   if(Boost_FIND_REQUIRED)
-    message(SEND_ERROR "Unable to find the requested Boost libraries.\n${Boost_ERROR_REASON}")
+    #message(SEND_ERROR "Unable to find the requested Boost libraries.\n${Boost_ERROR_REASON}")
   else()
     if(NOT Boost_FIND_QUIETLY)
       # we opt not to automatically output Boost_ERROR_REASON here as
@@ -1236,7 +1236,7 @@ else()
       # Since Boost is not always a required dependency we'll leave this
       # up to the end-user.
       if(Boost_DEBUG OR Boost_DETAILED_FAILURE_MSG)
-        message(STATUS "Could NOT find Boost\n${Boost_ERROR_REASON}")
+       # message(STATUS "Could NOT find Boost\n${Boost_ERROR_REASON}")
       else()
         message(STATUS "Could NOT find Boost")
       endif()

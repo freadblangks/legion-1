@@ -16,9 +16,9 @@ function(WarnAboutSpacesInBuildPath)
 
     if (SPACE_INDEX_POS GREATER -1)
       message("")
-      message(WARNING " *** WARNING!\n"
-                      " *** Your selected build directory contains spaces!\n"
-                      " *** Please note that this will cause issues!")
+    #  message(WARNING " *** WARNING!\n"
+      #                " *** Your selected build directory contains spaces!\n"
+       #               " *** Please note that this will cause issues!")
     endif()
   endif()
 endfunction()

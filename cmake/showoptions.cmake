@@ -123,7 +123,7 @@ if (BUILD_SHARED_LIBS)
   endif()
   add_definitions(-DTRINITY_API_USE_DYNAMIC_LINKING)
 
-  WarnAboutSpacesInBuildPath()
+ # WarnAboutSpacesInBuildPath()
 endif()
 
 message("")

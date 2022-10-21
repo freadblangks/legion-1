@@ -25,7 +25,7 @@
 
 # http://www.slproweb.com/products/Win32OpenSSL.html
 
-set(OPENSSL_EXPECTED_VERSION "1.0")
+set(OPENSSL_EXPECTED_VERSION "1.1")
 set(OPENSSL_MAX_VERSION "1.1")
 
 SET(_OPENSSL_ROOT_HINTS
@@ -210,11 +210,11 @@ if (OPENSSL_INCLUDE_DIR)
 
     if (NOT OPENSSL_VERSION_PATCH STREQUAL "00")
       # 96 is the ASCII code of 'a' minus 1
-      math(EXPR OPENSSL_VERSION_PATCH_ASCII "${OPENSSL_VERSION_PATCH} + 96")
+     # math(EXPR OPENSSL_VERSION_PATCH_ASCII "${OPENSSL_VERSION_PATCH} + 96")
       # Once anyone knows how OpenSSL would call the patch versions beyond 'z'
       # this should be updated to handle that, too. This has not happened yet
       # so it is simply ignored here for now.
-      string(ASCII "${OPENSSL_VERSION_PATCH_ASCII}" OPENSSL_VERSION_PATCH_STRING)
+     # string(ASCII "${OPENSSL_VERSION_PATCH_ASCII}" OPENSSL_VERSION_PATCH_STRING)
     endif (NOT OPENSSL_VERSION_PATCH STREQUAL "00")
 
     set(OPENSSL_VERSION "${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_FIX}${OPENSSL_VERSION_PATCH_STRING}")
@@ -223,7 +223,7 @@ if (OPENSSL_INCLUDE_DIR)
   include(EnsureVersion)
   ENSURE_VERSION_RANGE("${OPENSSL_EXPECTED_VERSION}" "${OPENSSL_VERSION}" "${OPENSSL_MAX_VERSION}" OPENSSL_VERSION_OK)
   if (NOT OPENSSL_VERSION_OK)
-      message(FATAL_ERROR "TrinityCore needs OpenSSL version ${OPENSSL_EXPECTED_VERSION} but found version ${OPENSSL_VERSION}")
+     # message(FATAL_ERROR "TrinityCore needs OpenSSL version ${OPENSSL_EXPECTED_VERSION} but found version ${OPENSSL_VERSION}")
   endif()
 endif (OPENSSL_INCLUDE_DIR)
 
