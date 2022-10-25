@@ -13,6 +13,7 @@ if(WIN32)
   if(DEFINED ENV{BOOST_ROOT})
     set(BOOST_ROOT $ENV{BOOST_ROOT})
     list(APPEND BOOST_LIBRARYDIR
+      ${BOOST_ROOT}/lib${PLATFORM}-msvc-12.0
       ${BOOST_ROOT}/lib${PLATFORM}-msvc-14.2 )
   endif()
 
@@ -30,9 +31,9 @@ include (CheckCXXSourceCompiles)
 
 if (WIN32)
   # On windows the requirements are higher according to the wiki.
-  set(BOOST_REQUIRED_VERSION 1.73)
+  set(BOOST_REQUIRED_VERSION 1.58)
 else()
-  set(BOOST_REQUIRED_VERSION 1.71)
+  set(BOOST_REQUIRED_VERSION 1.58)
 endif()
 
 find_package(Boost ${BOOST_REQUIRED_VERSION} REQUIRED system filesystem program_options iostreams regex)
