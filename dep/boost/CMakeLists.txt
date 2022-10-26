@@ -22,7 +22,7 @@ if(WIN32)
         ${BOOST_ROOT}/lib${PLATFORM}-msvc-14.0)
     endif()
   else()
-   # message(FATAL_ERROR "No BOOST_ROOT environment variable could be found! Please make sure it is set and the points to your Boost installation.")
+    #message(FATAL_ERROR "No BOOST_ROOT environment variable could be found! Please make sure it is set and the points to your Boost installation.")
   endif()
 
   set(Boost_USE_STATIC_LIBS        ON)
@@ -38,9 +38,9 @@ check_cxx_source_compiles("
   STD_HAS_WORKING_WREGEX)
 
 if (STD_HAS_WORKING_WREGEX)
-  find_package(Boost 1.66 REQUIRED system filesystem thread program_options iostreams)
+  find_package(Boost 1.55 REQUIRED system filesystem thread program_options iostreams)
 else()
-  find_package(Boost 1.64 REQUIRED system filesystem thread program_options iostreams regex)
+  find_package(Boost 1.55 REQUIRED system filesystem thread program_options iostreams regex)
 endif()
 
 # Find if Boost was compiled in C++03 mode because it requires -DBOOST_NO_CXX11_SCOPED_ENUMS

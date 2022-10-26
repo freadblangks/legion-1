@@ -27,11 +27,12 @@ struct TC_COMMON_API DB2FileSystemSource : public DB2FileSource
     ~DB2FileSystemSource();
     bool IsOpen() const override;
     bool Read(void* buffer, std::size_t numBytes) override;
-    int64 GetPosition() const override;
-    bool SetPosition(int64 position) override;
-    int64 GetFileSize() const override;
+    int64 GetPosition() ;
+    bool SetPosition(int64 position);
+    int64 GetFileSize() ;
     char const* GetFileName() const override;
-    DB2EncryptedSectionHandling HandleEncryptedSection(DB2SectionHeader const& sectionHeader) const override;
+   
+   // DB2EncryptedSectionHandling HandleEncryptedSection(DB2SectionHeader const& sectionHeader) const override;
 
 private:
     std::string _fileName;

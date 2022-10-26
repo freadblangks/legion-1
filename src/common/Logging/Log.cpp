@@ -1,5 +1,6 @@
 /*
- * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -56,14 +57,15 @@ Appender* Log::GetAppenderByName(std::string const& name)
     return it == appenders.end() ? nullptr : it->second.get();
 }
 
-void Log::CreateAppenderFromConfigLine(std::string const& appenderName, std::string const& options)
+void Log::CreateAppenderFromConfig(std::string const& appenderName)
 {
     if (appenderName.empty())
         return;
 
-    // Format = type, level, flags, optional1, optional2
+    // Format=type, level, flags, optional1, optional2
     // if type = File. optional1 = file and option2 = mode
     // if type = Console. optional1 = Color
+    std::string options = sConfigMgr->GetStringDefault(appenderName.c_str(), "");
 
     Tokenizer tokens(options, ',');
     auto iter = tokens.begin();
@@ -108,20 +110,16 @@ void Log::CreateAppenderFromConfigLine(std::string const& appenderName, std::str
     }
 }
 
-void Log::CreateAppenderFromConfig(std::string const& appenderName)
+void Log::CreateLoggerFromConfig(std::string const& appenderName)
 {
-    CreateAppenderFromConfigLine(appenderName, sConfigMgr->GetStringDefault(appenderName, ""));
-}
-
-void Log::CreateLoggerFromConfigLine(std::string const& loggerName, std::string const& options)
-{
-    if (loggerName.empty())
+    if (appenderName.empty())
         return;
 
     LogLevel level = LOG_LEVEL_DISABLED;
     uint8 type = uint8(-1);
 
-    std::string name = loggerName.substr(7);
+    std::string options = sConfigMgr->GetStringDefault(appenderName.c_str(), "");
+    std::string name = appenderName.substr(7);
 
     if (options.empty())
     {
@@ -155,7 +153,7 @@ void Log::CreateLoggerFromConfigLine(std::string const& loggerName, std::string 
     if (level < lowestLogLevel)
         lowestLogLevel = level;
 
-    logger = std::make_unique<Logger>(name, level);
+    logger = Trinity::make_unique<Logger>(name, level);
     //fprintf(stdout, "Log::CreateLoggerFromConfig: Created Logger %s, Level %u\n", name.c_str(), level);
 
     std::istringstream ss(*iter);
@@ -173,11 +171,6 @@ void Log::CreateLoggerFromConfigLine(std::string const& loggerName, std::string 
             fprintf(stderr, "Error while configuring Appender %s in Logger %s. Appender does not exist", str.c_str(), name.c_str());
         ss >> str;
     }
-}
-
-void Log::CreateLoggerFromConfig(std::string const& loggerName)
-{
-    CreateLoggerFromConfigLine(loggerName, sConfigMgr->GetStringDefault(loggerName, ""));
 }
 
 void Log::ReadAppendersFromConfig()
@@ -221,14 +214,14 @@ void Log::RegisterAppender(uint8 index, AppenderCreatorFn appenderCreateFn)
     appenderFactory[index] = appenderCreateFn;
 }
 
-void Log::outMessage(std::string const& filter, LogLevel level, std::string&& message)
+void Log::outMessage(std::string const& filter, LogLevel const level, std::string&& message)
 {
-    write(std::make_unique<LogMessage>(level, filter, std::move(message)));
+    write(Trinity::make_unique<LogMessage>(level, filter, std::move(message)));
 }
 
 void Log::outCommand(std::string&& message, std::string&& param1)
 {
-    write(std::make_unique<LogMessage>(LOG_LEVEL_INFO, "commands.gm", std::move(message), std::move(param1)));
+    write(Trinity::make_unique<LogMessage>(LOG_LEVEL_INFO, "commands.gm", std::move(message), std::move(param1)));
 }
 
 void Log::write(std::unique_ptr<LogMessage>&& msg) const
@@ -251,10 +244,10 @@ Logger const* Log::GetLoggerByType(std::string const& type) const
         return it->second.get();
 
     if (type == LOGGER_ROOT)
-        return nullptr;
+        return NULL;
 
     std::string parentLogger = LOGGER_ROOT;
-    size_t found = type.find_last_of('.');
+    size_t found = type.find_last_of(".");
     if (found != std::string::npos)
         parentLogger = type.substr(0, found);
 
@@ -287,7 +280,7 @@ std::string Log::GetTimestampStr()
     }
 }
 
-bool Log::SetLogLevel(std::string const& name, char const* newLevelc, bool isLogger /* = true */)
+bool Log::SetLogLevel(std::string const& name, const char* newLevelc, bool isLogger /* = true */)
 {
     LogLevel newLevel = LogLevel(atoi(newLevelc));
     if (newLevel < 0)

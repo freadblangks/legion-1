@@ -1,4 +1,4 @@
-# This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+# Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -13,11 +13,14 @@
 # (further support will be needed, this is a preliminary release!)
 set(OPENSSL_EXPECTED_VERSION 1.0.0)
 
-find_package(OpenSSL REQUIRED COMPONENTS Crypto SSL)
+find_package(OpenSSL REQUIRED)
 
 add_library(openssl INTERFACE)
 
 target_link_libraries(openssl
   INTERFACE
-    OpenSSL::Crypto
-    OpenSSL::SSL)
+    ${OPENSSL_LIBRARIES})
+
+target_include_directories(openssl
+  INTERFACE
+    ${OPENSSL_INCLUDE_DIR})

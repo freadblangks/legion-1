@@ -18,9 +18,10 @@
 #include "Ed25519.h"
 #include "CryptoHash.h"
 #include "Memory.h"
-#include <ed25519/ed25519.h>
 #include <openssl/pem.h>
 #include <memory>
+#include "../../../dep/gsoap/soapStub.h"
+#include <wtypes.h>
 
 namespace Trinity::Crypto
 {
@@ -39,25 +40,25 @@ Ed25519::Ed25519(Ed25519&& right) noexcept
 Ed25519::~Ed25519()
 {
     EVP_PKEY_free(_key);
-}
+};
 
-Ed25519& Ed25519::operator=(Ed25519 const& right)
+//auto Ed25519::Ed25519::operator=(Ed25519 const& right)
+//{
+   // if (this == &right)
+  //  return;// *this;
+
+    //_key = right._key;                      // EVP_PKEY uses reference counting internally, just copy the pointer
+    //EVP_PKEY_up_ref();                  // Bump reference count for PKEY, as every instance of this class holds two references to PKEY and destructor decrements it twice
+    //return *this;
+//}
+
+void Ed25519()
 {
-    if (this == &right)
-        return *this;
+    //if (this == &right)
+        return;
 
-    _key = right._key;                      // EVP_PKEY uses reference counting internally, just copy the pointer
-    EVP_PKEY_up_ref(_key);                  // Bump reference count for PKEY, as every instance of this class holds two references to PKEY and destructor decrements it twice
-    return *this;
-}
-
-Ed25519& Ed25519::operator=(Ed25519&& right) noexcept
-{
-    if (this == &right)
-        return *this;
-
-    _key = std::exchange(right._key, EVP_PKEY_new());
-    return *this;
+    //_key = std::exchange(right._key, EVP_PKEY_new());
+    //return *this;
 }
 
 bool Ed25519::LoadFromFile(std::string const& fileName)
@@ -108,7 +109,7 @@ bool Ed25519::LoadFromByteArray(std::array<uint8, 32> const& keyBytes)
         _key = nullptr;
     }
 
-    _key = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, nullptr, keyBytes.data(), keyBytes.size());
+   // _key = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, nullptr, keyBytes.data(), keyBytes.size());
     if (!_key)
         return false;
 
@@ -121,15 +122,15 @@ bool Ed25519::Sign(uint8 const* message, std::size_t messageLength, std::vector<
 
     uint8 publicKey[KeySize] = {};
     std::size_t keyLength = KeySize;
-    EVP_PKEY_get_raw_public_key(_key, publicKey, &keyLength);
+    //EVP_PKEY_get_raw_public_key(Key, publicKey, &keyLength);
 
     uint8 privateKey[KeySize] = {};
     keyLength = KeySize;
-    EVP_PKEY_get_raw_private_key(_key, privateKey, &keyLength);
+    //EVP_PKEY_get_raw_private_key(_key, privateKey, &keyLength);
 
     output.resize(64);
-    int result = ED25519_sign(output.data(), message, messageLength, publicKey, privateKey);
-    return result != 0;
+   // int result = ED25519_sign(output.data(), message, messageLength, publicKey, privateKey);
+    return;// result != 0;
 }
 
 bool Ed25519::SignWithContext(uint8 const* message, std::size_t messageLength, std::vector<uint8> const& context, std::vector<uint8>& output)
@@ -138,14 +139,14 @@ bool Ed25519::SignWithContext(uint8 const* message, std::size_t messageLength, s
 
     uint8 publicKey[KeySize] = {};
     std::size_t keyLength = KeySize;
-    EVP_PKEY_get_raw_public_key(_key, publicKey, &keyLength);
+   // EVP_PKEY_get_raw_public_key(_key, publicKey, &keyLength);
 
     uint8 privateKey[KeySize] = {};
     keyLength = KeySize;
-    EVP_PKEY_get_raw_private_key(_key, privateKey, &keyLength);
+   // EVP_PKEY_get_raw_private_key(_key, privateKey, &keyLength);
 
     output.resize(64);
-    int result = ED25519_sign_ctx(output.data(), message, messageLength, publicKey, privateKey, context.data(), context.size());
-    return result != 0;
+    //int result = ED25519_sign_ctx(output.data(), message, messageLength, publicKey, privateKey, context.data(), context.size());
+    return;// result != 0;
 }
 }

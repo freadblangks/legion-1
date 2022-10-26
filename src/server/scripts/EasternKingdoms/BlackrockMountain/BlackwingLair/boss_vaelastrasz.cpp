@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -74,9 +75,9 @@ public:
         boss_vaelAI(Creature* creature) : BossAI(creature, DATA_VAELASTRAZ_THE_CORRUPT)
         {
             Initialize();
-            creature->AddNpcFlag(UNIT_NPC_FLAG_GOSSIP);
-            creature->SetFaction(35);
-            creature->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+            creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            creature->setFaction(35);
+            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         }
 
         void Initialize()
@@ -113,7 +114,7 @@ public:
         void BeginSpeech(Unit* target)
         {
             PlayerGUID = target->GetGUID();
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             events.ScheduleEvent(EVENT_SPEECH_1, 1000);
         }
 
@@ -153,7 +154,7 @@ public:
                             events.ScheduleEvent(EVENT_SPEECH_4, 16000);
                             break;
                         case EVENT_SPEECH_4:
-                            me->SetFaction(103);
+                            me->setFaction(103);
                             if (Player* player = ObjectAccessor::GetPlayer(*me, PlayerGUID))
                                 AttackStart(player);
                             break;

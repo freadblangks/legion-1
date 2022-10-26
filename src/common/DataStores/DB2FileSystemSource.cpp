@@ -40,7 +40,7 @@ bool DB2FileSystemSource::Read(void* buffer, std::size_t numBytes)
     return fread(buffer, numBytes, 1, _file) == 1;
 }
 
-int64 DB2FileSystemSource::GetPosition() const
+int64 DB2FileSystemSource::GetPosition()
 {
     return ftell(_file);
 }
@@ -50,7 +50,7 @@ bool DB2FileSystemSource::SetPosition(int64 position)
     return fseek(_file, position, SEEK_SET) == 0;
 }
 
-int64 DB2FileSystemSource::GetFileSize() const
+int64 DB2FileSystemSource::GetFileSize() 
 {
     boost::system::error_code error;
     int64 size = boost::filesystem::file_size(_fileName, error);
@@ -62,7 +62,7 @@ char const* DB2FileSystemSource::GetFileName() const
     return _fileName.c_str();
 }
 
-DB2EncryptedSectionHandling DB2FileSystemSource::HandleEncryptedSection(DB2SectionHeader const& /*sectionHeader*/) const
-{
-    return DB2EncryptedSectionHandling::Skip;
-}
+//DB2EncryptedSectionHandling DB2FileSystemSource::HandleEncryptedSection(DB2SectionHeader const& /*sectionHeader*/) const
+//{
+  //  return DB2EncryptedSectionHandling::Skip;
+//}

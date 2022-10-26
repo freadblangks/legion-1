@@ -1,5 +1,6 @@
 /*
- * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,33 +17,35 @@
  */
 
 #include "ARC4.h"
-#include "Errors.h"
 
-Trinity::Crypto::ARC4::ARC4() : _ctx(EVP_CIPHER_CTX_new())
+ARC4::ARC4(uint32 len) : m_ctx()
 {
-    EVP_CIPHER_CTX_init(_ctx);
-    int result = EVP_EncryptInit_ex(_ctx, EVP_rc4(), nullptr, nullptr, nullptr);
-    ASSERT(result == 1);
+    EVP_CIPHER_CTX_init(&m_ctx);
+    EVP_EncryptInit_ex(&m_ctx, EVP_rc4(), NULL, NULL, NULL);
+    EVP_CIPHER_CTX_set_key_length(&m_ctx, len);
 }
 
-Trinity::Crypto::ARC4::~ARC4()
+ARC4::ARC4(uint8 *seed, uint32 len) : m_ctx()
 {
-    EVP_CIPHER_CTX_free(_ctx);
+    EVP_CIPHER_CTX_init(&m_ctx);
+    EVP_EncryptInit_ex(&m_ctx, EVP_rc4(), NULL, NULL, NULL);
+    EVP_CIPHER_CTX_set_key_length(&m_ctx, len);
+    EVP_EncryptInit_ex(&m_ctx, NULL, NULL, seed, NULL);
 }
 
-void Trinity::Crypto::ARC4::Init(uint8 const* seed, size_t len)
+ARC4::~ARC4()
 {
-    int result1 = EVP_CIPHER_CTX_set_key_length(_ctx, len);
-    ASSERT(result1 == 1);
-    int result2 = EVP_EncryptInit_ex(_ctx, nullptr, nullptr, seed, nullptr);
-    ASSERT(result2 == 1);
+    EVP_CIPHER_CTX_cleanup(&m_ctx);
 }
 
-void Trinity::Crypto::ARC4::UpdateData(uint8* data, size_t len)
+void ARC4::Init(uint8 *seed)
+{
+    EVP_EncryptInit_ex(&m_ctx, NULL, NULL, seed, NULL);
+}
+
+void ARC4::UpdateData(int len, uint8 *data)
 {
     int outlen = 0;
-    int result1 = EVP_EncryptUpdate(_ctx, data, &outlen, data, len);
-    ASSERT(result1 == 1);
-    int result2 = EVP_EncryptFinal_ex(_ctx, data, &outlen);
-    ASSERT(result2 == 1);
+    EVP_EncryptUpdate(&m_ctx, data, &outlen, data, len);
+    EVP_EncryptFinal_ex(&m_ctx, data, &outlen);
 }

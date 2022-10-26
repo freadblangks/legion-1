@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -116,22 +116,31 @@ class boss_zuramat : public CreatureScript
                     Talk(SAY_SLAY);
             }
 
+            void UpdateAI(uint32 diff) override
+            {
+                if (!UpdateVictim())
+                    return;
+
+                scheduler.Update(diff,
+                    std::bind(&BossAI::DoMeleeAttackIfReady, this));
+            }
+
             void ScheduleTasks() override
             {
-                me->GetScheduler().Schedule(Seconds(4), [this](TaskContext task)
+                scheduler.Schedule(Seconds(4), [this](TaskContext task)
                 {
                     DoCast(me, SPELL_SUMMON_VOID_SENTRY);
                     task.Repeat(Seconds(7), Seconds(10));
                 });
 
-                me->GetScheduler().Schedule(Seconds(9), [this](TaskContext task)
+                scheduler.Schedule(Seconds(9), [this](TaskContext task)
                 {
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 60.0f, true))
                         DoCast(target, SPELL_VOID_SHIFT);
                     task.Repeat(Seconds(15));
                 });
 
-                me->GetScheduler().Schedule(Seconds(18), Seconds(20), [this](TaskContext task)
+                scheduler.Schedule(Seconds(18), Seconds(20), [this](TaskContext task)
                 {
                     DoCast(me, SPELL_SHROUD_OF_DARKNESS);
                     task.Repeat(Seconds(18), Seconds(20));

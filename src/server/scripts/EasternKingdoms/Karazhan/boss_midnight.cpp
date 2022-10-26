@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -101,13 +102,13 @@ public:
 
         void ScheduleTasks() override
         {
-            me->GetScheduler().Schedule(Seconds(15), Seconds(25), [this](TaskContext task)
+            scheduler.Schedule(Seconds(15), Seconds(25), [this](TaskContext task)
             {
                 DoCastVictim(SPELL_SHADOWCLEAVE);
                 task.Repeat(Seconds(15), Seconds(25));
             });
 
-            me->GetScheduler().Schedule(Seconds(25), Seconds(45), [this](TaskContext task)
+            scheduler.Schedule(Seconds(25), Seconds(45), [this](TaskContext task)
             {
                 if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
                     DoCast(target,SPELL_INTANGIBLE_PRESENCE);
@@ -115,7 +116,7 @@ public:
                 task.Repeat(Seconds(25), Seconds(45));
             });
 
-            me->GetScheduler().Schedule(Seconds(30), Seconds(60), [this](TaskContext task)
+            scheduler.Schedule(Seconds(30), Seconds(60), [this](TaskContext task)
             {
                 Talk(SAY_RANDOM);
                 task.Repeat(Seconds(30), Seconds(60));
@@ -169,7 +170,7 @@ public:
                 _phase = PHASE_MOUNTED;
                 DoCastSelf(SPELL_SPAWN_SMOKE);
 
-                me->GetScheduler().Schedule(Seconds(10), Seconds(25), [this](TaskContext task)
+                scheduler.Schedule(Seconds(10), Seconds(25), [this](TaskContext task)
                 {
                     Unit* target = nullptr;
                     ThreatContainer::StorageType const &t_list = me->getThreatManager().getThreatList();
@@ -191,7 +192,7 @@ public:
                     task.Repeat(Seconds(10), Seconds(25));
                 });
 
-                me->GetScheduler().Schedule(Seconds(25), Seconds(35), [this](TaskContext task)
+                scheduler.Schedule(Seconds(25), Seconds(35), [this](TaskContext task)
                 {
                     DoCastVictim(SPELL_KNOCKDOWN);
                     task.Repeat(Seconds(25), Seconds(35));
@@ -214,12 +215,13 @@ public:
                 _midnightGUID = guid;
         }
 
-        void UpdateAI(uint32 /*diff*/) override
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim() && _phase != PHASE_NONE)
                 return;
 
-            DoMeleeAttackIfReady();
+            scheduler.Update(diff,
+                std::bind(&BossAI::DoMeleeAttackIfReady, this));
         }
 
         void SpellHit(Unit* /*source*/, const SpellInfo* spell) override
@@ -232,7 +234,7 @@ public:
                 if (Creature* midnight = ObjectAccessor::GetCreature(*me, _midnightGUID))
                 {
                     _phase = PHASE_NONE;
-                    me->GetScheduler().CancelAll();
+                    scheduler.CancelAll();
 
                     midnight->AttackStop();
                     midnight->RemoveAllAttackers();
@@ -246,7 +248,7 @@ public:
                     me->GetMotionMaster()->MoveChase(midnight);
                     Talk(SAY_MOUNT);
 
-                    me->GetScheduler().Schedule(Seconds(3), [this](TaskContext task)
+                    scheduler.Schedule(Seconds(3), [this](TaskContext task)
                     {
                         if (Creature* midnight = ObjectAccessor::GetCreature(*me, _midnightGUID))
                         {
@@ -340,7 +342,7 @@ public:
         {
             BossAI::EnterCombat(who);
 
-            me->GetScheduler().Schedule(Seconds(15), Seconds(25), [this](TaskContext task)
+            scheduler.Schedule(Seconds(15), Seconds(25), [this](TaskContext task)
             {
                 DoCastVictim(SPELL_KNOCKDOWN);
                 task.Repeat(Seconds(15), Seconds(25));
@@ -361,12 +363,13 @@ public:
             }
         }
 
-        void UpdateAI(uint32 /*diff*/) override
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim() || _phase == PHASE_MOUNTED)
                 return;
 
-            DoMeleeAttackIfReady();
+            scheduler.Update(diff,
+                std::bind(&BossAI::DoMeleeAttackIfReady, this));
         }
 
         private:

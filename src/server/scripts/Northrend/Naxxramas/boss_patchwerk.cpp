@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -120,8 +120,8 @@ public:
                         // Hateful Strike targets the highest non-MT threat in melee range on 10man
                         // and the higher HP target out of the two highest non-MT threats in melee range on 25man
                         float MostThreat = 0.0f;
-                        Unit* secondThreatTarget = nullptr;
-                        Unit* thirdThreatTarget = nullptr;
+                        Unit* secondThreatTarget = NULL;
+                        Unit* thirdThreatTarget = NULL;
 
                         std::list<HostileReference*>::const_iterator i = me->getThreatManager().getThreatList().begin();
                         for (; i != me->getThreatManager().getThreatList().end(); ++i)
@@ -149,7 +149,7 @@ public:
                             }
                         }
 
-                        Unit* pHatefulTarget = nullptr;
+                        Unit* pHatefulTarget = NULL;
                         if (!thirdThreatTarget)
                             pHatefulTarget = secondThreatTarget;
                         else if (secondThreatTarget)

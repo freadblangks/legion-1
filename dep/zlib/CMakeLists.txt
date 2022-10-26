@@ -1,4 +1,4 @@
-# This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+# Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -38,8 +38,6 @@ else()
 
   add_library(zlib STATIC
     ${zlib_STAT_SRCS})
-
-  set_target_properties(zlib PROPERTIES LINKER_LANGUAGE CXX)
 
   target_include_directories(zlib
     PUBLIC

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -105,7 +106,7 @@ public:
     bool OnQuestAccept(Player* /*player*/, Creature* creature, const Quest* quest) override
     {
         if (quest->GetQuestId() == QUEST_MISSING_DIPLO_PT16)
-            creature->SetFaction(FACTION_HOSTILE);
+            creature->setFaction(FACTION_HOSTILE);
 
         return true;
     }
@@ -202,7 +203,7 @@ public:
                 return;
 
             me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
-            me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
             SetCombatMovement(true);
 
             if (me->IsInCombat())

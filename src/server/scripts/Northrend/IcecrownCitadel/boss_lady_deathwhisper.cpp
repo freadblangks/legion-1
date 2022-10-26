@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -209,7 +209,7 @@ class boss_lady_deathwhisper : public CreatureScript
                 _cultistQueue.clear();
                 _darnavanGUID.Clear();
                 _phase = PHASE_ALL;
-                me->GetScheduler().SetValidator([this]
+                scheduler.SetValidator([this]
                 {
                     return !(me->HasUnitState(UNIT_STATE_CASTING) && _phase != PHASE_INTRO);
                 });
@@ -235,7 +235,7 @@ class boss_lady_deathwhisper : public CreatureScript
                     _introDone = true;
                     Talk(SAY_INTRO_1);
                     _phase = PHASE_INTRO;
-                    me->GetScheduler().Schedule(Seconds(10), GROUP_INTRO, [this](TaskContext context)
+                    scheduler.Schedule(Seconds(10), GROUP_INTRO, [this](TaskContext context)
                     {
                         switch (context.GetRepeatCounter())
                         {
@@ -271,7 +271,7 @@ class boss_lady_deathwhisper : public CreatureScript
 
             void AttackStart(Unit* victim) override
             {
-                if (me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
+                if (me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
                     return;
 
                 if (victim && me->Attack(victim, true) && _phase != PHASE_ONE)
@@ -291,9 +291,9 @@ class boss_lady_deathwhisper : public CreatureScript
                 me->setActive(true);
                 DoZoneInCombat();
                 _phase = PHASE_ONE;
-                me->GetScheduler().CancelGroup(GROUP_INTRO);
+                scheduler.CancelGroup(GROUP_INTRO);
                 // phase-independent events
-                me->GetScheduler()
+                scheduler
                     .Schedule(Minutes(10), [this](TaskContext /*context*/)
                     {
                         DoCastSelf(SPELL_BERSERK);
@@ -306,7 +306,7 @@ class boss_lady_deathwhisper : public CreatureScript
                         death_and_decay.Repeat(Seconds(22), Seconds(30));
                     });
                     if (GetDifficulty() != DIFFICULTY_10_N)
-                        me->GetScheduler().Schedule(Seconds(27), [this](TaskContext dominate_mind)
+                        scheduler.Schedule(Seconds(27), [this](TaskContext dominate_mind)
                         {
                             Talk(SAY_DOMINATE_MIND);
                             for (uint8 i = 0; i < _dominateMindCount; i++)
@@ -315,7 +315,7 @@ class boss_lady_deathwhisper : public CreatureScript
                             dominate_mind.Repeat(Seconds(40), Seconds(45));
                         });
                 // phase one only
-                me->GetScheduler()
+                scheduler
                     .Schedule(Seconds(5), GROUP_ONE, [this](TaskContext wave)
                     {
                         SummonWaveP1();
@@ -358,7 +358,7 @@ class boss_lady_deathwhisper : public CreatureScript
                 {
                     if (darnavan->IsAlive())
                     {
-                        darnavan->SetFaction(35);
+                        darnavan->setFaction(35);
                         darnavan->CombatStop(true);
                         darnavan->GetMotionMaster()->MoveIdle();
                         darnavan->SetReactState(REACT_PASSIVE);
@@ -370,8 +370,7 @@ class boss_lady_deathwhisper : public CreatureScript
                             {
                                 for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
                                     if (Player* member = itr->GetSource())
-                                        if (member->IsInMap(owner))
-                                            member->KilledMonsterCredit(NPC_DARNAVAN_CREDIT);
+                                        member->KilledMonsterCredit(NPC_DARNAVAN_CREDIT);
                             }
                             else
                                 owner->KilledMonsterCredit(NPC_DARNAVAN_CREDIT);
@@ -384,7 +383,7 @@ class boss_lady_deathwhisper : public CreatureScript
 
             void EnterEvadeMode(EvadeReason /*why*/) override
             {
-                me->GetScheduler().CancelAll();
+                scheduler.CancelAll();
                 summons.DespawnAll();
                 if (Creature* darnavan = ObjectAccessor::GetCreature(*me, _darnavanGUID))
                     darnavan->DespawnOrUnsummon();
@@ -411,9 +410,9 @@ class boss_lady_deathwhisper : public CreatureScript
                     damage -= me->GetPower(POWER_MANA);
                     me->SetPower(POWER_MANA, 0);
                     me->RemoveAurasDueToSpell(SPELL_MANA_BARRIER);
-                    me->GetScheduler().CancelGroup(GROUP_ONE);
+                    scheduler.CancelGroup(GROUP_ONE);
 
-                    me->GetScheduler()
+                    scheduler
                         .Schedule(Seconds(12), GROUP_TWO, [this](TaskContext frostbolt)
                         {
                             DoCastVictim(SPELL_FROSTBOLT);
@@ -441,7 +440,7 @@ class boss_lady_deathwhisper : public CreatureScript
                     {
                         me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
                         me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_ATTACK_ME, true);
-                        me->GetScheduler().Schedule(Seconds(), GROUP_TWO, [this](TaskContext context)
+                        scheduler.Schedule(Seconds(), GROUP_TWO, [this](TaskContext context)
                         {
                             SummonWaveP2();
                             context.Repeat(Seconds(45));
@@ -482,13 +481,17 @@ class boss_lady_deathwhisper : public CreatureScript
                 summons.Summon(summon);
             }
 
-            void UpdateAI(uint32 /*diff*/) override
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim() && _phase != PHASE_INTRO)
                     return;
 
-                if (!me->HasAura(SPELL_MANA_BARRIER))
-                    DoMeleeAttackIfReady();
+                scheduler.Update(diff, [this]
+                {
+                    // We should not melee attack when barrier is up
+                    if (!me->HasAura(SPELL_MANA_BARRIER))
+                        DoMeleeAttackIfReady();
+                });
             }
 
             // summoning function for first phase
@@ -593,8 +596,8 @@ class npc_cult_fanatic : public CreatureScript
 
             void Reset() override
             {
-                me->GetScheduler().CancelAll();
-                me->GetScheduler()
+                _scheduler.CancelAll();
+                _scheduler
                     .SetValidator([this]
                     {
                         return !me->HasUnitState(UNIT_STATE_CASTING);
@@ -635,19 +638,19 @@ class npc_cult_fanatic : public CreatureScript
                         DoCastSelf(SPELL_DARK_MARTYRDOM_FANATIC);
                         break;
                     case SPELL_DARK_MARTYRDOM_FANATIC:
-                        me->GetScheduler()
+                        _scheduler
                             .Schedule(Seconds(2), [this](TaskContext /*context*/)
                             {
                                 me->UpdateEntry(NPC_REANIMATED_FANATIC);
                                 DoCastSelf(SPELL_PERMANENT_FEIGN_DEATH);
                                 DoCastSelf(SPELL_CLEAR_ALL_DEBUFFS);
                                 DoCastSelf(SPELL_FULL_HEAL, true);
-                                me->AddUnitFlag(UnitFlags(UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE));
+                                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE);
                             })
                             .Schedule(Seconds(6), [this](TaskContext /*context*/)
                             {
                                 me->RemoveAurasDueToSpell(SPELL_PERMANENT_FEIGN_DEATH);
-                                me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE));
+                                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE);
                                 me->SetReactState(REACT_AGGRESSIVE);
                                 DoZoneInCombat(me);
 
@@ -660,15 +663,19 @@ class npc_cult_fanatic : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 /*diff*/) override
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim() && !me->HasAura(SPELL_PERMANENT_FEIGN_DEATH))
                     return;
 
-                DoMeleeAttackIfReady();
+                _scheduler.Update(diff, [this]
+                {
+                    DoMeleeAttackIfReady();
+                });
             }
 
         protected:
+            TaskScheduler _scheduler;
             InstanceScript* _instance;
         };
 
@@ -689,8 +696,8 @@ class npc_cult_adherent : public CreatureScript
 
             void Reset() override
             {
-                me->GetScheduler().CancelAll();
-                me->GetScheduler()
+               _scheduler.CancelAll();
+               _scheduler
                    .SetValidator([this]
                    {
                        return !me->HasUnitState(UNIT_STATE_CASTING);
@@ -730,19 +737,19 @@ class npc_cult_adherent : public CreatureScript
                         DoCastSelf(SPELL_DARK_MARTYRDOM_ADHERENT);
                         break;
                     case SPELL_DARK_MARTYRDOM_ADHERENT:
-                        me->GetScheduler()
+                        _scheduler
                             .Schedule(Seconds(2), [this](TaskContext /*context*/)
                             {
                                 me->UpdateEntry(NPC_REANIMATED_ADHERENT);
                                 DoCastSelf(SPELL_PERMANENT_FEIGN_DEATH);
                                 DoCastSelf(SPELL_CLEAR_ALL_DEBUFFS);
                                 DoCastSelf(SPELL_FULL_HEAL, true);
-                                me->AddUnitFlag(UnitFlags(UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE));
+                                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE);
                             })
                             .Schedule(Seconds(6), [this](TaskContext /*context*/)
                             {
                                 me->RemoveAurasDueToSpell(SPELL_PERMANENT_FEIGN_DEATH);
-                                me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE));
+                                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED | UNIT_FLAG_UNK_29 | UNIT_FLAG_NOT_SELECTABLE);
                                 me->SetReactState(REACT_AGGRESSIVE);
                                 DoCastSelf(SPELL_SHROUD_OF_THE_OCCULT);
                                 DoZoneInCombat(me);
@@ -756,7 +763,16 @@ class npc_cult_adherent : public CreatureScript
                 }
             }
 
+            void UpdateAI(uint32 diff) override
+            {
+                if (!UpdateVictim() && !me->HasAura(SPELL_PERMANENT_FEIGN_DEATH))
+                    return;
+
+                _scheduler.Update(diff);
+            }
+
         protected:
+            TaskScheduler _scheduler;
             InstanceScript* _instance;
         };
 
@@ -780,7 +796,7 @@ class npc_vengeful_shade : public CreatureScript
                 me->SetReactState(REACT_PASSIVE);
                 me->AddAura(SPELL_VENGEFUL_BLAST_PASSIVE, me);
 
-                me->GetScheduler()
+                _scheduler
                     .Schedule(Seconds(2), [this](TaskContext /*context*/)
                     {
                         me->SetReactState(REACT_AGGRESSIVE);
@@ -812,7 +828,16 @@ class npc_vengeful_shade : public CreatureScript
                 }
             }
 
+            void UpdateAI(uint32 diff) override
+            {
+                _scheduler.Update(diff, [this]
+                {
+                    DoMeleeAttackIfReady();
+                });
+            }
+
         private:
+            TaskScheduler _scheduler;
             ObjectGuid _targetGUID;
         };
 
@@ -859,8 +884,7 @@ class npc_darnavan : public CreatureScript
                     {
                         for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
                             if (Player* member = itr->GetSource())
-                                if (member->IsInMap(owner))
-                                    member->FailQuest(QUEST_DEPROGRAMMING);
+                                member->FailQuest(QUEST_DEPROGRAMMING);
                     }
                     else
                         owner->FailQuest(QUEST_DEPROGRAMMING);

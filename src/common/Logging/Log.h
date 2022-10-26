@@ -1,5 +1,6 @@
 /*
- * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -42,7 +43,7 @@ namespace Trinity
 
 typedef Appender*(*AppenderCreatorFn)(uint8 id, std::string const& name, LogLevel level, AppenderFlags flags, std::vector<char const*>&& extraArgs);
 
-template <class AppenderImpl>
+template<class AppenderImpl>
 Appender* CreateAppender(uint8 id, std::string const& name, LogLevel level, AppenderFlags flags, std::vector<char const*>&& extraArgs)
 {
     return new AppenderImpl(id, name, level, flags, std::forward<std::vector<char const*>>(extraArgs));
@@ -97,9 +98,6 @@ class TC_COMMON_API Log
         std::string const& GetLogsDir() const { return m_logsDir; }
         std::string const& GetLogsTimestamp() const { return m_logsTimestamp; }
 
-        void CreateAppenderFromConfigLine(std::string const& name, std::string const& options);
-        void CreateLoggerFromConfigLine(std::string const& name, std::string const& options);
-
     private:
         static std::string GetTimestampStr();
         void write(std::unique_ptr<LogMessage>&& msg) const;
@@ -112,7 +110,7 @@ class TC_COMMON_API Log
         void ReadAppendersFromConfig();
         void ReadLoggersFromConfig();
         void RegisterAppender(uint8 index, AppenderCreatorFn appenderCreateFn);
-        void outMessage(std::string const& filter, LogLevel level, std::string&& message);
+        void outMessage(std::string const& filter, LogLevel const level, std::string&& message);
         void outCommand(std::string&& message, std::string&& param1);
 
         std::unordered_map<uint8, AppenderCreatorFn> appenderFactory;
@@ -143,10 +141,8 @@ class TC_COMMON_API Log
         } \
     }
 
-#ifdef PERFORMANCE_PROFILING
-#define TC_LOG_MESSAGE_BODY(filterType__, level__, ...) ((void)0)
-#elif TRINITY_PLATFORM != TRINITY_PLATFORM_WINDOWS
-void check_args(char const*, ...) ATTR_PRINTF(1, 2);
+#if TRINITY_PLATFORM != TRINITY_PLATFORM_WINDOWS
+void check_args(const char*, ...) ATTR_PRINTF(1, 2);
 void check_args(std::string const&, ...);
 
 // This will catch format errors on build time

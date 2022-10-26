@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -49,7 +49,6 @@ enum RSDataTypes
     DATA_BURNING_TREE_4                     = 16,
     DATA_FLAME_RING                         = 17,
     DATA_TWILIGHT_FLAME_RING                = 18,
-    DATA_BALTHARUS_CLONE                    = 19
 };
 
 enum RSSharedActions
@@ -57,7 +56,7 @@ enum RSSharedActions
     ACTION_INTRO_BALTHARUS                  = -3975101,
     ACTION_BALTHARUS_DEATH                  = -3975102,
     ACTION_INTRO_HALION                     = -4014601,
-    ACTION_INTRO_HALION_2                   = -4014602
+    ACTION_INTRO_HALION_2                   = -4014602,
 };
 
 enum RSCreaturesIds
@@ -98,7 +97,7 @@ enum RSCreaturesIds
     NPC_COMBAT_STALKER                      = 40151, // Seen in sniffs but not used, so no wonder.
 
     // Xerestrasza
-    NPC_XERESTRASZA                         = 40429
+    NPC_XERESTRASZA                         = 40429,
 };
 
 enum RSGameObjectsIds
@@ -113,19 +112,19 @@ enum RSGameObjectsIds
     GO_BURNING_TREE_1                       = 203034,
     GO_BURNING_TREE_2                       = 203035,
     GO_BURNING_TREE_3                       = 203036,
-    GO_BURNING_TREE_4                       = 203037
+    GO_BURNING_TREE_4                       = 203037,
 };
 
 enum RSWorldStates
 {
     WORLDSTATE_CORPOREALITY_MATERIAL = 5049,
     WORLDSTATE_CORPOREALITY_TWILIGHT = 5050,
-    WORLDSTATE_CORPOREALITY_TOGGLE   = 5051
+    WORLDSTATE_CORPOREALITY_TOGGLE   = 5051,
 };
 
 enum RSInstanceSpell
 {
-    SPELL_BERSERK                       = 26662
+    SPELL_BERSERK                       = 26662,
 };
 
 template<typename AI, typename T>

@@ -20,13 +20,14 @@
 
 #include "Define.h"
 #include "EnumFlag.h"
+#include "Optional.h"
 #include <array>
 
-/// Represents a map magic value of 4 bytes (used in versions)
+ /// Represents a map magic value of 4 bytes (used in versions)
 using u_map_magic = std::array<char, 4>;
 
 TC_COMMON_API extern u_map_magic const MapMagic;
-TC_COMMON_API extern u_map_magic const MapVersionMagic;
+TC_COMMON_API extern uint32 const MapVersionMagic;
 TC_COMMON_API extern u_map_magic const MapAreaMagic;
 TC_COMMON_API extern u_map_magic const MapHeightMagic;
 TC_COMMON_API extern u_map_magic const MapLiquidMagic;
@@ -37,7 +38,7 @@ TC_COMMON_API extern u_map_magic const MapLiquidMagic;
 struct map_fileheader
 {
     u_map_magic mapMagic;
-    u_map_magic versionMagic;
+    uint32 versionMagic;
     uint32 buildMagic;
     uint32 areaMapOffset;
     uint32 areaMapSize;
@@ -51,8 +52,8 @@ struct map_fileheader
 
 enum class map_areaHeaderFlags : uint16
 {
-    None    = 0x0000,
-    NoArea  = 0x0001
+    None = 0x0000,
+    NoArea = 0x0001
 };
 
 DEFINE_ENUM_FLAG(map_areaHeaderFlags);
@@ -66,10 +67,10 @@ struct map_areaHeader
 
 enum class map_heightHeaderFlags : uint32
 {
-    None            = 0x0000,
-    NoHeight        = 0x0001,
-    HeightAsInt16   = 0x0002,
-    HeightAsInt8    = 0x0004,
+    None = 0x0000,
+    NoHeight = 0x0001,
+    HeightAsInt16 = 0x0002,
+    HeightAsInt8 = 0x0004,
     HasFlightBounds = 0x0008
 };
 
@@ -85,24 +86,24 @@ struct map_heightHeader
 
 enum class map_liquidHeaderFlags : uint8
 {
-    None        = 0x0000,
-    NoType      = 0x0001,
-    NoHeight    = 0x0002
+    None = 0x0000,
+    NoType = 0x0001,
+    NoHeight = 0x0002
 };
 
 DEFINE_ENUM_FLAG(map_liquidHeaderFlags);
 
 enum class map_liquidHeaderTypeFlags : uint8
 {
-    NoWater     = 0x00,
-    Water       = 0x01,
-    Ocean       = 0x02,
-    Magma       = 0x04,
-    Slime       = 0x08,
+    NoWater = 0x00,
+    Water = 0x01,
+    Ocean = 0x02,
+    Magma = 0x04,
+    Slime = 0x08,
 
-    DarkWater   = 0x10,
+    DarkWater = 0x10,
 
-    AllLiquids  = Water | Ocean | Magma | Slime
+    AllLiquids = Water | Ocean | Magma | Slime
 };
 
 DEFINE_ENUM_FLAG(map_liquidHeaderTypeFlags);
@@ -118,6 +119,46 @@ struct map_liquidHeader
     uint8  width;
     uint8  height;
     float  liquidLevel;
+};
+
+enum ZLiquidStatus : uint32
+{
+    LIQUID_MAP_NO_WATER = 0x00000000,
+    LIQUID_MAP_ABOVE_WATER = 0x00000001,
+    LIQUID_MAP_WATER_WALK = 0x00000002,
+    LIQUID_MAP_IN_WATER = 0x00000004,
+    LIQUID_MAP_UNDER_WATER = 0x00000008
+};
+
+#define MAP_LIQUID_STATUS_SWIMMING (LIQUID_MAP_IN_WATER | LIQUID_MAP_UNDER_WATER)
+#define MAP_LIQUID_STATUS_IN_CONTACT (MAP_LIQUID_STATUS_SWIMMING | LIQUID_MAP_WATER_WALK)
+
+struct LiquidData
+{
+    EnumFlag<map_liquidHeaderTypeFlags> type_flags = map_liquidHeaderTypeFlags::NoWater;
+    uint32 entry;
+    float  level;
+    float  depth_level;
+};
+
+struct PositionFullTerrainStatus
+{
+    struct AreaInfo
+    {
+        AreaInfo(int32 _adtId, int32 _rootId, int32 _groupId, uint32 _flags) : adtId(_adtId), rootId(_rootId), groupId(_groupId), mogpFlags(_flags) { }
+        int32 const adtId;
+        int32 const rootId;
+        int32 const groupId;
+        uint32 const mogpFlags;
+    };
+
+    PositionFullTerrainStatus() : areaId(0), floorZ(0.0f), outdoors(true), liquidStatus(LIQUID_MAP_NO_WATER) { }
+    uint32 areaId;
+    float floorZ;
+    bool outdoors;
+    ZLiquidStatus liquidStatus;
+    Optional<AreaInfo> areaInfo;
+    Optional<LiquidData> liquidInfo;
 };
 
 #endif // MapDefines_h__

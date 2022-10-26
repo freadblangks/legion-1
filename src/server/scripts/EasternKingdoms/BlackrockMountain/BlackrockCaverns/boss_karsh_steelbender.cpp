@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -40,11 +40,6 @@ enum Events
     EVENT_CLEAVE                        = 1,
     EVENT_QUICKSILVER_ARMOR             = 2,
     EVENT_SUPERHEATED_QUICKSILVER_ARMOR = 3
-};
-
-enum Achieve
-{
-    STACKEDISDONE
 };
 
 class boss_karsh_steelbender : public CreatureScript
@@ -113,26 +108,7 @@ class boss_karsh_steelbender : public CreatureScript
         }
 };
 
-class achievement_too_hot_to_handle : public AchievementCriteriaScript
-{
-public:
-    achievement_too_hot_to_handle() : AchievementCriteriaScript("achievement_too_hot_to_handle") {}
-
-    bool OnCheck(Player* /*player*/, Unit* target) override
-    {
-        if (!target)
-            return false;
-
-        if (auto karsh = target->ToCreature())
-            if (karsh->AI()->GetData(STACKEDISDONE))
-                return true;
-
-        return false;
-    }
-};
-
 void AddSC_boss_karsh_steelbender()
 {
     new boss_karsh_steelbender();
-    new achievement_too_hot_to_handle();
 }

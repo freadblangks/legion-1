@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -47,7 +48,7 @@ public:
         {
             Initialize();
             creature->GetMotionMaster()->MovePoint(0, 8599.258f, 963.951f, 547.553f);
-            creature->SetFaction(35); //wrong faction in db?
+            creature->setFaction(35); //wrong faction in db?
         }
 
         void Initialize()
@@ -69,7 +70,7 @@ public:
             if (uiType != POINT_MOTION_TYPE)
                 return;
 
-            me->SetFaction(14);
+            me->setFaction(14);
         }
 
         void DamageTaken(Unit* pDoneBy, uint32& uiDamage) override
@@ -78,7 +79,7 @@ public:
             {
                 uiDamage = 0;
                 pDoneBy->CastSpell(pDoneBy, SPELL_KILL_CREDIT, true);
-                me->SetFaction(35);
+                me->setFaction(35);
                 me->DespawnOrUnsummon(5000);
                 me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
                 EnterEvadeMode();
@@ -119,6 +120,9 @@ public:
 enum GuardianPavilion
 {
     SPELL_TRESPASSER_H                            = 63987,
+    AREA_SUNREAVER_PAVILION                       = 4676,
+
+    AREA_SILVER_COVENANT_PAVILION                 = 4677,
     SPELL_TRESPASSER_A                            = 63986,
 };
 
@@ -137,7 +141,7 @@ public:
         void MoveInLineOfSight(Unit* who) override
 
         {
-            if (me->GetAreaId() != AREA_ICECROWN_SUNREAVER_PAVILION && me->GetAreaId() != AREA_ICECROWN_SILVER_COVENANT_PAVILION)
+            if (me->GetAreaId() != AREA_SUNREAVER_PAVILION && me->GetAreaId() != AREA_SILVER_COVENANT_PAVILION)
                 return;
 
             if (!who || who->GetTypeId() != TYPEID_PLAYER || !me->IsHostileTo(who) || !me->isInBackInMap(who, 5.0f))

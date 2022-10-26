@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -144,7 +145,7 @@ class boss_mandokir : public CreatureScript
                     {
                         if (Creature* chainedSpirit = ObjectAccessor::GetCreature(*me, *itr))
                             if (chainedSpirit->GetEntry() == NPC_CHAINED_SPIRIT && chainedSpirit->AI())
-                                chainedSpirit->SetFaction(FACTION_NONE);
+                                chainedSpirit->setFaction(FACTION_NONE);
                     }
                 }
 
@@ -245,7 +246,7 @@ class boss_mandokir : public CreatureScript
                     switch (eventId)
                     {
                         case EVENT_SUMMON_OHGAN:
-                            me->SetMountDisplayId(0);
+                            me->SetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID, 0);
                             DoCast(me, SPELL_SUMMON_OHGAN, true);
                             break;
                         case EVENT_DECAPITATE:
@@ -503,8 +504,8 @@ class spell_mandokir_bloodletting : public SpellScriptLoader
 
                 int32 damage = std::max<int32>(7500, target->CountPctFromCurHealth(aurEff->GetAmount()));
 
-                caster->CastCustomSpell(target, SPELL_BLOODLETTING_DAMAGE, &damage, nullptr, nullptr, true);
-                target->CastCustomSpell(caster, SPELL_BLOODLETTING_HEAL, &damage, nullptr, nullptr, true);
+                caster->CastCustomSpell(target, SPELL_BLOODLETTING_DAMAGE, &damage, 0, 0, true);
+                target->CastCustomSpell(caster, SPELL_BLOODLETTING_HEAL, &damage, 0, 0, true);
             }
 
             void Register() override
@@ -714,7 +715,7 @@ class spell_mandokir_reanimate_ohgan : public SpellScriptLoader
                 {
                     target->RemoveAura(SPELL_PERMANENT_FEIGN_DEATH);
                     target->CastSpell(target, SPELL_OHGAN_HEART_VISUAL, true);
-                    target->CastSpell(nullptr, SPELL_OHGAN_ORDERS, true);
+                    target->CastSpell((Unit*)NULL, SPELL_OHGAN_ORDERS, true);
                 }
             }
 

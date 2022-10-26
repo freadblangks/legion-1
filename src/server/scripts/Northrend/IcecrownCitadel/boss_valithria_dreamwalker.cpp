@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,7 +21,6 @@
 #include "InstanceScript.h"
 #include "MotionMaster.h"
 #include "ObjectAccessor.h"
-#include "PhasingHandler.h"
 #include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
 #include "SpellInfo.h"
@@ -142,12 +141,11 @@ enum Events
     EVENT_EXPLODE                           = 18,
 };
 
-enum Misc
+enum Actions
 {
-    ACTION_ENTER_COMBAT    = 1,
-    MISSED_PORTALS         = 2,
-    ACTION_DEATH           = 3,
-    DATA_SUPPRESSERS_COUNT = 4
+    ACTION_ENTER_COMBAT = 1,
+    MISSED_PORTALS      = 2,
+    ACTION_DEATH        = 3,
 };
 
 Position const ValithriaSpawnPos = {4210.813f, 2484.443f, 364.9558f, 0.01745329f};
@@ -184,7 +182,7 @@ class DelayedCastEvent : public BasicEvent
 
         bool Execute(uint64 /*time*/, uint32 /*diff*/) override
         {
-            _trigger->CastSpell(_trigger, _spellId, false, nullptr, nullptr, _originalCaster);
+            _trigger->CastSpell(_trigger, _spellId, false, NULL, NULL, _originalCaster);
             if (_despawnTime)
                 _trigger->DespawnOrUnsummon(_despawnTime);
             return true;
@@ -341,13 +339,10 @@ class boss_valithria_dreamwalker : public CreatureScript
 
             void HealReceived(Unit* healer, uint32& heal) override
             {
-                if (!me->HasLootRecipients())
-                    me->AddLootRecipient(healer);
+                if (!me->hasLootRecipient())
+                    me->SetLootRecipient(healer);
 
                 me->LowerPlayerDamageReq(heal);
-
-                if (healer->IsPlayer() && healer->getLevel() > 80)
-                    heal *= healer->getLevel() - 80;
 
                 // encounter complete
                 if (me->HealthAbovePctHealed(100, heal) && !_done)
@@ -405,7 +400,7 @@ class boss_valithria_dreamwalker : public CreatureScript
                     DoCast(me, SPELL_AWARD_REPUTATION_BOSS_KILL);
                     // this display id was found in sniff instead of the one on aura
                     me->SetDisplayId(11686);
-                    me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     me->DespawnOrUnsummon(4000);
                     if (Creature* lichKing = ObjectAccessor::GetCreature(*me, _instance->GetGuidData(DATA_VALITHRIA_LICH_KING)))
                         lichKing->CastSpell(lichKing, SPELL_SPAWN_CHEST, false);
@@ -630,18 +625,10 @@ class npc_the_lich_king_controller : public CreatureScript
                 me->setActive(true);
             }
 
-            uint32 GetData(uint32 data) const override
-            {
-                if (data == DATA_SUPPRESSERS_COUNT)
-                    return RAID_MODE<uint32>(4, 6, 4, 6);
-                else
-                    return 0;
-            }
-
             void JustSummoned(Creature* summon) override
             {
                 // must not be in dream phase
-                PhasingHandler::RemovePhase(summon, 173, true);
+                summon->SetInPhase(173, true, false);
                 if (summon->GetEntry() != NPC_SUPPRESSER)
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
                         summon->AI()->AttackStart(target);
@@ -743,12 +730,6 @@ class npc_risen_archmage : public CreatureScript
                     if (Creature* trigger = ObjectAccessor::GetCreature(*me, _instance->GetGuidData(DATA_VALITHRIA_TRIGGER)))
                         trigger->AI()->DoZoneInCombat();
                 }
-            }
-
-            void JustDied(Unit* attacker) override
-            {
-                if (!me->IsInCombat())
-                    EnterCombat(attacker);
             }
 
             void DoAction(int32 action) override
@@ -1111,7 +1092,7 @@ class npc_dream_cloud : public CreatureScript
                     {
                         case EVENT_CHECK_PLAYER:
                         {
-                            Player* player = nullptr;
+                            Player* player = NULL;
                             Trinity::AnyPlayerInObjectRangeCheck check(me, 5.0f);
                             Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck> searcher(me, player, check);
                             Cell::VisitWorldObjects(me, searcher, 7.5f);
@@ -1121,7 +1102,7 @@ class npc_dream_cloud : public CreatureScript
                         case EVENT_EXPLODE:
                             me->GetMotionMaster()->MoveIdle();
                             // must use originalCaster the same for all clouds to allow stacking
-                            me->CastSpell(me, EMERALD_VIGOR, false, nullptr, nullptr, _instance->GetGuidData(DATA_VALITHRIA_DREAMWALKER));
+                            me->CastSpell(me, EMERALD_VIGOR, false, NULL, NULL, _instance->GetGuidData(DATA_VALITHRIA_DREAMWALKER));
                             me->DespawnOrUnsummon(100);
                             break;
                         default:
@@ -1249,7 +1230,7 @@ class spell_dreamwalker_summoner : public SpellScriptLoader
                 if (!GetHitUnit())
                     return;
 
-                GetHitUnit()->CastSpell(GetCaster(), GetSpellInfo()->GetEffect(effIndex)->TriggerSpell, true, nullptr, nullptr, GetCaster()->GetInstanceScript()->GetGuidData(DATA_VALITHRIA_LICH_KING));
+                GetHitUnit()->CastSpell(GetCaster(), GetSpellInfo()->GetEffect(effIndex)->TriggerSpell, true, NULL, NULL, GetCaster()->GetInstanceScript()->GetGuidData(DATA_VALITHRIA_LICH_KING));
             }
 
             void Register() override
@@ -1274,41 +1255,29 @@ class spell_dreamwalker_summon_suppresser : public SpellScriptLoader
         {
             PrepareAuraScript(spell_dreamwalker_summon_suppresser_AuraScript);
 
-            bool Validate(SpellInfo const* /*spell*/) override
-            {
-                return ValidateSpellInfo({ SPELL_SUMMON_SUPPRESSER });
-            }
-
             void PeriodicTick(AuraEffect const* /*aurEff*/)
             {
                 PreventDefaultAction();
-                HandleSummon(GetCaster());
-            }
-
-            void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-            {
-                HandleSummon(GetCaster());
-            }
-
-            void HandleSummon(Unit* caster)
-            {
-                if (!caster || !caster->IsAIEnabled)
+                Unit* caster = GetCaster();
+                if (!caster)
                     return;
 
                 std::list<Creature*> summoners;
-                GetCreatureListWithEntryInGrid(summoners, caster, NPC_WORLD_TRIGGER, 90.0f);
+                GetCreatureListWithEntryInGrid(summoners, caster, NPC_WORLD_TRIGGER, 100.0f);
+                summoners.remove_if(Trinity::UnitAuraCheck(true, SPELL_RECENTLY_SPAWNED));
+                Trinity::Containers::RandomResize(summoners, 2);
                 if (summoners.empty())
                     return;
 
-                uint8 suppresserNumber = caster->GetAI()->GetData(DATA_SUPPRESSERS_COUNT);
-                for (uint8 i = 0; i < suppresserNumber; ++i)
-                    caster->CastSpell(Trinity::Containers::SelectRandomContainerElement(summoners), SPELL_SUMMON_SUPPRESSER, true);
+                for (uint32 i = 0; i < 3; ++i)
+                    caster->CastSpell(summoners.front(), SPELL_SUMMON_SUPPRESSER, true);
+                for (uint32 i = 0; i < 3; ++i)
+                    caster->CastSpell(summoners.back(), SPELL_SUMMON_SUPPRESSER, true);
             }
 
             void Register() override
             {
                 OnEffectPeriodic += AuraEffectPeriodicFn(spell_dreamwalker_summon_suppresser_AuraScript::PeriodicTick, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL);
-                AfterEffectApply += AuraEffectApplyFn(spell_dreamwalker_summon_suppresser_AuraScript::OnApply, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL, AURA_EFFECT_HANDLE_REAL);
             }
         };
 
@@ -1340,7 +1309,7 @@ class spell_dreamwalker_summon_suppresser_effect : public SpellScriptLoader
                 if (!GetHitUnit())
                     return;
 
-                GetHitUnit()->CastSpell(GetCaster(), GetSpellInfo()->GetEffect(effIndex)->TriggerSpell, true, nullptr, nullptr, GetCaster()->GetInstanceScript()->GetGuidData(DATA_VALITHRIA_LICH_KING));
+                GetHitUnit()->CastSpell(GetCaster(), GetSpellInfo()->GetEffect(effIndex)->TriggerSpell, true, NULL, NULL, GetCaster()->GetInstanceScript()->GetGuidData(DATA_VALITHRIA_LICH_KING));
             }
 
             void Register() override
@@ -1436,7 +1405,7 @@ class spell_dreamwalker_nightmare_cloud : public SpellScriptLoader
             bool Load() override
             {
                 _instance = GetOwner()->GetInstanceScript();
-                return _instance != nullptr;
+                return _instance != NULL;
             }
 
             void PeriodicTick(AuraEffect const* /*aurEff*/)
@@ -1476,7 +1445,7 @@ class spell_dreamwalker_twisted_nightmares : public SpellScriptLoader
                 //    return;
 
                 if (InstanceScript* instance = GetHitUnit()->GetInstanceScript())
-                    GetHitUnit()->CastSpell(nullptr, GetSpellInfo()->GetEffect(effIndex)->TriggerSpell, true, nullptr, nullptr, instance->GetGuidData(DATA_VALITHRIA_DREAMWALKER));
+                    GetHitUnit()->CastSpell((Unit*)NULL, GetSpellInfo()->GetEffect(effIndex)->TriggerSpell, true, NULL, NULL, instance->GetGuidData(DATA_VALITHRIA_DREAMWALKER));
             }
 
             void Register() override

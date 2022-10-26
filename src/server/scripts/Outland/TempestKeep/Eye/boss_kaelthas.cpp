@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -332,8 +333,8 @@ struct advisorbase_ai : public ScriptedAI
         Initialize();
 
         me->SetStandState(UNIT_STAND_STATE_STAND);
-        me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
-        me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED));
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED);
 
         //reset encounter
         if (instance->GetBossState(DATA_KAELTHAS) == IN_PROGRESS)
@@ -343,7 +344,7 @@ struct advisorbase_ai : public ScriptedAI
 
     void MoveInLineOfSight(Unit* who) override
     {
-        if (!who || _inFakeDeath || me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
+        if (!who || _inFakeDeath || me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
             return;
 
         ScriptedAI::MoveInLineOfSight(who);
@@ -351,7 +352,7 @@ struct advisorbase_ai : public ScriptedAI
 
     void AttackStart(Unit* who) override
     {
-        if (!who || _inFakeDeath || me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
+        if (!who || _inFakeDeath || me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
             return;
 
         ScriptedAI::AttackStart(who);
@@ -362,7 +363,7 @@ struct advisorbase_ai : public ScriptedAI
         if (spell->Id == SPELL_RESSURECTION)
         {
             _hasRessurrected = true;
-            me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED));
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED);
             me->SetStandState(UNIT_STAND_STATE_STAND);
             events.ScheduleEvent(EVENT_DELAYED_RESSURECTION, 2000);
         }
@@ -380,9 +381,8 @@ struct advisorbase_ai : public ScriptedAI
             me->SetHealth(0);
             me->RemoveAllAurasOnDeath();
             me->ModifyAuraState(AURA_STATE_HEALTHLESS_20_PERCENT, false);
-            me->ModifyAuraState(AURA_STATE_HEALTHLESS_25_PERCENT, false);
             me->ModifyAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, false);
-            me->AddUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED));
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_STUNNED);
             me->SetTarget(ObjectGuid::Empty);
             me->SetStandState(UNIT_STAND_STATE_DEAD);
             me->GetMotionMaster()->Clear();
@@ -454,8 +454,8 @@ class boss_kaelthas : public CreatureScript
             {
                 Initialize();
                 DoAction(ACTION_PREPARE_ADVISORS);
-                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
-                me->SetEmoteState(EMOTE_ONESHOT_NONE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
                 me->SetDisableGravity(false);
                 me->SetTarget(ObjectGuid::Empty);
                 me->SetObjectScale(1.0f);
@@ -483,7 +483,7 @@ class boss_kaelthas : public CreatureScript
                 {
                     case ACTION_START_ENCOUNTER:
                         Talk(SAY_INTRO);
-                        me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 
                         _advisorGuid[ADVISOR_THALADRED] = instance->GetGuidData(DATA_THALADREDTHEDARKENER);
                         _advisorGuid[ADVISOR_SANGUINAR] = instance->GetGuidData(DATA_LORDSANGUINAR);
@@ -500,7 +500,7 @@ class boss_kaelthas : public CreatureScript
                             if (Creature* creature = ObjectAccessor::GetCreature(*me, _advisorGuid[i]))
                             {
                                 creature->Respawn(true);
-                                creature->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                                creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                                 creature->AI()->EnterEvadeMode();
                             }
                         }
@@ -600,7 +600,7 @@ class boss_kaelthas : public CreatureScript
                     case POINT_TRANSITION_CENTER_ASCENDING:
                         me->SetFacingTo(float(M_PI), true);
                         Talk(SAY_PHASE5_NUTS);
-                        me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         me->SetDisableGravity(true);
                         //me->SetHover(true); -- Set in sniffs, but breaks his visual.
                         events.ScheduleEvent(EVENT_TRANSITION_2, 2000);
@@ -619,7 +619,7 @@ class boss_kaelthas : public CreatureScript
                     case POINT_END_TRANSITION:
                         me->SetReactState(REACT_AGGRESSIVE);
                         me->InterruptNonMeleeSpells(false);
-                        me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         me->RemoveAurasDueToSpell(SPELL_FULLPOWER);
 
                         if (Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO, 0))
@@ -673,13 +673,13 @@ class boss_kaelthas : public CreatureScript
                     switch (eventId)
                     {
                         case EVENT_START_ENCOUNTER:
-                            me->AddUnitFlag(UNIT_FLAG_PACIFIED);
+                            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED);
                             DoAction(ACTION_ACTIVE_ADVISOR);
                             break;
                         case EVENT_ACTIVE_ADVISOR:
                             if (Creature* advisor = ObjectAccessor::GetCreature(*me, _advisorGuid[_advisorCounter]))
                             {
-                                advisor->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                                advisor->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                                 if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
                                     advisor->AI()->AttackStart(target);
@@ -709,7 +709,7 @@ class boss_kaelthas : public CreatureScript
                             // Sometimes people can collect Aggro in Phase 1-3. Reset threat before releasing Kael.
                             DoResetThreat();
 
-                            me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_PACIFIED));
+                            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_PACIFIED);
 
                             if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
                                 AttackStart(target);
@@ -742,7 +742,7 @@ class boss_kaelthas : public CreatureScript
                             events.ScheduleEvent(EVENT_SUMMON_PHOENIX, urand(45000, 60000), EVENT_GROUP_COMBAT, PHASE_COMBAT);
                             break;
                         case EVENT_END_TRANSITION:
-                            me->SetEmoteState(EMOTE_ONESHOT_NONE);
+                            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
                             DoCast(SPELL_FULLPOWER);
                             events.ScheduleEvent(EVENT_TRANSITION_4, 2000);
                             break;
@@ -807,7 +807,7 @@ class boss_kaelthas : public CreatureScript
                             me->RemoveAurasDueToSpell(SPELL_NETHER_BEAM_VISUAL3);
                             DoCast(me, SPELL_KAEL_EXPLODES3, true);
                             DoCast(me, SPELL_KAEL_STUNNED); // Core doesn't handle the emote properly while flying.
-                            me->SetEmoteState(EMOTE_STATE_DROWNED);
+                            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_DROWNED);
 
                             // Destroy the surrounding environment.
                             if (GameObject* statue = instance->GetGameObject(DATA_KAEL_STATUE_LEFT))
@@ -1085,7 +1085,7 @@ class boss_grand_astromancer_capernian : public CreatureScript
 
             void AttackStart(Unit* who) override
             {
-                if (!who || me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
+                if (!who || me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
                     return;
 
                 if (me->Attack(who, true))
@@ -1278,8 +1278,8 @@ class npc_kael_flamestrike : public CreatureScript
             {
                 Initialize();
 
-                me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
-                me->SetFaction(14);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->setFaction(14);
             }
 
             void MoveInLineOfSight(Unit* /*who*/) override { }

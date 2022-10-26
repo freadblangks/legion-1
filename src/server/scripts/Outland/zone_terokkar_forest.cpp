@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -86,7 +87,7 @@ public:
         {
             Initialize();
             me->SetStandState(UNIT_STAND_STATE_STAND);
-            me->SetFaction(FACTION_HOSTILE);
+            me->setFaction(FACTION_HOSTILE);
         }
 
         void EnterCombat(Unit* /*who*/) override { }
@@ -94,7 +95,7 @@ public:
         void DoNice()
         {
             Talk(SAY_SUBMIT);
-            me->SetFaction(FACTION_FRIENDLY);
+            me->setFaction(FACTION_FRIENDLY);
             me->SetStandState(UNIT_STAND_STATE_SIT);
             me->RemoveAllAuras();
             me->DeleteThreatList();
@@ -110,10 +111,10 @@ public:
             {
                 if (Group* group = player->GetGroup())
                 {
-                    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                    for (GroupReference* itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
                     {
                         Player* groupie = itr->GetSource();
-                        if (groupie && groupie->IsInMap(player) &&
+                        if (groupie &&
                             groupie->GetQuestStatus(QUEST_DONTKILLTHEFATONE) == QUEST_STATUS_INCOMPLETE &&
                             groupie->GetReqKillOrCastCurrentCount(QUEST_DONTKILLTHEFATONE, NPC_BOULDERFIST_INVADER) == REQUIRED_KILL_COUNT)
                         {
@@ -338,7 +339,7 @@ public:
         if (action == GOSSIP_ACTION_INFO_DEF+1)
         {
             CloseGossipMenuFor(player);
-            creature->SetFaction(FACTION_HOSTILE_FLOON);
+            creature->setFaction(FACTION_HOSTILE_FLOON);
             creature->AI()->Talk(SAY_FLOON_ATTACK, player);
             creature->AI()->AttackStart(player);
         }
@@ -383,7 +384,7 @@ public:
         {
             Initialize();
             if (me->getFaction() != m_uiNormFaction)
-                me->SetFaction(m_uiNormFaction);
+                me->setFaction(m_uiNormFaction);
         }
 
         void EnterCombat(Unit* /*who*/) override { }
@@ -503,7 +504,7 @@ public:
         if (quest->GetQuestId() == ESCAPE_FROM_FIREWING_POINT_H || quest->GetQuestId() == ESCAPE_FROM_FIREWING_POINT_A)
         {
             ENSURE_AI(npc_escortAI, (creature->AI()))->Start(true, false, player->GetGUID());
-            creature->SetFaction(FACTION_ESCORTEE);
+            creature->setFaction(FACTION_ESCORTEE);
         }
         return true;
     }
@@ -643,9 +644,9 @@ public:
                 pEscortAI->Start(false, false, player->GetGUID());
 
             if (player->GetTeamId() == TEAM_ALLIANCE)
-                creature->SetFaction(FACTION_ESCORT_A_NEUTRAL_PASSIVE);
+                creature->setFaction(FACTION_ESCORT_A_NEUTRAL_PASSIVE);
             else
-                creature->SetFaction(FACTION_ESCORT_H_NEUTRAL_PASSIVE);
+                creature->setFaction(FACTION_ESCORT_H_NEUTRAL_PASSIVE);
         }
         return true;
     }
@@ -685,56 +686,6 @@ public:
     };
 };
 
-#define QUEST_TARGET        22459
-//#define SPELL_FREE_WEBBED   38950
-
-const uint32 netherwebVictims[6] =
-{
-    18470, 16805, 21242, 18452, 22482, 21285
-};
-class mob_netherweb_victim : public CreatureScript
-{
-public:
-    mob_netherweb_victim() : CreatureScript("mob_netherweb_victim") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new mob_netherweb_victimAI(creature);
-    }
-
-    struct mob_netherweb_victimAI : public ScriptedAI
-    {
-        mob_netherweb_victimAI(Creature* creature) : ScriptedAI(creature) {}
-
-        void Reset() override {}
-        void EnterCombat(Unit* /*who*/) override {}
-        void MoveInLineOfSight(Unit* /*who*/) override {}
-
-        void JustDied(Unit* killer) override
-        {
-            Player* player = killer->ToPlayer();
-            if (!player)
-                return;
-
-            if (player->GetQuestStatus(10873) == QUEST_STATUS_INCOMPLETE)
-            {
-                if (rand() % 100 < 25)
-                {
-                    me->SummonCreature(QUEST_TARGET, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
-                    player->KilledMonsterCredit(QUEST_TARGET, ObjectGuid::Empty);
-                }
-                else
-                    me->SummonCreature(netherwebVictims[rand() % 6], 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
-
-                if (rand() % 100 < 75)
-                    me->SummonCreature(netherwebVictims[rand() % 6], 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
-
-                me->SummonCreature(netherwebVictims[rand() % 6], 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
-            }
-        }
-    };
-};
-
 void AddSC_terokkar_forest()
 {
     new npc_unkor_the_ruthless();
@@ -746,5 +697,4 @@ void AddSC_terokkar_forest()
     new npc_skywing();
     new npc_slim();
     new npc_akuno();
-    new mob_netherweb_victim();
 }

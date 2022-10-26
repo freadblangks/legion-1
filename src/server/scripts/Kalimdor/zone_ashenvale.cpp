@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -83,7 +84,7 @@ public:
         {
             if (quest->GetQuestId() == QUEST_FREEDOM_TO_RUUL)
             {
-                me->SetFaction(FACTION_QUEST);
+                me->setFaction(FACTION_QUEST);
                 npc_escortAI::Start(true, false, player->GetGUID());
             }
         }
@@ -97,7 +98,7 @@ public:
             switch (waypointId)
             {
                 case 0:
-                    me->SetStandState(UNIT_STAND_STATE_STAND);
+                    me->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
                     if (GameObject* Cage = me->FindNearestGameObject(GO_CAGE, 20))
                         Cage->SetGoState(GO_STATE_ACTIVE);
                     break;
@@ -226,7 +227,7 @@ public:
             if (quest->GetQuestId() == QUEST_VORSHA)
             {
                 Talk(SAY_MUG_START1);
-                me->SetFaction(FACTION_QUEST);
+                me->setFaction(FACTION_QUEST);
                 npc_escortAI::Start(true, false, player->GetGUID());
             }
         }
@@ -245,7 +246,7 @@ public:
 
                             if (GameObject* go = GetClosestGameObjectWithEntry(me, GO_NAGA_BRAZIER, INTERACTION_DISTANCE*2))
                             {
-                                go->RemoveFlag(GO_FLAG_NOT_SELECTABLE);
+                                go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
                                 SetEscortPaused(true);
                             }
                             break;

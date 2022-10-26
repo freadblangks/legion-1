@@ -1,5 +1,5 @@
 /*
- * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -93,13 +93,7 @@ bool Trinity::Crypto::RSA::LoadFromString(std::string const& keyPem, KeyTag)
 BigNumber Trinity::Crypto::RSA::GetModulus() const
 {
     BigNumber bn;
-#if defined(OPENSSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x10100000L
-    const BIGNUM* rsa_n;
-    RSA_get0_key(_rsa, &rsa_n, nullptr, nullptr);
-    BN_copy(bn.BN(), rsa_n);
-#else
     BN_copy(bn.BN(), _rsa->n);
-#endif
     return bn;
 }
 
@@ -117,7 +111,7 @@ bool Trinity::Crypto::RSA::Sign(int32 hashType, uint8 const* dataHash, std::size
     uint32 signatureLength = 0;
     int result = RSA_sign(hashType, dataHash, dataHashLength, output, &signatureLength, _rsa);
     std::reverse(output, output + GetOutputSize());
-    return result != 0;
+    return result != -1;
 }
 
 namespace Trinity

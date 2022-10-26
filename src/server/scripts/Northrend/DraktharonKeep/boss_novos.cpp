@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -203,15 +203,15 @@ public:
             _bubbled = state;
             if (!state)
             {
-                if (me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
-                    me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                if (me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 if (me->HasUnitState(UNIT_STATE_CASTING))
                     me->CastStop();
             }
             else
             {
-                if (!me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
-                    me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                if (!me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 DoCast(SPELL_ARCANE_FIELD);
             }
         }
@@ -251,7 +251,7 @@ public:
             if (Creature* crystalChannelTarget = crystal->FindNearestCreature(NPC_CRYSTAL_CHANNEL_TARGET, 5.0f))
             {
                 if (active)
-                    crystalChannelTarget->CastSpell(nullptr, SPELL_BEAM_CHANNEL);
+                    crystalChannelTarget->CastSpell((Unit*)NULL, SPELL_BEAM_CHANNEL);
                 else if (crystalChannelTarget->HasUnitState(UNIT_STATE_CASTING))
                     crystalChannelTarget->CastStop();
             }
@@ -403,7 +403,7 @@ class spell_novos_summon_minions : public SpellScriptLoader
             void HandleScript(SpellEffIndex /*effIndex*/)
             {
                 for (uint8 i = 0; i < 2; ++i)
-                    GetCaster()->CastSpell(nullptr, SPELL_SUMMON_COPY_OF_MINIONS, true);
+                    GetCaster()->CastSpell((Unit*)NULL, SPELL_SUMMON_COPY_OF_MINIONS, true);
             }
 
             void Register() override

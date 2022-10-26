@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -177,8 +177,8 @@ struct dummy_dragonAI : public ScriptedAI
 
     void Reset() override
     {
-        if (me->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE))
-            me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+        if (me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
         events.Reset();
         Initialize();
@@ -324,7 +324,7 @@ struct dummy_dragonAI : public ScriptedAI
     void JustDied(Unit* /*killer*/) override
     {
         if (!_canLoot)
-            me->ResetLootRecipients();
+            me->SetLootRecipient(NULL);
 
         uint32 spellId = 0;
 
@@ -380,7 +380,7 @@ struct dummy_dragonAI : public ScriptedAI
         }
     }
 
-    void ExecuteEvents(uint32 eventId)
+    void ExecuteEvent(uint32 eventId)
     {
         switch (eventId)
         {
@@ -453,7 +453,7 @@ public:
                         events.ScheduleEvent(EVENT_HATCH_EGGS, 30000);
                         break;
                     default:
-                        dummy_dragonAI::ExecuteEvents(eventId);
+                        dummy_dragonAI::ExecuteEvent(eventId);
                         break;
                 }
             }
@@ -532,7 +532,7 @@ public:
                         }
                         break;
                     default:
-                        dummy_dragonAI::ExecuteEvents(eventId);
+                        dummy_dragonAI::ExecuteEvent(eventId);
                         break;
                 }
             }
@@ -598,7 +598,7 @@ public:
                         }
                         break;
                     default:
-                        dummy_dragonAI::ExecuteEvents(eventId);
+                        dummy_dragonAI::ExecuteEvent(eventId);
                         break;
                 }
             }
@@ -876,7 +876,7 @@ public:
             me->SetReactState(REACT_PASSIVE);
             events.ScheduleEvent(EVENT_TSUNAMI_TIMER, 100);
             events.ScheduleEvent(EVENT_TSUNAMI_BUFF, 1000);
-            me->AddUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE));
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
         }
 
         void UpdateAI(uint32 diff) override
@@ -933,7 +933,7 @@ public:
 
         void Reset() override
         {
-            me->AddUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE));
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
             me->AddAura(46265, me); // Wrong, can't find proper visual
             me->AddAura(69422, me);
             events.ScheduleEvent(EVENT_VOID_BLAST, 5000);

@@ -1,5 +1,5 @@
 /*
- * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,19 +18,19 @@
 #include "Metric.h"
 #include "Common.h"
 #include "Config.h"
-#include "DeadlineTimer.h"
 #include "Log.h"
 #include "Strand.h"
 #include "Util.h"
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
 void Metric::Initialize(std::string const& realmName, Trinity::Asio::IoContext& ioContext, std::function<void()> overallStatusLogger)
 {
-    _dataStream = std::make_unique<boost::asio::ip::tcp::iostream>();
+    _dataStream = Trinity::make_unique<boost::asio::ip::tcp::iostream>();
     _realmName = FormatInfluxDBTagValue(realmName);
-    _batchTimer = std::make_unique<Trinity::Asio::DeadlineTimer>(ioContext);
-    _overallStatusTimer = std::make_unique<Trinity::Asio::DeadlineTimer>(ioContext);
+    _batchTimer = Trinity::make_unique<boost::asio::deadline_timer>(ioContext);
+    _overallStatusTimer = Trinity::make_unique<boost::asio::deadline_timer>(ioContext);
     _overallStatusLogger = overallStatusLogger;
     LoadFromConfigs();
 }
@@ -213,17 +213,11 @@ void Metric::ScheduleSend()
     }
 }
 
-void Metric::Unload()
+void Metric::ForceSend()
 {
     // Send what's queued only if IoContext is stopped (so only on shutdown)
     if (_enabled && Trinity::Asio::get_io_context(*_batchTimer).stopped())
-    {
-        _enabled = false;
         SendBatch();
-    }
-
-    _batchTimer->cancel();
-    _overallStatusTimer->cancel();
 }
 
 void Metric::ScheduleOverallStatusLog()
@@ -255,7 +249,7 @@ std::string Metric::FormatInfluxDBValue(std::string const& value)
     return '"' + boost::replace_all_copy(value, "\"", "\\\"") + '"';
 }
 
-std::string Metric::FormatInfluxDBValue(char const* value)
+std::string Metric::FormatInfluxDBValue(const char* value)
 {
     return FormatInfluxDBValue(std::string(value));
 }

@@ -96,7 +96,7 @@ namespace VMAP
             std::string iDestDir;
             std::string iSrcDir;
             bool (*iFilterMethod)(char *pName);
-            //G3D::Table<std::string, unsigned int > iUniqueNameIds;
+            G3D::Table<std::string, unsigned int > iUniqueNameIds;
             unsigned int iCurrentUniqueNameId;
             MapData mapData;
             std::set<std::string> spawnedModelFiles;

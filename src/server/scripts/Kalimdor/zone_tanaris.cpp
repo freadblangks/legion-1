@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -90,7 +91,7 @@ public:
         void Reset() override
         {
             Initialize();
-            me->SetFaction(35);
+            me->setFaction(35);
         }
 
         void SendItem(Unit* receiver)
@@ -103,7 +104,7 @@ public:
                 !player->HasItemCount(ITEM_SILVER_TOTEM, 1, true))
             {
                 ItemPosCountVec dest;
-                uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 11522, 1, nullptr);
+                uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 11522, 1, NULL);
                 if (msg == EQUIP_ERR_OK)
                     player->StoreNewItem(dest, ITEM_SILVER_TOTEM, true);
             }
@@ -120,7 +121,7 @@ public:
             {
                 if (SwitchFactionTimer <= diff)
                 {
-                    me->SetFaction(91);
+                    me->setFaction(91);
                     isFriendly = false;
                 } else SwitchFactionTimer -= diff;
             }
@@ -318,10 +319,10 @@ public:
     {
         if (quest->GetQuestId() == Q_OOX17)
         {
-            creature->SetFaction(113);
+            creature->setFaction(113);
             creature->SetFullHealth();
-            creature->SetStandState(UNIT_STAND_STATE_STAND);
-            creature->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+            creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
+            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
             creature->AI()->Talk(SAY_OOX_START);
 
             if (npc_escortAI* pEscortAI = CAST_AI(npc_OOX17::npc_OOX17AI, creature->AI()))

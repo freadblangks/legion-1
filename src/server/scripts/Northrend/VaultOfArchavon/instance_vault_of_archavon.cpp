@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,6 +18,7 @@
 #include "ScriptMgr.h"
 #include "Creature.h"
 #include "InstanceScript.h"
+#include "Map.h"
 #include "vault_of_archavon.h"
 
 /* Vault of Archavon encounters:
@@ -34,7 +35,7 @@ class instance_vault_of_archavon : public InstanceMapScript
 
         struct instance_vault_of_archavon_InstanceMapScript : public InstanceScript
         {
-            instance_vault_of_archavon_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
+            instance_vault_of_archavon_InstanceMapScript(Map* map) : InstanceScript(map)
             {
                 SetHeaders(DataHeader);
                 SetBossNumber(EncounterCount);
@@ -85,13 +86,13 @@ class instance_vault_of_archavon : public InstanceMapScript
                 switch (type)
                 {
                     case DATA_ARCHAVON:
-                        ArchavonDeath = time(nullptr);
+                        ArchavonDeath = time(NULL);
                         break;
                     case DATA_EMALON:
-                        EmalonDeath = time(nullptr);
+                        EmalonDeath = time(NULL);
                         break;
                     case DATA_KORALON:
-                        KoralonDeath = time(nullptr);
+                        KoralonDeath = time(NULL);
                         break;
                     default:
                         return true;

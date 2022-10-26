@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,7 +24,6 @@
 #include "InstanceScript.h"
 #include "Map.h"
 #include "ObjectAccessor.h"
-#include "PhasingHandler.h"
 #include "Player.h"
 #include "ScriptedCreature.h"
 #include "SpellInfo.h"
@@ -100,7 +99,7 @@ public:
 
         void DamageTaken(Unit* /*pAttacker*/, uint32 &damage) override
         {
-            if (me->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE))
+            if (me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
                 damage = 0;
 
             if ((GetHealthPct(0) >= 66 && GetHealthPct(damage) < 66)||
@@ -124,7 +123,7 @@ public:
                     // Channel visual
                     DoCast(me, INSANITY_VISUAL, true);
                     // Unattackable
-                    me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     me->SetControlled(true, UNIT_STATE_STUNNED);
                 }
 
@@ -148,7 +147,7 @@ public:
                         // clone
                         player->CastSpell(summon, SPELL_CLONE_PLAYER, true);
                         // phase the summon
-                        PhasingHandler::AddPhase(summon, spellInfo->GetEffect(EFFECT_0)->MiscValueB, true);
+                        summon->SetInPhase(spellInfo->GetEffect(EFFECT_0)->MiscValueB, true, true);
                     }
                 }
                 ++insanityHandled;
@@ -174,15 +173,15 @@ public:
             instance->DoStopCriteriaTimer(CRITERIA_TIMED_TYPE_EVENT, ACHIEV_QUICK_DEMISE_START_EVENT);
 
             // Visible for all players in insanity
+            me->SetInPhase(169, true, true);
             for (uint32 i = 173; i <= 177; ++i)
-                PhasingHandler::AddPhase(me, i, false);
-            PhasingHandler::AddPhase(me, 169, true);
+                me->SetInPhase(i, true, true);
 
             ResetPlayersPhase();
 
             // Cleanup
             Summons.DespawnAll();
-            me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             me->SetControlled(false, UNIT_STATE_STUNNED);
         }
 
@@ -214,7 +213,7 @@ public:
                         return;
                     else
                     {
-                        nextPhase = visage->GetPhaseShift().GetPhases().begin()->Id;
+                        nextPhase = *visage->GetPhases().begin();
                         break;
                     }
                 }
@@ -245,7 +244,7 @@ public:
                     return;
 
                 insanityHandled = 0;
-                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->SetControlled(false, UNIT_STATE_STUNNED);
                 me->RemoveAurasDueToSpell(INSANITY_VISUAL);
             }

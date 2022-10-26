@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -17,6 +17,7 @@
 
 #include "ScriptMgr.h"
 #include "InstanceScript.h"
+#include "Map.h"
 #include "the_stockade.h"
 
 class instance_the_stockade : public InstanceMapScript
@@ -26,7 +27,7 @@ public:
 
     struct instance_the_stockade_InstanceMapScript : public InstanceScript
     {
-        instance_the_stockade_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
+        instance_the_stockade_InstanceMapScript(Map* map) : InstanceScript(map)
         {
             SetHeaders(DataHeader);
             SetBossNumber(EncounterCount);

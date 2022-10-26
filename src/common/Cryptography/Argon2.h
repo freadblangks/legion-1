@@ -23,7 +23,7 @@
 #include "Optional.h"
 #include <string>
 
-namespace Trinity::Crypto
+namespace Argon2
 {
     struct TC_COMMON_API Argon2
     {

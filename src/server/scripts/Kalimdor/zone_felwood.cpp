@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -59,14 +59,14 @@ public:
             {
                 me->CastSpell(me, SPELL_INFECTED_WOULD);
                 me->SetEntry(NPC_CORRUPTED_LASHER);
-                me->SetFaction(FACTION_HOSTILE);
+                me->setFaction(FACTION_HOSTILE);
             }
             else
             {
-                me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             }
 
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
             me->CastSpell(me, SPELL_STAND);
             me->GetMotionMaster()->MoveRandom(8.0f);
             events.ScheduleEvent(EVENT_CHECK_OOC, 20000);
@@ -215,7 +215,8 @@ public: spell_beesbees() : SpellScriptLoader("spell_beesbees") { }
 enum RuumbosSillyDance
 {
     NPC_DRIZZLE  = 47556,
-    NPC_FERLI    = 47558
+    NPC_FERLI    = 47558,
+    MAP_KALIMDOR = 1
 };
 
 Position const DrizzleSpawnPos = { 3852.52f, -1321.92f, 213.3353f, 5.72468f };
@@ -233,7 +234,7 @@ public: spell_ruumbos_silly_dance() : SpellScriptLoader("spell_ruumbos_silly_dan
             {
                 if (Player* player = GetHitPlayer())
                 {
-                    player->SetEmoteState(EMOTE_STATE_DANCE);
+                    player->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_DANCE);
 
                     if (player->GetMapId() == MAP_KALIMDOR)
                     {

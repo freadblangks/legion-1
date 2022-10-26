@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -110,7 +111,7 @@ class boss_majordomo : public CreatureScript
                     if (!me->FindNearestCreature(NPC_FLAMEWAKER_HEALER, 100.0f) && !me->FindNearestCreature(NPC_FLAMEWAKER_ELITE, 100.0f))
                     {
                         instance->UpdateEncounterStateForKilledCreature(me->GetEntry(), me);
-                        me->SetFaction(FACTION_FRIENDLY);
+                        me->setFaction(FACTION_FRIENDLY);
                         EnterEvadeMode();
                         Talk(SAY_DEFEAT);
                         _JustDied();
@@ -165,7 +166,7 @@ class boss_majordomo : public CreatureScript
                         {
                             case EVENT_OUTRO_1:
                                 me->NearTeleportTo(RagnarosTelePos.GetPositionX(), RagnarosTelePos.GetPositionY(), RagnarosTelePos.GetPositionZ(), RagnarosTelePos.GetOrientation());
-                                me->AddNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+                                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                                 break;
                             case EVENT_OUTRO_2:
                                 instance->instance->SummonCreature(NPC_RAGNAROS, RagnarosSummonPos);
@@ -184,15 +185,15 @@ class boss_majordomo : public CreatureScript
             {
                 if (action == ACTION_START_RAGNAROS)
                 {
-                    me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+                    me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                     Talk(SAY_SUMMON_MAJ);
                     events.ScheduleEvent(EVENT_OUTRO_2, 8000);
                     events.ScheduleEvent(EVENT_OUTRO_3, 24000);
                 }
                 else if (action == ACTION_START_RAGNAROS_ALT)
                 {
-                    me->SetFaction(FACTION_FRIENDLY);
-                    me->AddNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+                    me->setFaction(FACTION_FRIENDLY);
+                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 }
             }
 

@@ -62,18 +62,18 @@ SFMTRand::SFMTRand()
     std::random_device dev;
     if (dev.entropy() > 0)
     {
-        std::array<uint32, SFMT_N32> seed;
-        std::generate(seed.begin(), seed.end(), std::ref(dev));
+        //std::array<uint32, SFMT_N32> seed;
+        //std::generate(seed.begin(), seed.end(), std::ref(dev));
 
-        sfmt_init_by_array(&_state, seed.data(), seed.size());
+        //sfmt_init_by_array(&_state, seed.data(), seed.size());
     }
-    else
-        sfmt_init_gen_rand(&_state, uint32(time(nullptr)));
+    //else
+       // sfmt_init_gen_rand(&_state, uint32(time(nullptr)));
 }
 
 uint32 SFMTRand::RandomUInt32()                            // Output random bits
 {
-    return sfmt_genrand_uint32(&_state);
+    return;// sfmt_genrand_uint32(&_state);
 }
 
 void* SFMTRand::operator new(size_t size, std::nothrow_t const&)
@@ -115,3 +115,5 @@ void SFMTRand::operator delete[](void* ptr)
 {
     _mm_free(ptr);
 }
+
+

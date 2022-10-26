@@ -1,5 +1,6 @@
  /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -85,8 +86,8 @@ public:
 
             DoCastSelf(SPELL_IRRIDATION, true);
 
-            me->AddUnitFlag(UNIT_FLAG_PVP_ATTACKABLE);
-            me->AddUnitFlag(UNIT_FLAG_IN_COMBAT);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
             me->SetHealth(me->CountPctFromMaxHealth(10));
             me->SetStandState(UNIT_STAND_STATE_SLEEP);
         }
@@ -115,7 +116,7 @@ public:
                 _canAskForHelp = false;
                 _canUpdateEvents = true;
 
-                me->RemoveUnitFlag(UNIT_FLAG_PVP_ATTACKABLE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE);
                 me->SetStandState(UNIT_STAND_STATE_STAND);
 
                 _playerGUID = caster->GetGUID();
@@ -184,6 +185,8 @@ enum Overgrind
     SAY_EMOTE       = 1,
     ATTACK_YELL     = 2,
 
+    AREA_COVE       = 3579,
+    AREA_ISLE       = 3639,
     QUEST_GNOMERCY  = 9537,
     FACTION_HOSTILE = 14,
     SPELL_DYNAMITE  = 7978
@@ -200,7 +203,7 @@ public:
         {
             Initialize();
             NormFaction = creature->getFaction();
-            NpcFlags = (uint32)creature->m_unitData->NpcFlags[0];
+            NpcFlags = creature->GetUInt32Value(UNIT_NPC_FLAGS);
         }
 
         void Initialize()
@@ -208,7 +211,7 @@ public:
             DynamiteTimer = 8000;
             EmoteTimer = urand(120000, 150000);
 
-            if (me->GetAreaId() == AREA_AZUREMYST_ISLE_TRAITOR_COVE || me->GetAreaId() == AREA_AZUREMYST_ISLE_SILVERMYST_ISLE)
+            if (me->GetAreaId() == AREA_COVE || me->GetAreaId() == AREA_ISLE)
                 IsTreeEvent = true;
             else
                 IsTreeEvent = false;
@@ -218,8 +221,8 @@ public:
         {
             Initialize();
 
-            me->SetFaction(NormFaction);
-            me->AddNpcFlag(NPCFlags(NpcFlags));
+            me->setFaction(NormFaction);
+            me->SetUInt32Value(UNIT_NPC_FLAGS, NpcFlags);
         }
 
         void EnterCombat(Unit* who) override
@@ -230,7 +233,7 @@ public:
         void sGossipSelect(Player* player, uint32 /*menuId*/, uint32 /*gossipListId*/) override
         {
             CloseGossipMenuFor(player);
-            me->SetFaction(FACTION_HOSTILE);
+            me->setFaction(FACTION_HOSTILE);
             me->Attack(player, true);
         }
 
@@ -289,7 +292,7 @@ public:
 
         void Reset() override
         {
-            me->AddUnitFlag(UNIT_FLAG_IN_COMBAT);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
             me->SetHealth(me->CountPctFromMaxHealth(15));
             switch (urand(0, 1))
             {
@@ -401,7 +404,7 @@ public:
                     case EVENT_ACCEPT_QUEST:
                         if (Player* player = ObjectAccessor::GetPlayer(*me, _player))
                             Talk(SAY_START, player);
-                        me->SetFaction(FACTION_QUEST);
+                        me->setFaction(FACTION_QUEST);
                         _events.ScheduleEvent(EVENT_START_ESCORT, Seconds(1));
                         break;
                     case EVENT_START_ESCORT:
@@ -410,7 +413,7 @@ public:
                         _events.ScheduleEvent(EVENT_STAND, Seconds(2));
                         break;
                     case EVENT_STAND: // Remove kneel standstate. Using a separate delayed event because it causes unwanted delay before starting waypoint movement.
-                        me->SetStandState(UNIT_STAND_STATE_STAND);
+                        me->SetByteValue(UNIT_FIELD_BYTES_1, 0, 0);
                         break;
                     case EVENT_TALK_END:
                         if (Player* player = ObjectAccessor::GetPlayer(*me, _player))
@@ -507,7 +510,7 @@ public:
             {
                 SparkGUID = Spark->GetGUID();
                 Spark->setActive(true);
-                Spark->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+                Spark->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             }
             SayTimer = 8000;
         }
@@ -637,7 +640,7 @@ public:
         {
             if (Creature* ravager = go->FindNearestCreature(NPC_DEATH_RAVAGER, 5.0f, true))
             {
-                ravager->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                ravager->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 ravager->SetReactState(REACT_AGGRESSIVE);
                 ravager->AI()->AttackStart(player);
             }
@@ -671,7 +674,7 @@ public:
         {
             Initialize();
 
-            me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             me->SetReactState(REACT_PASSIVE);
         }
 

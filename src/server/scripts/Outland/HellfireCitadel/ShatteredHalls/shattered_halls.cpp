@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -87,16 +87,16 @@ class boss_shattered_executioner : public CreatureScript
                 // _Reset() resets the loot mode, so we add them again, if any
                 uint32 prisonersExecuted = instance->GetData(DATA_PRISONERS_EXECUTED);
                 if (prisonersExecuted == 0)
-                    me->AddLootMode(LOOT_MODE_MYTHIC_KEYSTONE);
+                    me->AddLootMode(LOOT_MODE_HARD_MODE_3);
                 if (prisonersExecuted <= 1)
-                    me->AddLootMode(LOOT_MODE_25_N);
+                    me->AddLootMode(LOOT_MODE_HARD_MODE_2);
                 if (prisonersExecuted <= 2)
-                    me->AddLootMode(LOOT_MODE_HEROIC);
+                    me->AddLootMode(LOOT_MODE_HARD_MODE_1);
 
                 if (instance->GetBossState(DATA_KARGATH) == DONE)
-                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                 else
-                    me->AddUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
 
                 Initialize();
             }
@@ -142,11 +142,11 @@ class boss_shattered_executioner : public CreatureScript
                     switch (data)
                     {
                         case 3:
-                            me->RemoveLootMode(LOOT_MODE_HEROIC);
+                            me->RemoveLootMode(LOOT_MODE_HARD_MODE_1);
                         case 2:
-                            me->RemoveLootMode(LOOT_MODE_25_N);
+                            me->RemoveLootMode(LOOT_MODE_HARD_MODE_2);
                         case 1:
-                            me->RemoveLootMode(LOOT_MODE_MYTHIC_KEYSTONE);
+                            me->RemoveLootMode(LOOT_MODE_HARD_MODE_3);
                     }
                 }
             }

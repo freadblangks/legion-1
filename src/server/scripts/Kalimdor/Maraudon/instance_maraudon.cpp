@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,6 +24,7 @@ gets instead the deserter debuff.
 
 #include "ScriptMgr.h"
 #include "InstanceScript.h"
+#include "Map.h"
 #include "maraudon.h"
 
 class instance_maraudon : public InstanceMapScript
@@ -38,7 +39,7 @@ public:
 
     struct instance_maraudon_InstanceMapScript : public InstanceScript
     {
-        instance_maraudon_InstanceMapScript(InstanceMap* map) : InstanceScript(map) { }
+        instance_maraudon_InstanceMapScript(Map* map) : InstanceScript(map) { }
     };
 };
 

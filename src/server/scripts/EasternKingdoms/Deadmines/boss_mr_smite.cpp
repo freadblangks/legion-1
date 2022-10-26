@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,10 +22,14 @@ SDComment: Timers and say taken from acid script
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "deadmines.h"
+#include "GameObject.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
 
-enum eSpels
+enum Spels
 {
     SPELL_TRASH             = 3391,
     SPELL_SMITE_STOMP       = 6432,
@@ -45,14 +49,27 @@ public:
 
     CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_mr_smiteAI (creature);
+        return GetDeadminesAI<boss_mr_smiteAI>(creature);
     }
 
     struct boss_mr_smiteAI : public ScriptedAI
     {
         boss_mr_smiteAI(Creature* creature) : ScriptedAI(creature)
         {
+            Initialize();
             instance = creature->GetInstanceScript();
+        }
+
+        void Initialize()
+        {
+            uiTrashTimer = urand(5000, 9000);
+            uiSlamTimer = 9000;
+            uiNimbleReflexesTimer = urand(15500, 31600);
+
+            uiHealth = 0;
+
+            uiPhase = 0;
+            uiTimer = 0;
         }
 
         InstanceScript* instance;
@@ -68,14 +85,7 @@ public:
 
         void Reset() override
         {
-            uiTrashTimer = urand(5000, 9000);
-            uiSlamTimer = 9000;
-            uiNimbleReflexesTimer = urand(15500, 31600);
-
-            uiHealth = 0;
-
-            uiPhase = 0;
-            uiTimer = 0;
+            Initialize();
 
             SetEquipmentSlots(false, EQUIP_SWORD, EQUIP_UNEQUIP, EQUIP_NO_CHANGE);
         }
@@ -127,12 +137,11 @@ public:
                 ++uiHealth;
                 DoCastAOE(SPELL_SMITE_STOMP, false);
                 SetCombatMovement(false);
-                /*                if (instance)
-                    if (GameObject* go = GameObject::GetGameObject(*me, instance->GetGuidData(DATA_SMITE_CHEST)))
-                    {
-                        me->GetMotionMaster()->Clear();
-                        me->GetMotionMaster()->MovePoint(1, go->GetPositionX() - 3.0f, go->GetPositionY(), go->GetPositionZ());
-                        }*/
+                if (GameObject* go = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(DATA_SMITE_CHEST)))
+                {
+                    me->GetMotionMaster()->Clear();
+                    me->GetMotionMaster()->MovePoint(1, go->GetPositionX() - 3.0f, go->GetPositionY(), go->GetPositionZ());
+                }
             }
 
             if (uiPhase)

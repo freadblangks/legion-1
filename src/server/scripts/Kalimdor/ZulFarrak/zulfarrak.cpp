@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -131,7 +132,7 @@ public:
         {
             Initialize();
 
-            me->SetFaction(FACTION_FRIENDLY);
+            me->setFaction(FACTION_FRIENDLY);
         }
 
         void UpdateAI(uint32 diff) override
@@ -154,7 +155,7 @@ public:
                             Text_Timer = 5000;
                             break;
                         case 3:
-                            me->SetFaction(FACTION_HOSTILE);
+                            me->setFaction(FACTION_HOSTILE);
                             if (Player* target = ObjectAccessor::GetPlayer(*me, PlayerGUID))
                                 AttackStart(target);
 
@@ -199,7 +200,7 @@ public:
         {
            if (Creature* crew = ObjectAccessor::GetCreature(*me, instance->GetGuidData(entry)))
                if (crew->IsAlive())
-                   crew->SetFaction(FACTION_HOSTILE);
+                   crew->setFaction(FACTION_HOSTILE);
         }
     };
 
@@ -238,7 +239,7 @@ private:
             crew->SetWalk(true);
             crew->SetHomePosition(x, y, z, 0);
             crew->GetMotionMaster()->MovePoint(1, x, y, z);
-            crew->SetFaction(FACTION_FREED);
+            crew->setFaction(FACTION_FREED);
         }
     }
 };
@@ -387,7 +388,7 @@ public:
         {
             if (me->IsAlive())
             {
-                me->SetFaction(FACTION_FRIENDLY);
+                me->setFaction(FACTION_FRIENDLY);
                 me->GetMotionMaster()->MovePoint(0, 1858.57f, 1146.35f, 14.745f);
                 me->SetHomePosition(1858.57f, 1146.35f, 14.745f, 3.85f); // in case he gets interrupted
                 Talk(SAY_WEEGLI_OK_I_GO);
@@ -454,7 +455,7 @@ public:
         if (!pZumrah)
             return false;
 
-        pZumrah->SetFaction(ZUMRAH_HOSTILE_FACTION);
+        pZumrah->setFaction(ZUMRAH_HOSTILE_FACTION);
         return true;
     }
 

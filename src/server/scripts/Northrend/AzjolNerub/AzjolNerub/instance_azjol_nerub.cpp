@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,6 +21,7 @@
 #include "Creature.h"
 #include "CreatureAI.h"
 #include "InstanceScript.h"
+#include "Map.h"
 
 DoorData const doorData[] =
 {
@@ -63,7 +64,7 @@ class instance_azjol_nerub : public InstanceMapScript
 
         struct instance_azjol_nerub_InstanceScript : public InstanceScript
         {
-            instance_azjol_nerub_InstanceScript(InstanceMap* map) : InstanceScript(map)
+            instance_azjol_nerub_InstanceScript(Map* map) : InstanceScript(map)
             {
                 SetHeaders(DataHeader);
                 SetBossNumber(EncounterCount);

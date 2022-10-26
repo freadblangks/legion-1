@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,8 +23,6 @@ SDComment:
 SDCategory: Razorfen Kraul
 EndScriptData */
 
-//Missing scripts and Bosses
-
 #include "ScriptMgr.h"
 #include "GameObject.h"
 #include "InstanceScript.h"
@@ -45,7 +44,7 @@ public:
 
     struct instance_razorfen_kraul_InstanceMapScript : public InstanceScript
     {
-        instance_razorfen_kraul_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
+        instance_razorfen_kraul_InstanceMapScript(Map* map) : InstanceScript(map)
         {
             SetHeaders(DataHeader);
             WardKeeperDeath = 0;
@@ -59,7 +58,7 @@ public:
             switch (go->GetEntry())
             {
                 case 21099: DoorWardGUID = go->GetGUID(); break;
-                case 20920: go->SetFaction(0); break; // big fat fugly hack
+                case 20920: go->SetUInt32Value(GAMEOBJECT_FACTION, 0); break; // big fat fugly hack
             }
         }
 
@@ -68,7 +67,7 @@ public:
             if (WardKeeperDeath == WARD_KEEPERS_NR)
                 if (GameObject* go = instance->GetGameObject(DoorWardGUID))
                 {
-                    go->SetFlags(GameObjectFlags(GO_FLAG_IN_USE | GO_FLAG_NODESPAWN));
+                    go->SetUInt32Value(GAMEOBJECT_FLAGS, 33);
                     go->SetGoState(GO_STATE_ACTIVE);
                 }
         }

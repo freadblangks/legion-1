@@ -31,8 +31,8 @@ struct EnumText
     // Human-readable description of the value
     char const* const Description;
 };
-
-namespace Trinity::Impl::EnumUtilsImpl
+namespace SmartEnum
+//namespace Trinity::Impl::EnumUtilsImpl
 {
     template <typename Enum>
     struct EnumUtils

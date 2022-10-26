@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,6 +18,7 @@
 #include "ScriptMgr.h"
 #include "Creature.h"
 #include "InstanceScript.h"
+#include "Map.h"
 #include "ruins_of_ahnqiraj.h"
 
 class instance_ruins_of_ahnqiraj : public InstanceMapScript
@@ -27,7 +28,7 @@ class instance_ruins_of_ahnqiraj : public InstanceMapScript
 
         struct instance_ruins_of_ahnqiraj_InstanceMapScript : public InstanceScript
         {
-            instance_ruins_of_ahnqiraj_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
+            instance_ruins_of_ahnqiraj_InstanceMapScript(Map* map) : InstanceScript(map)
             {
                 SetHeaders(DataHeader);
                 SetBossNumber(NUM_ENCOUNTER);

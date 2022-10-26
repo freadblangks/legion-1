@@ -1,5 +1,5 @@
 /*
- * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,45 +21,45 @@
 #include <boost/thread/tss.hpp>
 #include <random>
 
-//static boost::thread_specific_ptr<SFMTRand> sfmtRand;
+static boost::thread_specific_ptr<SFMTRand> sfmtRand;
 static SFMTEngine engine;
 
-//static SFMTRand* GetRng()
-//{
-  //  SFMTRand* rand = sfmtRand.get();
+static SFMTRand* GetRng()
+{
+    SFMTRand* rand = sfmtRand.get();
 
-    //if (!rand)
-  //  {
-      //  rand = new SFMTRand();
-        //sfmtRand.reset(rand);
-    //}
+    if (!rand)
+    {
+        rand = new SFMTRand();
+        sfmtRand.reset(rand);
+    }
 
-    //return rand;
-//}
+    return rand;
+}
 
 int32 irand(int32 min, int32 max)
 {
     ASSERT(max >= min);
-    //return;// int32(GetRng()->IRandom(min, max));
+    return int32(GetRng()->IRandom(min, max));
 }
 
 uint32 urand(uint32 min, uint32 max)
 {
     ASSERT(max >= min);
-   // return;// GetRng()->URandom(min, max);
+    return GetRng()->URandom(min, max);
 }
 
 uint32 urandms(uint32 min, uint32 max)
 {
     ASSERT(max >= min);
     ASSERT(std::numeric_limits<uint32>::max() / Milliseconds::period::den >= max);
-    //return;// GetRng()->URandom(min * Milliseconds::period::den, max * Milliseconds::period::den);
+    return GetRng()->URandom(min * Milliseconds::period::den, max * Milliseconds::period::den);
 }
 
 float frand(float min, float max)
 {
     ASSERT(max >= min);
-    //return;// float(GetRng()->Random() * (max - min) + min);
+    return float(GetRng()->Random() * (max - min) + min);
 }
 
 Milliseconds randtime(Milliseconds const& min, Milliseconds const& max)
@@ -72,17 +72,17 @@ Milliseconds randtime(Milliseconds const& min, Milliseconds const& max)
 
 uint32 rand32()
 {
-   // return;// GetRng()->BRandom();
+    return GetRng()->BRandom();
 }
 
 double rand_norm()
 {
-   // return;// GetRng()->Random();
+    return GetRng()->Random();
 }
 
 double rand_chance()
 {
-    //return; GetRng()->Random() * 100.0;
+    return GetRng()->Random() * 100.0;
 }
 
 uint32 urandweighted(size_t count, double const* chances)

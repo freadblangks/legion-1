@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -247,7 +248,7 @@ public:
         void Reset() override
         {
             _events.Reset();
-            me->SetDisplayFromModel(1);
+            me->SetDisplayId(me->GetCreatureTemplate()->Modelid2);
         }
 
         void EnterCombat(Unit* /*who*/) override
@@ -263,16 +264,12 @@ public:
             _events.Reset();
             if (Creature* legoso = me->FindNearestCreature(NPC_LEGOSO, SIZE_OF_GRIDS))
             {
-                for (Group* group : me->GetLootRecipientGroups())
-                {
-                    if (killer->GetGUID() == legoso->GetGUID() ||
-                        (group && group->IsMember(killer->GetGUID())) ||
-                        killer->GetGUID() == legoso->AI()->GetGUID(DATA_EVENT_STARTER_GUID))
-                    {
-                        legoso->AI()->DoAction(ACTION_LEGOSO_SIRONAS_KILLED);
-                        break;
-                    }
-                }
+                Group* group = me->GetLootRecipientGroup();
+
+                if (killer->GetGUID() == legoso->GetGUID() ||
+                    (group && group->IsMember(killer->GetGUID())) ||
+                    killer->GetGUID() == legoso->AI()->GetGUID(DATA_EVENT_STARTER_GUID))
+                    legoso->AI()->DoAction(ACTION_LEGOSO_SIRONAS_KILLED);
             }
         }
 
@@ -434,7 +431,7 @@ public:
                             break;
                         case EVENT_HEALING_SURGE:
                         {
-                            Unit* target = nullptr;
+                            Unit* target = NULL;
                             if (me->GetHealthPct() < 85)
                                 target = me;
                             else if (Player* player = GetPlayerForEscort())
@@ -634,7 +631,7 @@ public:
                             _explosivesGuids.clear();
                             if (Creature* sironas = me->FindNearestCreature(NPC_SIRONAS, SIZE_OF_GRIDS))
                             {
-                                sironas->RemoveUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC));
+                                sironas->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
                                 me->SetFacingToObject(sironas);
                             }
                             _moveTimer = 1 * IN_MILLISECONDS;
@@ -744,7 +741,7 @@ public:
                     SetEscortPaused(true);
 
                     //Find Sironas and make it respawn if needed
-                    Creature* sironas = nullptr;
+                    Creature* sironas = NULL;
                     Trinity::AllCreaturesOfEntryInRange check(me, NPC_SIRONAS, SIZE_OF_GRIDS);
                     Trinity::CreatureSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(me, sironas, check);
                     Cell::VisitAllObjects(me, searcher, SIZE_OF_GRIDS);
@@ -809,35 +806,9 @@ public:
     }
 };
 
-
-//24318
-class item_sample_water_flask_24318 : public ItemScript
-{
-public:
-    item_sample_water_flask_24318() : ItemScript("item_sample_water_flask_24318") { }
-
-    enum eItem {
-        QUEST_DONT_DRINK_THE_WATER = 9748,
-        SPELL_BLOODMYST_WATER_SAMPLE = 31549,
-    };
-
-    bool OnUse(Player* plr, Item* /*item*/, SpellCastTargets const& targets, ObjectGuid /*castId*/) override
-    {
-        if (plr->GetQuestStatus(QUEST_DONT_DRINK_THE_WATER) == QUEST_STATUS_INCOMPLETE && plr->GetAreaId() == 3906)
-        {
-            plr->GetScheduler().Schedule(6s, [this, plr] (TaskContext context)
-            {
-                plr->ForceCompleteQuest(QUEST_DONT_DRINK_THE_WATER);
-            });
-        }
-        return true;
-    }
-};
-
 void AddSC_bloodmyst_isle()
 {
     new npc_webbed_creature();
     new npc_sironas();
     new npc_demolitionist_legoso();
-    new item_sample_water_flask_24318();
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -159,10 +160,10 @@ public:
             if (Creature* Sath = ObjectAccessor::GetCreature(*me, SathGUID))
                 Sath->AI()->EnterEvadeMode();
 
-            me->SetFaction(14);
+            me->setFaction(14);
             if (!bJustReset) //first reset at create
             {
-                me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE));
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
                 me->SetDisableGravity(false);
                 me->SetVisible(true);
                 me->SetStandState(UNIT_STAND_STATE_SLEEP);
@@ -177,7 +178,7 @@ public:
 
             bJustReset = true;
             me->SetVisible(false);
-            me->AddUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE));
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
             ScriptedAI::EnterEvadeMode(why);
         }
 
@@ -202,7 +203,7 @@ public:
             {
                 if (!TalkSequence)
                 {
-                    me->AddUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE));
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
                     me->InterruptNonMeleeSpells(true);
                     me->RemoveAllAuras();
                     me->DeleteThreatList();
@@ -224,7 +225,7 @@ public:
                 {
                     if (ResetTimer <= diff)
                     {
-                        me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE));
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                         me->SetDisableGravity(false);
                         me->SetVisible(true);
                         me->SetStandState(UNIT_STAND_STATE_SLEEP);
@@ -386,7 +387,7 @@ public:
             switch (TalkSequence)
             {
                 case 1:
-                    me->SetFaction(35);
+                    me->setFaction(35);
                     TalkTimer = 1000;
                     break;
                 case 2:

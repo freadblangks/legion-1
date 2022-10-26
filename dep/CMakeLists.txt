@@ -1,4 +1,4 @@
-# This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
+# Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -12,6 +12,7 @@ add_subdirectory(threads)
 
 if(SERVERS OR TOOLS)
   add_subdirectory(boost)
+  add_subdirectory(process)
   add_subdirectory(zlib)
   add_subdirectory(g3dlite)
   add_subdirectory(recastnavigation)
@@ -21,7 +22,6 @@ if(SERVERS OR TOOLS)
   add_subdirectory(valgrind)
   add_subdirectory(openssl)
   add_subdirectory(jemalloc)
-  add_subdirectory(argon2)
 endif()
 
 if(SERVERS)
@@ -34,14 +34,6 @@ if(SERVERS)
 endif()
 
 if(TOOLS)
+  add_subdirectory(bzip2)
   add_subdirectory(CascLib)
-endif()
-
-if(BUILD_TESTING)
-  include(FetchContent)
-  FetchContent_Declare(Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v2.13.0
-    GIT_SHALLOW    1)
-  FetchContent_MakeAvailable(Catch2)
 endif()

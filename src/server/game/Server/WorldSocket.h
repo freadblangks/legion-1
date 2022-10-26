@@ -21,7 +21,7 @@
 
 #include "Common.h"
 #include "BigNumber.h"
-#include "DatabaseEnvFwd.h"
+//#include "DatabaseEnvFwd.h"
 #include "MessageBuffer.h"
 #include "QueryCallbackProcessor.h"
 #include "Socket.h"

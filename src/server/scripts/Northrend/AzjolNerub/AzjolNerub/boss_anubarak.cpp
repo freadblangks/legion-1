@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -46,6 +46,7 @@ enum Spells
     SPELL_SUMMON_GUARDIAN       = 53614,
     SPELL_SUMMON_VENOMANCER     = 53615,
 
+    SPELL_DART                  = 59349,
     SPELL_BACKSTAB              = 52540,
     SPELL_ASSASSIN_VISUAL       = 53611,
     SPELL_SUNDER_ARMOR          = 53618,
@@ -121,7 +122,7 @@ public:
         void Reset() override
         {
             BossAI::Reset();
-            me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE));
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
             instance->DoStopCriteriaTimer(CRITERIA_TIMED_TYPE_EVENT, ACHIEV_GOTTA_GO_START_EVENT);
             _nextSubmerge = 75;
             _petCount = 0;
@@ -333,7 +334,7 @@ public:
                     {
                         me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
                         me->RemoveAurasDueToSpell(SPELL_IMPALE_AURA);
-                        me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE));
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                         DoCastSelf(SPELL_EMERGE);
                         events.SetPhase(PHASE_EMERGE);
                         events.ScheduleEvent(EVENT_POUND, randtime(Seconds(13), Seconds(18)), 0, PHASE_EMERGE);
@@ -364,7 +365,7 @@ public:
         {
             if (spell->Id == SPELL_SUBMERGE)
             {
-                me->AddUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE));
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                 me->RemoveAurasDueToSpell(SPELL_LEECHING_SWARM);
                 DoCastSelf(SPELL_IMPALE_AURA, true);
 
@@ -463,6 +464,7 @@ class npc_anubarak_anub_ar_darter : public CreatureScript
             void InitializeAI() override
             {
                 npc_anubarak_pet_template::InitializeAI();
+                DoCastAOE(SPELL_DART);
             }
         };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -97,9 +97,9 @@ enum ICDataTypes
     DATA_PUTRICIDE_TABLE               = 16,
     DATA_NAUSEA_ACHIEVEMENT            = 17,
     DATA_ORB_WHISPERER_ACHIEVEMENT     = 18,
-    DATA_PRINCE_KELESETH               = 19,
-    DATA_PRINCE_TALDARAM               = 20,
-    DATA_PRINCE_VALANAR                = 21,
+    DATA_PRINCE_KELESETH_GUID          = 19,
+    DATA_PRINCE_TALDARAM_GUID          = 20,
+    DATA_PRINCE_VALANAR_GUID           = 21,
     DATA_BLOOD_PRINCES_CONTROL         = 22,
     DATA_SINDRAGOSA_FROSTWYRMS         = 23,
     DATA_SPINESTALKER                  = 24,
@@ -321,8 +321,6 @@ enum ICCreaturesIds
     NPC_WORLD_TRIGGER_INFINITE_AOI              = 36171,
     NPC_SPIRIT_BOMB                             = 39189,
     NPC_FROSTMOURNE_TRIGGER                     = 38584,
-    NPC_SHADOW_TRAP                             = 39137,
-
 
     // Generic
     NPC_INVISIBLE_STALKER                       = 30298
@@ -486,9 +484,6 @@ enum ICSharedActions
     ACTION_ROTFACE_DEATH        = -366272,
     ACTION_CHANGE_PHASE         = -366780,
 
-    // Putricide
-    ACTION_CHECK_BOSS           = -366781,
-
     // Blood-Queen Lana'thel
     ACTION_KILL_MINCHAR         = -379550,
 
@@ -530,6 +525,7 @@ enum ICWorldStatesICC
 enum ICAreaIds
 {
     AREA_ICECROWN_CITADEL   = 4812,
+    AREA_THE_FROZEN_THRONE  = 4859
 };
 
 class spell_trigger_spell_from_caster : public SpellScriptLoader

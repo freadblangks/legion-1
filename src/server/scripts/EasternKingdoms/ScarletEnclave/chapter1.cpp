@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,7 +30,6 @@
 #include "SpellInfo.h"
 #include "TemporarySummon.h"
 #include "Vehicle.h"
-
 
 /*######
 ##Quest 12848
@@ -129,8 +128,8 @@ public:
         {
             Initialize();
             events.Reset();
-            me->SetFaction(7);
-            me->AddUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+            me->setFaction(7);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
             me->SetStandState(UNIT_STAND_STATE_KNEEL);
             me->LoadEquipment(0, true);
         }
@@ -194,7 +193,7 @@ public:
                         TC_LOG_ERROR("scripts", "npc_unworthy_initiateAI: unable to find anchor!");
 
                     float dist = 99.0f;
-                    GameObject* prison = nullptr;
+                    GameObject* prison = NULL;
 
                     for (uint8 i = 0; i < 12; ++i)
                     {
@@ -235,8 +234,8 @@ public:
                         wait_timer -= diff;
                     else
                     {
-                        me->SetFaction(14);
-                        me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                        me->setFaction(14);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                         phase = PHASE_ATTACKING;
 
                         if (Player* target = ObjectAccessor::GetPlayer(*me, playerGUID))
@@ -371,12 +370,9 @@ class npc_eye_of_acherus : public CreatureScript
         {
             npc_eye_of_acherusAI(Creature* creature) : ScriptedAI(creature)
             {
-                me->SetDisplayFromModel(0);
+                me->SetDisplayId(me->GetCreatureTemplate()->Modelid1);
                 if (Player* owner = me->GetCharmerOrOwner()->ToPlayer())
-                {
-                    me->InitCharmInfo()->InitPossessCreateSpells();
                     owner->SendAutoRepeatCancel(me);
-                }
 
                 me->SetReactState(REACT_PASSIVE);
 
@@ -453,6 +449,186 @@ class npc_eye_of_acherus : public CreatureScript
         {
             return new npc_eye_of_acherusAI(creature);
         }
+};
+
+/*######
+## npc_death_knight_initiate
+######*/
+
+enum Spells_DKI
+{
+    SPELL_DUEL                  = 52996,
+    //SPELL_DUEL_TRIGGERED        = 52990,
+    SPELL_DUEL_VICTORY          = 52994,
+    SPELL_DUEL_FLAG             = 52991,
+    SPELL_GROVEL                = 7267,
+};
+
+enum Says_VBM
+{
+    SAY_DUEL                    = 0,
+};
+
+enum Misc_VBN
+{
+    QUEST_DEATH_CHALLENGE       = 12733,
+    FACTION_HOSTILE             = 2068
+};
+
+class npc_death_knight_initiate : public CreatureScript
+{
+public:
+    npc_death_knight_initiate() : CreatureScript("npc_death_knight_initiate") { }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) override
+    {
+        ClearGossipMenuFor(player);
+        if (action == GOSSIP_ACTION_INFO_DEF)
+        {
+            CloseGossipMenuFor(player);
+
+            if (player->IsInCombat() || creature->IsInCombat())
+                return true;
+
+            if (npc_death_knight_initiateAI* pInitiateAI = CAST_AI(npc_death_knight_initiate::npc_death_knight_initiateAI, creature->AI()))
+            {
+                if (pInitiateAI->m_bIsDuelInProgress)
+                    return true;
+            }
+
+            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);
+
+            player->CastSpell(creature, SPELL_DUEL, false);
+            player->CastSpell(player, SPELL_DUEL_FLAG, true);
+        }
+        return true;
+    }
+
+    bool OnGossipHello(Player* player, Creature* creature) override
+    {
+        if (player->GetQuestStatus(QUEST_DEATH_CHALLENGE) == QUEST_STATUS_INCOMPLETE && creature->IsFullHealth())
+        {
+            if (player->HealthBelowPct(10))
+                return true;
+
+            if (player->IsInCombat() || creature->IsInCombat())
+                return true;
+
+            AddGossipItemFor(player, Player::GetDefaultGossipMenuForSource(creature), 0, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+            SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
+        }
+        return true;
+    }
+
+    struct npc_death_knight_initiateAI : public CombatAI
+    {
+        npc_death_knight_initiateAI(Creature* creature) : CombatAI(creature)
+        {
+            Initialize();
+        }
+
+        void Initialize()
+        {
+            m_uiDuelerGUID.Clear();
+            m_uiDuelTimer = 5000;
+            m_bIsDuelInProgress = false;
+            lose = false;
+        }
+
+        bool lose;
+        ObjectGuid m_uiDuelerGUID;
+        uint32 m_uiDuelTimer;
+        bool m_bIsDuelInProgress;
+
+        void Reset() override
+        {
+            Initialize();
+
+            me->RestoreFaction();
+            CombatAI::Reset();
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);
+        }
+
+        void SpellHit(Unit* pCaster, const SpellInfo* pSpell) override
+        {
+            if (!m_bIsDuelInProgress && pSpell->Id == SPELL_DUEL)
+            {
+                m_uiDuelerGUID = pCaster->GetGUID();
+                Talk(SAY_DUEL, pCaster);
+                m_bIsDuelInProgress = true;
+            }
+        }
+
+       void DamageTaken(Unit* pDoneBy, uint32 &uiDamage) override
+        {
+            if (m_bIsDuelInProgress && pDoneBy->IsControlledByPlayer())
+            {
+                if (pDoneBy->GetGUID() != m_uiDuelerGUID && pDoneBy->GetOwnerGUID() != m_uiDuelerGUID) // other players cannot help
+                    uiDamage = 0;
+                else if (uiDamage >= me->GetHealth())
+                {
+                    uiDamage = 0;
+
+                    if (!lose)
+                    {
+                        pDoneBy->RemoveGameObject(SPELL_DUEL_FLAG, true);
+                        pDoneBy->AttackStop();
+                        me->CastSpell(pDoneBy, SPELL_DUEL_VICTORY, true);
+                        lose = true;
+                        me->CastSpell(me, SPELL_GROVEL, true);
+                        me->RestoreFaction();
+                    }
+                }
+            }
+        }
+
+        void UpdateAI(uint32 uiDiff) override
+        {
+            if (!UpdateVictim())
+            {
+                if (m_bIsDuelInProgress)
+                {
+                    if (m_uiDuelTimer <= uiDiff)
+                    {
+                        me->setFaction(FACTION_HOSTILE);
+
+                        if (Unit* unit = ObjectAccessor::GetUnit(*me, m_uiDuelerGUID))
+                            AttackStart(unit);
+                    }
+                    else
+                        m_uiDuelTimer -= uiDiff;
+                }
+                return;
+            }
+
+            if (m_bIsDuelInProgress)
+            {
+                if (lose)
+                {
+                    if (!me->HasAura(SPELL_GROVEL))
+                        EnterEvadeMode();
+                    return;
+                }
+                else if (me->GetVictim() && me->EnsureVictim()->GetTypeId() == TYPEID_PLAYER && me->EnsureVictim()->HealthBelowPct(10))
+                {
+                    me->EnsureVictim()->CastSpell(me->GetVictim(), SPELL_GROVEL, true); // beg
+                    me->EnsureVictim()->RemoveGameObject(SPELL_DUEL_FLAG, true);
+                    EnterEvadeMode();
+                    return;
+                }
+            }
+
+            /// @todo spells
+
+            CombatAI::UpdateAI(uiDiff);
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const override
+    {
+        return new npc_death_knight_initiateAI(creature);
+    }
 };
 
 /*######
@@ -600,8 +776,8 @@ public:
                         if (charmer->HasAura(SPELL_EFFECT_STOLEN_HORSE))
                         {
                             charmer->RemoveAurasDueToSpell(SPELL_EFFECT_STOLEN_HORSE);
-                            caster->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
-                            caster->SetFaction(35);
+                            caster->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                            caster->setFaction(35);
                             DoCast(caster, SPELL_CALL_DARK_RIDER, true);
                             if (Creature* Dark_Rider = me->FindNearestCreature(NPC_DARK_RIDER_OF_ACHERUS, 15))
                                 ENSURE_AI(npc_dark_rider_of_acherus::npc_dark_rider_of_acherusAI, Dark_Rider->AI())->InitDespawnHorse(caster);
@@ -677,8 +853,8 @@ public:
                 return;
 
             deathcharger->RestoreFaction();
-            deathcharger->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
-            deathcharger->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+            deathcharger->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+            deathcharger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             if (!me->GetVehicle() && deathcharger->IsVehicle() && deathcharger->GetVehicleKit()->HasEmptySeat(0))
                 me->EnterVehicle(deathcharger);
         }
@@ -691,9 +867,9 @@ public:
 
             if (killer->GetTypeId() == TYPEID_PLAYER && deathcharger->GetTypeId() == TYPEID_UNIT && deathcharger->IsVehicle())
             {
-                deathcharger->AddNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
-                deathcharger->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
-                deathcharger->SetFaction(2096);
+                deathcharger->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                deathcharger->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                deathcharger->setFaction(2096);
             }
         }
     };
@@ -767,7 +943,7 @@ public:
             // Ghouls should display their Birth Animation
             // Crawling out of the ground
             //DoCast(me, 35177, true);
-            //me->Say("Mommy?", LANG_UNIVERSAL, 0);
+            //me->MonsterSay("Mommy?", LANG_UNIVERSAL, 0);
             me->SetReactState(REACT_DEFENSIVE);
         }
 
@@ -844,7 +1020,7 @@ class npc_scarlet_miner_cart : public CreatureScript
         {
             npc_scarlet_miner_cartAI(Creature* creature) : PassiveAI(creature)
             {
-                me->SetDisplayFromModel(0); // Modelid2
+                me->SetDisplayId(me->GetCreatureTemplate()->Modelid1); // Modelid2 is a horse.
             }
 
             void JustSummoned(Creature* summon) override
@@ -881,7 +1057,7 @@ class npc_scarlet_miner_cart : public CreatureScript
                 if (apply)
                 {
                     _playerGUID = who->GetGUID();
-                    me->CastSpell(nullptr, SPELL_SUMMON_MINER, true);
+                    me->CastSpell((Unit*)NULL, SPELL_SUMMON_MINER, true);
                 }
                 else
                 {
@@ -1046,173 +1222,7 @@ class npc_scarlet_miner : public CreatureScript
         }
 };
 
-enum DeathsChallenge
-{
-    SPELL_DUEL = 52996,
-    //SPELL_DUEL_TRIGGERED = 52990,
-    SPELL_DUEL_VICTORY = 52994,
-    SPELL_DUEL_FLAG = 52991,
-    SPELL_GROVEL = 7267,
-    SAY_DUEL = 0,
-    QUEST_DEATH_CHALLENGE = 12733,
-    FACTION_HOSTILE = 2068
-};
-
-//28406
-class npc_death_knight_initiate : public CreatureScript
-{
-public:
-    npc_death_knight_initiate() : CreatureScript("npc_death_knight_initiate") { }
-
-    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) override
-    {
-        ClearGossipMenuFor(player);
-        if (action == GOSSIP_ACTION_INFO_DEF)
-        {
-            CloseGossipMenuFor(player);
-
-            if (player->IsInCombat() || creature->IsInCombat())
-                return true;
-
-            if (npc_death_knight_initiateAI* pInitiateAI = CAST_AI(npc_death_knight_initiate::npc_death_knight_initiateAI, creature->AI()))
-            {
-                if (pInitiateAI->m_bIsDuelInProgress)
-                    return true;
-            }
-
-            creature->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
-            creature->RemoveUnitFlag(UNIT_FLAG_UNK_15);
-
-            player->CastSpell(creature, SPELL_DUEL, false);
-            player->CastSpell(player, SPELL_DUEL_FLAG, true);
-        }
-        return true;
-    }
-
-    bool OnGossipHello(Player* player, Creature* creature) override
-    {
-        if (player->GetQuestStatus(QUEST_DEATH_CHALLENGE) == QUEST_STATUS_INCOMPLETE && creature->IsFullHealth())
-        {
-            if (player->HealthBelowPct(10))
-                return true;
-
-            if (player->IsInCombat() || creature->IsInCombat())
-                return true;
-
-            AddGossipItemFor(player, Player::GetDefaultGossipMenuForSource(creature), 0, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
-            SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
-        }
-        return true;
-    }
-
-    struct npc_death_knight_initiateAI : public CombatAI
-    {
-        npc_death_knight_initiateAI(Creature* creature) : CombatAI(creature)
-        {
-            Initialize();
-        }
-
-        void Initialize()
-        {
-            m_uiDuelerGUID.Clear();
-            m_uiDuelTimer = 5000;
-            m_bIsDuelInProgress = false;
-            lose = false;
-        }
-
-        bool lose;
-        ObjectGuid m_uiDuelerGUID;
-        uint32 m_uiDuelTimer;
-        bool m_bIsDuelInProgress;
-
-        void Reset() override
-        {
-            Initialize();
-
-            me->RestoreFaction();
-            CombatAI::Reset();
-            me->RemoveUnitFlag(UNIT_FLAG_UNK_15);
-        }
-
-        void SpellHit(Unit* pCaster, const SpellInfo* pSpell) override
-        {
-            if (!m_bIsDuelInProgress && pSpell->Id == SPELL_DUEL)
-            {
-                m_uiDuelerGUID = pCaster->GetGUID();
-                Talk(SAY_DUEL, pCaster);
-                m_bIsDuelInProgress = true;
-            }
-        }
-
-        void DamageTaken(Unit* pDoneBy, uint32& uiDamage) override
-        {
-            if (m_bIsDuelInProgress && pDoneBy->IsControlledByPlayer())
-            {
-                if (pDoneBy->GetGUID() != m_uiDuelerGUID && pDoneBy->GetOwnerGUID() != m_uiDuelerGUID)
-                    uiDamage = 0;
-                else if (uiDamage >= me->GetHealth())
-                {
-                    uiDamage = 0;
-
-                    if (!lose)
-                    {
-                        pDoneBy->RemoveGameObject(SPELL_DUEL_FLAG, true);
-                        pDoneBy->AttackStop();
-                        me->CastSpell(pDoneBy, SPELL_DUEL_VICTORY, true);
-                        lose = true;
-                        me->SetFacingToObject(pDoneBy);                        
-                    }
-                }
-            }
-        }
-
-        void UpdateAI(uint32 uiDiff) override
-        {
-            if (!UpdateVictim())
-            {
-                if (m_bIsDuelInProgress)
-                {
-                    if (m_uiDuelTimer <= uiDiff)
-                    {
-                        me->SetFaction(FACTION_HOSTILE);
-
-                        if (Unit* unit = ObjectAccessor::GetUnit(*me, m_uiDuelerGUID))
-                            AttackStart(unit);
-                    }
-                    else
-                        m_uiDuelTimer -= uiDiff;
-                }
-                return;
-            }
-
-            if (m_bIsDuelInProgress)
-            {
-                if (lose)
-                {
-                    if (!me->HasAura(SPELL_GROVEL))
-                    {
-                        me->AddAura(SPELL_GROVEL);
-                        me->ForcedDespawn(3000, 5s);
-                    }
-                    return;
-                }
-                else if (me->GetVictim() && me->EnsureVictim()->GetTypeId() == TYPEID_PLAYER && me->EnsureVictim()->HealthBelowPct(10))
-                {                    
-                    me->EnsureVictim()->RemoveGameObject(SPELL_DUEL_FLAG, true);
-                    me->ForcedDespawn(0, 5s);
-                    return;
-                }
-            }
-            CombatAI::UpdateAI(uiDiff);
-        }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const override
-    {
-        return new npc_death_knight_initiateAI(creature);
-    }
-};
-
+// npc 28912 quest 17217 boss 29001 mob 29007 go 191092
 
 void AddSC_the_scarlet_enclave_c1()
 {
@@ -1220,6 +1230,7 @@ void AddSC_the_scarlet_enclave_c1()
     new npc_unworthy_initiate_anchor();
     new go_acherus_soul_prison();
     new npc_eye_of_acherus();
+    new npc_death_knight_initiate();
     new npc_salanar_the_horseman();
     new npc_dark_rider_of_acherus();
     new npc_ros_dark_rider();
@@ -1227,5 +1238,4 @@ void AddSC_the_scarlet_enclave_c1()
     new npc_scarlet_ghoul();
     new npc_scarlet_miner();
     new npc_scarlet_miner_cart();
-    new npc_death_knight_initiate();
 }

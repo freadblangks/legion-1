@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -87,13 +87,13 @@ public:
                         playerGUID = player->GetGUID();
                         speechTimer = 1000;
                         speechCounter = 1;
-                        me->SetFaction(player->getFaction());
+                        me->setFaction(player->getFaction());
                         me->CombatStop(true);
                         me->GetMotionMaster()->MoveIdle();
                         me->SetReactState(REACT_PASSIVE);
                         DoCastAOE(SPELL_THREAT_PULSE, true);
 
-                        sCreatureTextMgr->SendChat(me, SAY_PERSUADE_RAND, nullptr, CHAT_MSG_ADDON, LANG_ADDON, TEXT_RANGE_NORMAL, 0, TEAM_OTHER, false, player);
+                        sCreatureTextMgr->SendChat(me, SAY_PERSUADE_RAND, NULL, CHAT_MSG_ADDON, LANG_ADDON, TEXT_RANGE_NORMAL, 0, TEAM_OTHER, false, player);
                         Talk(SAY_CRUSADER);
                     }
                 }
@@ -136,7 +136,7 @@ public:
                             break;
 
                         case 5:
-                            sCreatureTextMgr->SendChat(me, SAY_PERSUADED5, nullptr, CHAT_MSG_ADDON, LANG_ADDON, TEXT_RANGE_NORMAL, 0, TEAM_OTHER, false, player);
+                            sCreatureTextMgr->SendChat(me, SAY_PERSUADED5, NULL, CHAT_MSG_ADDON, LANG_ADDON, TEXT_RANGE_NORMAL, 0, TEAM_OTHER, false, player);
                             speechTimer = 8000;
                             break;
 
@@ -236,7 +236,7 @@ public:
                 me->LoadEquipment(0, true);
                 me->RemoveAurasDueToSpell(SPELL_ANTI_MAGIC_ZONE);
                 me->RemoveAurasDueToSpell(SPELL_KOLTIRA_TRANSFORM);
-                me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             }
         }
 
@@ -257,7 +257,7 @@ public:
                     break;
                 case 3:
                     SetEscortPaused(true);
-                    me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
                     Talk(SAY_BREAKOUT2);
                     DoCast(me, SPELL_ANTI_MAGIC_ZONE);
@@ -282,7 +282,7 @@ public:
             if (summoned->GetEntry() == NPC_HIGH_INQUISITOR_VALROTH)
                 valrothGUID = summoned->GetGUID();
 
-            summoned->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+            summoned->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
         }
 
         void SummonAcolyte(uint32 uiAmount)
@@ -340,7 +340,7 @@ public:
                         case 5:
                             Talk(SAY_BREAKOUT9);
                             me->RemoveAurasDueToSpell(SPELL_ANTI_MAGIC_ZONE);
-                            me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                             waveTimer = 2500;
                             break;
                         case 6:
@@ -655,7 +655,7 @@ public:
         {
             Initialize();
 
-            me->AddUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
         }
 
         bool MeetQuestCondition(Player* player)
@@ -700,12 +700,6 @@ public:
                     break;
                 case 29070:                                     // Valok the Righteous
                     if (player->GetQuestStatus(12746) == QUEST_STATUS_INCOMPLETE)
-                        return true;
-                case 49355:                                     // Lord Harford
-                    if (player->GetQuestStatus(28649) == QUEST_STATUS_INCOMPLETE)
-                        return true;
-                case 49356:                                     // Gally Lumpstain
-                    if (player->GetQuestStatus(28650) == QUEST_STATUS_INCOMPLETE)
                         return true;
                     break;
             }
@@ -759,7 +753,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_6, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -768,7 +762,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -790,7 +783,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_8, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -799,7 +792,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -821,7 +813,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_3, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -830,7 +822,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -852,7 +843,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_7, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -861,7 +852,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -883,7 +873,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_4, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -892,7 +882,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -914,7 +903,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_9, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -923,7 +912,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -945,7 +933,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_5, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -954,7 +942,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -976,7 +963,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_10, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -985,7 +972,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -1007,7 +993,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_1, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -1016,7 +1002,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;
@@ -1038,7 +1023,7 @@ public:
                                 case 9:
                                     Talk(SAY_EXEC_TIME_2, player);
                                     me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
+                                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
                                     break;
                                 case 10:
                                     Talk(SAY_EXEC_WAITING, player);
@@ -1047,69 +1032,6 @@ public:
                                     Talk(EMOTE_DIES);
                                     me->setDeathState(JUST_DIED);
                                     me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
-                                    return;
-                            }
-                            break;
-                        case RACE_GOBLIN:
-                            switch (ExecuteSpeech_Counter)
-                            {
-                                case 0: Talk(SAY_EXEC_START_1, player); break;
-                                case 1: me->SetStandState(UNIT_STAND_STATE_STAND); break;
-                                case 2: Talk(SAY_EXEC_PROG_5, player); break;
-                                case 3: Talk(SAY_EXEC_NAME_1, player); break;
-                                case 4: Talk(SAY_EXEC_RECOG_1, player); break;
-                                case 5: Talk(SAY_EXEC_NOREM_5, player); break;
-                                case 6: Talk(SAY_EXEC_THINK_7, player); break;
-                                case 7: Talk(SAY_EXEC_LISTEN_1, player); break;
-                                case 8:
-                                    if (Creature* Plaguefist = GetClosestCreatureWithEntry(me, NPC_PLAGUEFIST, 85.0f))
-                                        Plaguefist->AI()->Talk(SAY_PLAGUEFIST, player);
-                                    break;
-                                case 9:
-                                    Talk(SAY_EXEC_TIME_6, player);
-                                    me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
-                                    break;
-                                case 10:
-                                    Talk(SAY_EXEC_WAITING, player);
-                                    break;
-                                case 11:
-                                    Talk(EMOTE_DIES, me);
-                                    me->setDeathState(JUST_DIED);
-                                    me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
-                                    return;
-                            }
-                            break;
-                        case RACE_WORGEN:
-                            switch (ExecuteSpeech_Counter)
-                            {
-                                case 0: Talk(SAY_EXEC_START_1, player); break;
-                                case 1: me->SetStandState(UNIT_STAND_STATE_STAND); break;
-                                case 2: Talk(SAY_EXEC_PROG_5, player); break;
-                                case 3: Talk(SAY_EXEC_NAME_1, player); break;
-                                case 4: Talk(SAY_EXEC_RECOG_1, player); break;
-                                case 5: Talk(SAY_EXEC_NOREM_5, player); break;
-                                case 6: Talk(SAY_EXEC_THINK_7, player); break;
-                                case 7: Talk(SAY_EXEC_LISTEN_1, player); break;
-                                case 8:
-                                    if (Creature* Plaguefist = GetClosestCreatureWithEntry(me, NPC_PLAGUEFIST, 85.0f))
-                                        Plaguefist->AI()->Talk(SAY_PLAGUEFIST, player);
-                                    break;
-                                case 9:
-                                    Talk(SAY_EXEC_TIME_6, player);
-                                    me->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
-                                    break;
-                                case 10:
-                                    Talk(SAY_EXEC_WAITING, player);
-                                    break;
-                                case 11:
-                                    Talk(EMOTE_DIES, me);
-                                    me->setDeathState(JUST_DIED);
-                                    me->SetHealth(0);
-                                    player->KilledMonsterCredit(me->GetEntry());
                                     return;
                             }
                             break;

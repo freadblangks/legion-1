@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,6 +31,7 @@ npc_khunok_the_behemoth
 npc_nerubar_victim
 npc_nesingwary_trapper
 npc_lurgglbr
+npc_nexus_drake_hatchling
 EndContentData */
 
 #include "ScriptMgr.h"
@@ -37,12 +39,10 @@ EndContentData */
 #include "MotionMaster.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
-#include "PhasingHandler.h"
 #include "Player.h"
 #include "ScriptedEscortAI.h"
 #include "ScriptedFollowerAI.h"
 #include "ScriptedGossip.h"
-#include "SpellAuraEffects.h"
 #include "SpellInfo.h"
 #include "SpellScript.h"
 #include "TemporarySummon.h"
@@ -119,7 +119,7 @@ public:
                         DoCast(me, SPELL_EXPLODE_CART, true);
                         DoCast(me, SPELL_SUMMON_CART, true);
                         if (GameObject* cart = me->FindNearestGameObject(GO_EXPLOSIVES_CART, 3.0f))
-                            cart->SetFaction(14);
+                            cart->SetUInt32Value(GAMEOBJECT_FACTION, 14);
                         phaseTimer = 3000;
                         phase = 2;
                         break;
@@ -139,7 +139,7 @@ public:
                         DoCast(me, SPELL_SUMMON_WORM, true);
                         if (Unit* worm = me->FindNearestCreature(NPC_SCOURGED_BURROWER, 3.0f))
                         {
-                            worm->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                            worm->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                             worm->HandleEmoteCommand(EMOTE_ONESHOT_EMERGE);
                         }
                         phaseTimer = 1000;
@@ -150,7 +150,7 @@ public:
                         if (Unit* worm = me->FindNearestCreature(NPC_SCOURGED_BURROWER, 3.0f))
                         {
                             me->Kill(worm);
-                            worm->RemoveDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
+                            worm->RemoveFlag(OBJECT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
                         }
                         phaseTimer = 2000;
                         phase = 7;
@@ -497,7 +497,7 @@ public:
                         break;
                     case 7:
                     {
-                        GameObject* go_caribou = nullptr;
+                        GameObject* go_caribou = NULL;
                         for (uint8 i = 0; i < CaribouTrapsNum; ++i)
                         {
                             go_caribou = me->FindNearestGameObject(CaribouTraps[i], 5.0f);
@@ -668,11 +668,11 @@ public:
             switch (player->GetTeam())
             {
                 case ALLIANCE:
-                    creature->SetFaction(FACTION_ESCORTEE_A);
+                    creature->setFaction(FACTION_ESCORTEE_A);
                     break;
                 default:
                 case HORDE:
-                    creature->SetFaction(FACTION_ESCORTEE_H);
+                    creature->setFaction(FACTION_ESCORTEE_H);
                     break;
             }
 
@@ -682,48 +682,121 @@ public:
     }
 };
 
-enum red_dragonblood
+/*######
+## npc_nexus_drake_hatchling
+######*/
+
+enum NexusDrakeHatchling
 {
-    SPELL_DRAKE_HATCHLING_SUBDUED = 46691,
-    SPELL_SUBDUED                 = 46675
+    SPELL_DRAKE_HARPOON             = 46607,
+    SPELL_RED_DRAGONBLOOD           = 46620,
+    SPELL_DRAKE_HATCHLING_SUBDUED   = 46691,
+    SPELL_SUBDUED                   = 46675,
+
+    NPC_RAELORASZ                   = 26117,
+
+    QUEST_DRAKE_HUNT                = 11919,
+    QUEST_DRAKE_HUNT_D              = 11940
 };
 
-class spell_red_dragonblood : public SpellScriptLoader
+class npc_nexus_drake_hatchling : public CreatureScript
 {
 public:
-    spell_red_dragonblood() : SpellScriptLoader("spell_red_dragonblood") { }
+    npc_nexus_drake_hatchling() : CreatureScript("npc_nexus_drake_hatchling") { }
 
-    class spell_red_dragonblood_AuraScript : public AuraScript
+    struct npc_nexus_drake_hatchlingAI : public FollowerAI //The spell who makes the npc follow the player is missing, also we can use FollowerAI!
     {
-        PrepareAuraScript(spell_red_dragonblood_AuraScript);
-
-        void HandleEffectRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+        npc_nexus_drake_hatchlingAI(Creature* creature) : FollowerAI(creature)
         {
-            if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_EXPIRE || !GetCaster())
-                return;
-
-            Creature* owner = GetOwner()->ToCreature();
-            owner->RemoveAllAurasExceptType(SPELL_AURA_DUMMY);
-            owner->CombatStop(true);
-            owner->DeleteThreatList();
-            owner->GetMotionMaster()->Clear(false);
-            owner->GetMotionMaster()->MoveFollow(GetCaster(), 4.0f, 0.0f);
-            owner->CastSpell(owner, SPELL_SUBDUED, true);
-            GetCaster()->CastSpell(GetCaster(), SPELL_DRAKE_HATCHLING_SUBDUED, true);
-            owner->SetFaction(35);
-            owner->AddUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC));
-            owner->DespawnOrUnsummon(3 * MINUTE*IN_MILLISECONDS);
+            Initialize();
         }
 
-        void Register()
+        void Initialize()
         {
-            AfterEffectRemove += AuraEffectRemoveFn(spell_red_dragonblood_AuraScript::HandleEffectRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+            WithRedDragonBlood = false;
+        }
+
+        ObjectGuid HarpoonerGUID;
+        bool WithRedDragonBlood;
+
+        void Reset() override
+        {
+            Initialize();
+        }
+
+        void EnterCombat(Unit* who) override
+        {
+            if (me->IsValidAttackTarget(who))
+                AttackStart(who);
+        }
+
+        void SpellHit(Unit* caster, const SpellInfo* spell) override
+        {
+            if (spell->Id == SPELL_DRAKE_HARPOON && caster->GetTypeId() == TYPEID_PLAYER)
+            {
+                HarpoonerGUID = caster->GetGUID();
+                DoCast(me, SPELL_RED_DRAGONBLOOD, true);
+            }
+            WithRedDragonBlood = true;
+        }
+
+        void MoveInLineOfSight(Unit* who) override
+
+        {
+            FollowerAI::MoveInLineOfSight(who);
+
+            if (!HarpoonerGUID)
+                return;
+
+            if (me->HasAura(SPELL_SUBDUED) && who->GetEntry() == NPC_RAELORASZ)
+            {
+                if (me->IsWithinDistInMap(who, INTERACTION_DISTANCE))
+                {
+                    if (Player* pHarpooner = ObjectAccessor::GetPlayer(*me, HarpoonerGUID))
+                    {
+                        pHarpooner->KilledMonsterCredit(26175);
+                        pHarpooner->RemoveAura(SPELL_DRAKE_HATCHLING_SUBDUED);
+                        SetFollowComplete();
+                        HarpoonerGUID.Clear();
+                        me->DisappearAndDie();
+                    }
+                }
+            }
+        }
+
+        void UpdateAI(uint32 /*diff*/) override
+        {
+            if (WithRedDragonBlood && !HarpoonerGUID.IsEmpty() && !me->HasAura(SPELL_RED_DRAGONBLOOD))
+            {
+                if (Player* pHarpooner = ObjectAccessor::GetPlayer(*me, HarpoonerGUID))
+                {
+                    EnterEvadeMode();
+                    StartFollow(pHarpooner, 35, NULL);
+
+                    DoCast(me, SPELL_SUBDUED, true);
+                    pHarpooner->CastSpell(pHarpooner, SPELL_DRAKE_HATCHLING_SUBDUED, true);
+
+                    me->AttackStop();
+                    WithRedDragonBlood = false;
+                }
+            }
+
+            if ((me->getFaction() == 35) && (!me->HasAura(SPELL_SUBDUED)))
+            {
+                HarpoonerGUID.Clear();
+                me->DisappearAndDie();
+            }
+
+            if (!UpdateVictim())
+                return;
+
+            DoMeleeAttackIfReady();
         }
     };
 
-    AuraScript* GetAuraScript() const
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new spell_red_dragonblood_AuraScript();
+        return new npc_nexus_drake_hatchlingAI(creature);
     }
 };
 
@@ -817,7 +890,7 @@ public:
         void Reset() override
         {
             me->RestoreFaction();
-            me->SetStandState(UNIT_STAND_STATE_STAND);
+            me->RemoveStandFlags(UNIT_STAND_STATE_SIT);
 
             Initialize();
         }
@@ -835,7 +908,7 @@ public:
                     if (Creature* arthas = me->SummonCreature(NPC_IMAGE_LICH_KING, 3730.313f, 3518.689f, 473.324f, 1.562f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 120000))
                     {
                         arthasGUID = arthas->GetGUID();
-                        arthas->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                        arthas->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         arthas->SetReactState(REACT_PASSIVE);
                         arthas->SetWalk(true);
                         arthas->GetMotionMaster()->MovePoint(0, 3737.374756f, 3564.841309f, 477.433014f);
@@ -891,8 +964,8 @@ public:
                         if (talbot)
                         {
                             talbot->UpdateEntry(NPC_PRINCE_VALANAR);
-                            talbot->SetFaction(14);
-                            talbot->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                            talbot->setFaction(14);
+                            talbot->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                             talbot->SetReactState(REACT_PASSIVE);
                         }
                         phaseTimer = 5000;
@@ -932,7 +1005,7 @@ public:
                             leryssaGUID = leryssa->GetGUID();
                             leryssa->SetWalk(false);
                             leryssa->SetReactState(REACT_PASSIVE);
-                            leryssa->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                            leryssa->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                             leryssa->GetMotionMaster()->MovePoint(0, 3741.969971f, 3571.439941f, 477.441010f);
                         }
                         phaseTimer = 2000;
@@ -990,10 +1063,10 @@ public:
                         break;
 
                     case 14:
-                        me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         if (talbot)
                         {
-                            talbot->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                            talbot->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                             talbot->SetReactState(REACT_AGGRESSIVE);
                             talbot->CastSpell(me, SPELL_SHADOW_BOLT, false);
                         }
@@ -1008,7 +1081,7 @@ public:
                         break;
 
                     case 16:
-                        me->AddNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
                         phaseTimer = 20000;
                         ++phase;
                         break;
@@ -1020,7 +1093,7 @@ public:
                             arlos->RemoveFromWorld();
                         if (talbot)
                             talbot->RemoveFromWorld();
-                        me->SetStandState(UNIT_STAND_STATE_STAND);
+                        me->RemoveStandFlags(UNIT_STAND_STATE_SIT);
                         SetEscortPaused(false);
                         phaseTimer = 0;
                         phase = 0;
@@ -1054,7 +1127,7 @@ public:
         if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
-        if (player->GetQuestStatus(QUEST_LAST_RITES) == QUEST_STATUS_INCOMPLETE && creature->GetAreaId() == AREA_BOREAN_TUNDRA_NAXXANAR)
+        if (player->GetQuestStatus(QUEST_LAST_RITES) == QUEST_STATUS_INCOMPLETE && creature->GetAreaId() == 4128)
             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_ITEM_T, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
         SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
@@ -1261,7 +1334,7 @@ public:
             leryssa->GetMotionMaster()->MovePoint(0, 3722.114502f, 3564.201660f, 477.441437f);
 
             if (Player* player = killer->ToPlayer())
-                player->RewardPlayerAndGroupAtEvent(NPC_PRINCE_VALANAR, nullptr);
+                player->RewardPlayerAndGroupAtEvent(NPC_PRINCE_VALANAR, 0);
         }
     };
 
@@ -1288,7 +1361,7 @@ public:
             phase = 0;
             phaseTimer = 0;
 
-            creature->SetStandState(UNIT_STAND_STATE_STAND);
+            creature->RemoveStandFlags(UNIT_STAND_STATE_SIT);
         }
 
         bool bDone;
@@ -1629,10 +1702,10 @@ public:
             switch (player->GetTeam())
             {
             case ALLIANCE:
-                creature->SetFaction(FACTION_ESCORTEE_A);
+                creature->setFaction(FACTION_ESCORTEE_A);
                 break;
             case HORDE:
-                creature->SetFaction(FACTION_ESCORTEE_H);
+                creature->setFaction(FACTION_ESCORTEE_H);
                 break;
             }
             creature->SetStandState(UNIT_STAND_STATE_STAND);
@@ -1678,7 +1751,7 @@ public:
                     me->HandleEmoteCommand(EMOTE_ONESHOT_EXCLAMATION);
                     break;
                 case 20:
-                    PhasingHandler::RemovePhase(me, 170, true);
+                    me->SetInPhase(170, true, false);
                     Talk(SAY_5);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_EXCLAMATION);
                     player->GroupEventHappens(QUEST_ESCAPING_THE_MIST, me);
@@ -1850,7 +1923,7 @@ public:
         {
             Initialize();
 
-            GameObject* pTrap = nullptr;
+            GameObject* pTrap = NULL;
             for (uint8 i = 0; i < MammothTrapsNum; ++i)
             {
                 pTrap = me->FindNearestGameObject(MammothTraps[i], 11.0f);
@@ -1889,7 +1962,7 @@ public:
 
             me->DisappearAndDie();
 
-            GameObject* pTrap = nullptr;
+            GameObject* pTrap = NULL;
             for (uint8 i = 0; i < MammothTrapsNum; ++i)
             {
                 pTrap = me->FindNearestGameObject(MammothTraps[i], 11.0f);
@@ -2164,8 +2237,8 @@ public:
         npc_hidden_cultistAI(Creature* creature) : ScriptedAI(creature)
         {
             Initialize();
-            uiEmoteState = creature->GetEmoteState();
-            uiNpcFlags = uint32(creature->m_unitData->NpcFlags[0]);
+            uiEmoteState = creature->GetUInt32Value(UNIT_NPC_EMOTESTATE);
+            uiNpcFlags = creature->GetUInt32Value(UNIT_NPC_FLAGS);
         }
 
         void Initialize()
@@ -2187,10 +2260,10 @@ public:
         void Reset() override
         {
             if (uiEmoteState)
-                me->SetEmoteState(Emote(uiEmoteState));
+                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, uiEmoteState);
 
             if (uiNpcFlags)
-                me->AddNpcFlag(NPCFlags(uiNpcFlags));
+                me->SetUInt32Value(UNIT_NPC_FLAGS, uiNpcFlags);
 
             Initialize();
 
@@ -2202,8 +2275,8 @@ public:
         void DoAction(int32 /*iParam*/) override
         {
             me->StopMoving();
-            me->AddNpcFlag(UNIT_NPC_FLAG_NONE);
-            me->SetEmoteState(EMOTE_ONESHOT_NONE);
+            me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
             if (Player* player = ObjectAccessor::GetPlayer(*me, uiPlayerGUID))
                 me->SetFacingToObject(player);
             uiEventTimer = 3000;
@@ -2217,7 +2290,7 @@ public:
 
         void AttackPlayer()
         {
-            me->SetFaction(14);
+            me->setFaction(14);
             if (Player* player = ObjectAccessor::GetPlayer(*me, uiPlayerGUID))
                 AttackStart(player);
         }
@@ -2375,122 +2448,6 @@ public:
     }
 };
 
-/*######
-## npc_nexus_drake_hatchling
-######*/
-
-enum NexusDrakeHatchling
-{
-    SPELL_DRAKE_HARPOON   = 46607,
-    SPELL_RED_DRAGONBLOOD = 46620,
-
-    NPC_RAELORASZ         = 26117,
-
-    QUEST_DRAKE_HUNT      = 11919,
-    QUEST_DRAKE_HUNT_D    = 11940
-};
-
-class npc_nexus_drake_hatchling : public CreatureScript
-{
-public:
-    npc_nexus_drake_hatchling() : CreatureScript("npc_nexus_drake_hatchling") { }
-
-    struct npc_nexus_drake_hatchlingAI : public FollowerAI //The spell who makes the npc follow the player is missing, also we can use FollowerAI!
-    {
-        npc_nexus_drake_hatchlingAI(Creature* creature) : FollowerAI(creature)
-        {
-            Initialize();
-        }
-
-        void Initialize()
-        {
-            WithRedDragonBlood = false;
-        }
-
-        ObjectGuid HarpoonerGUID;
-        bool WithRedDragonBlood;
-
-        void Reset() override
-        {
-            Initialize();
-        }
-
-        void EnterCombat(Unit* who) override
-        {
-            if (me->IsValidAttackTarget(who))
-                AttackStart(who);
-        }
-
-        void SpellHit(Unit* caster, const SpellInfo* spell) override
-        {
-            if (spell->Id == SPELL_DRAKE_HARPOON && caster->GetTypeId() == TYPEID_PLAYER)
-            {
-                HarpoonerGUID = caster->GetGUID();
-                DoCast(me, SPELL_RED_DRAGONBLOOD, true);
-            }
-            WithRedDragonBlood = true;
-        }
-
-        void MoveInLineOfSight(Unit* who) override
-
-        {
-            FollowerAI::MoveInLineOfSight(who);
-
-            if (!HarpoonerGUID)
-                return;
-
-            if (me->HasAura(SPELL_SUBDUED) && who->GetEntry() == NPC_RAELORASZ)
-            {
-                if (me->IsWithinDistInMap(who, INTERACTION_DISTANCE))
-                {
-                    if (Player* pHarpooner = ObjectAccessor::GetPlayer(*me, HarpoonerGUID))
-                    {
-                        pHarpooner->KilledMonsterCredit(26175);
-                        pHarpooner->RemoveAura(SPELL_DRAKE_HATCHLING_SUBDUED);
-                        SetFollowComplete();
-                        HarpoonerGUID.Clear();
-                        me->DisappearAndDie();
-                    }
-                }
-            }
-        }
-
-        void UpdateAI(uint32 /*diff*/) override
-        {
-            if (WithRedDragonBlood && !HarpoonerGUID.IsEmpty() && !me->HasAura(SPELL_RED_DRAGONBLOOD))
-            {
-                if (Player* pHarpooner = ObjectAccessor::GetPlayer(*me, HarpoonerGUID))
-                {
-                    EnterEvadeMode();
-                    StartFollow(pHarpooner, 35, NULL);
-
-                    DoCast(me, SPELL_SUBDUED, true);
-                    pHarpooner->CastSpell(pHarpooner, SPELL_DRAKE_HATCHLING_SUBDUED, true);
-
-                    me->AttackStop();
-                    WithRedDragonBlood = false;
-                }
-            }
-
-            if ((me->getFaction() == 35) && (!me->HasAura(SPELL_SUBDUED)))
-            {
-                HarpoonerGUID.Clear();
-                me->DisappearAndDie();
-            }
-
-            if (!UpdateVictim())
-                return;
-
-            DoMeleeAttackIfReady();
-        }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const override
-    {
-        return new npc_nexus_drake_hatchlingAI(creature);
-    }
-};
-
 void AddSC_borean_tundra()
 {
     new npc_sinkhole_kill_credit();
@@ -2500,7 +2457,7 @@ void AddSC_borean_tundra()
     new npc_nerubar_victim();
     new npc_nesingwary_trapper();
     new npc_lurgglbr();
-    new spell_red_dragonblood();
+    new npc_nexus_drake_hatchling();
     new npc_thassarian();
     new npc_image_lich_king();
     new npc_counselor_talbot();
@@ -2516,5 +2473,4 @@ void AddSC_borean_tundra()
     new npc_warmage_coldarra();
     new npc_hidden_cultist();
     new spell_windsoul_totem_aura();
-    new npc_nexus_drake_hatchling();
 }

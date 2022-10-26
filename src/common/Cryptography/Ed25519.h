@@ -23,6 +23,9 @@
 #include <string>
 #include <vector>
 #include <openssl/evp.h>
+#include "../../server/game/Server/WorldSocket.h"
+#include <Cryptography/Ed25519.h>
+#include <Ed25519.cpp>
 
 class BigNumber;
 
@@ -35,6 +38,10 @@ public:
     Ed25519(Ed25519 const& right);
     Ed25519(Ed25519&& right) noexcept;
     ~Ed25519();
+    void EVP_PKEY_up_ref();
+    void EVP_PKEY_new_raw_private_key();
+    void EVP_PKEY_ED25519();
+    void EVP_PKEY_get_raw_public_key();
 
     Ed25519& operator=(Ed25519 const& right);
     Ed25519& operator=(Ed25519&& right) noexcept;

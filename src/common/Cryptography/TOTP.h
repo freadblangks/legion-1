@@ -22,7 +22,7 @@
 #include <ctime>
 #include <vector>
 
-namespace Trinity::Crypto
+namespace Argon2
 {
     struct TC_COMMON_API TOTP
     {

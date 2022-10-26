@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -202,7 +202,7 @@ public:
         void InitializeAI() override
         {
             float x, y, z;
-            me->GetNearPoint(me, x, y, z, 1, 100.0f, frand(0.f, 2.f * float(M_PI)));
+            me->GetNearPoint(me, x, y, z, 1, 100.0f, float(M_PI * 2 * rand_norm()));
             me->GetMotionMaster()->MovePoint(0, x, y, z);
             DoCastSelf(SPELL_MOLTEN_FLAME, true);
         }
@@ -210,7 +210,7 @@ public:
 
     CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetBlackTempleAI<npc_molten_flameAI>(creature);
+        return new npc_molten_flameAI(creature);
     }
 };
 

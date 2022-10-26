@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 BfaCore Reforged
+ * Copyright (C) 2008-2018 TrinityCore <https://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -15,60 +15,61 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ObjectMgr.h"
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "SpellScript.h"
-#include "SpellAuraEffects.h"
-#include "Player.h"
-#include "Weather.h"
-#include "WorldSession.h"
 #include "halls_of_origination.h"
+#include "InstanceScript.h"
+#include "Map.h"
+#include "Player.h"
+#include "ScriptedCreature.h"
+#include "SpellAuraEffects.h"
+#include "SpellScript.h"
+#include "TemporarySummon.h"
+#include "Weather.h"
 
 enum Texts
 {
-    SAY_AGGRO = 0,
-    SAY_DEATH = 1,
+    SAY_AGGRO                       = 0,
+    SAY_DEATH                       = 1,
 };
 
 enum Events
 {
-    EVENT_RAGING_SMASH = 1,
-    EVENT_FLAME_BOLT = 2,
-    EVENT_EARTH_SPIKE = 3,
-    EVENT_PTAH_EXPLODE = 4,
-    EVENT_QUICKSAND = 5,
+    EVENT_RAGING_SMASH              = 1,
+    EVENT_FLAME_BOLT                = 2,
+    EVENT_EARTH_SPIKE               = 3,
+    EVENT_PTAH_EXPLODE              = 4,
+    EVENT_QUICKSAND                 = 5,
 };
 
 enum Spells
 {
-    SPELL_RAGING_SMASH = 83650,
-    SPELL_FLAME_BOLT = 77370,
-    SPELL_EARTH_SPIKE_WARN = 94974,
+    SPELL_RAGING_SMASH              = 83650,
+    SPELL_FLAME_BOLT                = 77370,
+    SPELL_EARTH_SPIKE_WARN          = 94974,
 
-    SPELL_PTAH_EXPLOSION = 75519,
-    SPELL_SANDSTORM = 75491,
+    SPELL_PTAH_EXPLOSION            = 75519,
+    SPELL_SANDSTORM                 = 75491,
 
-    SPELL_SUMMON_QUICKSAND = 75550, // Spell not in DBC, no SMSG_SPELL_START/GO for it
+    SPELL_SUMMON_QUICKSAND          = 75550, // Spell not in DBC, no SMSG_SPELL_START/GO for it
 
-    SPELL_BEETLE_BURROW = 75463,
+    SPELL_BEETLE_BURROW             = 75463,
 
-    SPELL_SUMMON_JEWELED_SCARAB = 75462,
-    SPELL_SUMMON_DUSTBONE_HORROR = 75521,
+    SPELL_SUMMON_JEWELED_SCARAB     = 75462,
+    SPELL_SUMMON_DUSTBONE_HORROR    = 75521,
 };
 
 enum Phases
 {
-    PHASE_NORMAL = 1,
-    PHASE_DISPERSE = 2,
+    PHASE_NORMAL                    = 1,
+    PHASE_DISPERSE                  = 2,
 
-    PHASE_MASK_DISPERSE = (1 << PHASE_DISPERSE),
-    PHASE_MASK_NORMAL = (1 << PHASE_NORMAL),
+    PHASE_MASK_DISPERSE             = (1 << PHASE_DISPERSE),
+    PHASE_MASK_NORMAL               = (1 << PHASE_NORMAL),
 };
 
 enum PtahData
 {
-    DATA_SUMMON_DEATHS = 0
+    DATA_SUMMON_DEATHS              = 0
 };
 
 class SummonScarab : public BasicEvent
@@ -107,29 +108,10 @@ public:
             for (std::list<Creature*>::iterator itr = units.begin(); itr != units.end(); ++itr)
                 (*itr)->DespawnOrUnsummon();
 
+            units.clear();
             GetCreatureListWithEntryInGrid(units, me, NPC_JEWELED_SCARAB, 100.0f);
             for (std::list<Creature*>::iterator itr = units.begin(); itr != units.end(); ++itr)
                 (*itr)->DespawnOrUnsummon();
-        }
-
-        void SendWeather(WeatherState weather, float grade) const
-        {
-            WorldPacket data(SMSG_WEATHER, 9);
-            data << uint32(weather);
-            data << float(grade);
-            data << uint8(0);
-            SendPacketToPlayers(&data);
-        }
-
-        // Send packet to all players in Tomb of the Earthrager
-        void SendPacketToPlayers(WorldPacket const* data) const
-        {
-            Map::PlayerList const& players = me->GetMap()->GetPlayers();
-            if (!players.isEmpty())
-            for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            if (Player* player = itr->GetSource())
-            if (player->GetAreaId() == AREA_TOMB_OF_THE_EARTHRAGER)
-                player->GetSession()->SendPacket(data);
         }
 
         void Reset() override
@@ -144,16 +126,16 @@ public:
             events.ScheduleEvent(EVENT_EARTH_SPIKE, urand(16000, 21000), 0, PHASE_NORMAL);
         }
 
-        void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/) override
+        void DamageTaken(Unit* /*attacker*/, uint32& damage) override
         {
-            if (me->HealthBelowPct(50) && !_hasDispersed)
+            if (me->HealthBelowPctDamaged(50, damage) && (events.GetPhaseMask() & PHASE_MASK_NORMAL) && !_hasDispersed)
             {
                 events.SetPhase(PHASE_DISPERSE);
                 _hasDispersed = true;
 
                 me->AttackStop();
                 DoCast(me, SPELL_SANDSTORM);
-                SendWeather(WEATHER_STATE_LIGHT_SANDSTORM, 1.0f);
+                me->GetMap()->SetZoneWeather(AREA_TOMB_OF_THE_EARTHRAGER, WEATHER_STATE_LIGHT_SANDSTORM, 1.0f);
                 events.ScheduleEvent(EVENT_PTAH_EXPLODE, 6000, 0, PHASE_DISPERSE);
                 events.ScheduleEvent(EVENT_QUICKSAND, 10000, 0, PHASE_DISPERSE);
 
@@ -185,7 +167,7 @@ public:
                 ++_summonDeaths;
                 if (_summonDeaths == 11) // All summons died
                 {
-                    SendWeather(WEATHER_STATE_FOG, 0.0f);
+                    me->GetMap()->SetZoneWeather(AREA_TOMB_OF_THE_EARTHRAGER, WEATHER_STATE_FOG, 0.0f);
                     me->RemoveAurasDueToSpell(SPELL_PTAH_EXPLOSION);
                     events.SetPhase(PHASE_NORMAL);
                     events.ScheduleEvent(EVENT_RAGING_SMASH, urand(7000, 12000), 0, PHASE_NORMAL);
@@ -231,29 +213,29 @@ public:
             {
                 switch (eventId)
                 {
-                case EVENT_RAGING_SMASH:
-                    DoCastVictim(SPELL_RAGING_SMASH);
-                    events.ScheduleEvent(EVENT_RAGING_SMASH, urand(7000, 12000), 0, PHASE_NORMAL);
-                    break;
-                case EVENT_FLAME_BOLT:
-                    DoCast(me, SPELL_FLAME_BOLT);
-                    events.ScheduleEvent(EVENT_FLAME_BOLT, 15000, 0, PHASE_NORMAL);
-                    break;
-                case EVENT_EARTH_SPIKE:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                        DoCast(target, SPELL_EARTH_SPIKE_WARN);
-                    events.ScheduleEvent(EVENT_EARTH_SPIKE, urand(16000, 21000), 0, PHASE_NORMAL);
-                    break;
-                case EVENT_PTAH_EXPLODE:
-                    DoCast(me, SPELL_PTAH_EXPLOSION);
-                    break;
-                case EVENT_QUICKSAND:
-                    // Spell not in DBC, it is not cast either, according to sniffs
-                    if (Unit * target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                        if (Creature * quicksand = me->SummonCreature(NPC_QUICKSAND, *target))
-                            quicksand->SetCreatedBySpell(SPELL_SUMMON_QUICKSAND);
-                    events.ScheduleEvent(EVENT_QUICKSAND, 10000, 0, PHASE_DISPERSE);
-                    break;
+                    case EVENT_RAGING_SMASH:
+                        DoCastVictim(SPELL_RAGING_SMASH);
+                        events.ScheduleEvent(EVENT_RAGING_SMASH, urand(7000, 12000), 0, PHASE_NORMAL);
+                        break;
+                    case EVENT_FLAME_BOLT:
+                        DoCast(me, SPELL_FLAME_BOLT);
+                        events.ScheduleEvent(EVENT_FLAME_BOLT, 15000, 0, PHASE_NORMAL);
+                        break;
+                    case EVENT_EARTH_SPIKE:
+                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                            DoCast(target, SPELL_EARTH_SPIKE_WARN);
+                        events.ScheduleEvent(EVENT_EARTH_SPIKE, urand(16000, 21000), 0, PHASE_NORMAL);
+                        break;
+                    case EVENT_PTAH_EXPLODE:
+                        DoCast(me, SPELL_PTAH_EXPLOSION);
+                        break;
+                    case EVENT_QUICKSAND:
+                        // Spell not in DBC, it is not cast either, according to sniffs
+                        if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                            if (Creature* quicksand = me->SummonCreature(NPC_QUICKSAND, *target))
+                                quicksand->SetUInt32Value(UNIT_CREATED_BY_SPELL, SPELL_SUMMON_QUICKSAND);
+                        events.ScheduleEvent(EVENT_QUICKSAND, 10000, 0, PHASE_DISPERSE);
+                        break;
                 }
             }
 
@@ -268,34 +250,34 @@ public:
 
     CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_earthrager_ptahAI(creature);
+        return GetHallsOfOriginationAI<boss_earthrager_ptahAI>(creature);
     }
 };
 
 class spell_earthrager_ptah_flame_bolt : public SpellScriptLoader
 {
-public:
-    spell_earthrager_ptah_flame_bolt() : SpellScriptLoader("spell_earthrager_ptah_flame_bolt") { }
+    public:
+        spell_earthrager_ptah_flame_bolt() : SpellScriptLoader("spell_earthrager_ptah_flame_bolt") { }
 
-    class spell_earthrager_ptah_flame_bolt_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_earthrager_ptah_flame_bolt_SpellScript);
-
-        void FilterTargets(std::list<WorldObject*>& targets)
+        class spell_earthrager_ptah_flame_bolt_SpellScript : public SpellScript
         {
-            Trinity::Containers::RandomResize(targets, GetCaster()->GetMap()->IsHeroic() ? 3 : 2);
-        }
+            PrepareSpellScript(spell_earthrager_ptah_flame_bolt_SpellScript);
 
-        void Register() override
+            void FilterTargets(std::list<WorldObject*>& targets)
+            {
+                Trinity::Containers::RandomResize(targets, GetCaster()->GetMap()->IsHeroic() ? 3 : 2);
+            }
+
+            void Register() override
+            {
+                OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_earthrager_ptah_flame_bolt_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const override
         {
-            OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_earthrager_ptah_flame_bolt_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
+            return new spell_earthrager_ptah_flame_bolt_SpellScript();
         }
-    };
-
-    SpellScript* GetSpellScript() const override
-    {
-        return new spell_earthrager_ptah_flame_bolt_SpellScript();
-    }
 };
 
 class spell_earthrager_ptah_explosion : public SpellScriptLoader
@@ -311,8 +293,8 @@ public:
         {
             if (Unit* ptah = GetCaster())
             {
-                ptah->AddUnitFlag(UnitFlags(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_29 | UNIT_FLAG_UNK_31));
-                ptah->AddUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
+                ptah->SetFlag(UNIT_FIELD_FLAGS, uint32(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_29 | UNIT_FLAG_UNK_31));
+                ptah->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
             }
         }
 
@@ -320,8 +302,8 @@ public:
         {
             if (Unit* ptah = GetCaster())
             {
-                ptah->RemoveUnitFlag(UnitFlags(uint32(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_29 | UNIT_FLAG_UNK_31)));
-                ptah->RemoveUnitFlag2(UNIT_FLAG2_FEIGN_DEATH);
+                ptah->RemoveFlag(UNIT_FIELD_FLAGS, uint32(UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_UNK_29 | UNIT_FLAG_UNK_31));
+                ptah->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
             }
         }
 
