@@ -79,7 +79,7 @@ Set ``OPENSSL_USE_STATIC_LIBS`` to ``TRUE`` to look for static libraries.
 Set ``OPENSSL_MSVC_STATIC_RT`` set ``TRUE`` to choose the MT version of the lib.
 #]=======================================================================]
 
-set(OPENSSL_EXPECTED_VERSION "1.1")
+set(OPENSSL_EXPECTED_VERSION "1.0")
 
 macro(_OpenSSL_test_and_find_dependencies ssl_library crypto_library)
   if((CMAKE_SYSTEM_NAME STREQUAL "Linux") AND
@@ -208,7 +208,7 @@ if(WIN32 AND NOT CYGWIN)
       set(_OPENSSL_MSVC_RT_MODE "MD")
     endif ()
 
-    # Since OpenSSL 1.1, lib names are like libcrypto32MTd.lib and libssl32MTd.lib
+    # Since OpenSSL 1.0, lib names are like libcrypto32MTd.lib and libssl32MTd.lib
     if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
         set(_OPENSSL_MSVC_ARCH_SUFFIX "64")
     else()

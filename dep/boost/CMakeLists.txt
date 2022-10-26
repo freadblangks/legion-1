@@ -22,7 +22,7 @@ if(WIN32)
         ${BOOST_ROOT}/lib${PLATFORM}-msvc-14.0)
     endif()
   else()
-    #message(FATAL_ERROR "No BOOST_ROOT environment variable could be found! Please make sure it is set and the points to your Boost installation.")
+    message(FATAL_ERROR "No BOOST_ROOT environment variable could be found! Please make sure it is set and the points to your Boost installation.")
   endif()
 
   set(Boost_USE_STATIC_LIBS        ON)
