@@ -2,6 +2,77 @@
 #include <array>
 #include "SpellAuraDefines.h"
 #include "SpellAuraEffects.h"
+#include "Player.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ScriptMgr.h"
+#include "SpellMgr.h"
+#include "SpellInfo.h"
+#include "ScriptedCreature.h"
+#include "GameObjectAI.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ObjectMgr.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "SpellAuras.h"
+#include "MapManager.h"
+#include "Spell.h"
+#include "Vehicle.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CreatureTextMgr.h"
+#include "MoveSplineInit.h"
+#include "Weather.h"
+#include "GameObjectAI.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ObjectMgr.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "SpellAuras.h"
+#include "MapManager.h"
+#include "Spell.h"
+#include "Vehicle.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CreatureTextMgr.h"
+#include "Weather.h"
+#include <Instances/InstanceScript.h>
+#include <Movement/MotionMaster.h>
+#include "SpellInfo.h"
+#include "Player.h"
+#include "MotionMaster.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "Vehicle.h"
+#include "GameObject.h"
+#include <Instances/InstanceScript.h>
+#include "TemporarySummon.h"
+#include "Position.h"
+#include <Globals/ObjectAccessor.h>
+#include <Maps/Map.cpp>
+#include "MapInstanced.h"
+#include <Instances/InstanceScript.h>
+#include <DungeonFinding/LFGMgr.h>
+#include "LFG.h"
+#include "InstanceScript.h"
+#include "EventMap.h"
+#include <Instances/InstanceScript.h>
+#include <Globals/ObjectAccessor.cpp>
+#include <Globals/ObjectAccessor.h>
+#include <effects.h>
+#include <Utilities/MessageBuffer.h>
+#include <OCIdl.h>
+#include <windows.ui.text.h>
 
 enum eCreatures
 {
@@ -9,7 +80,8 @@ enum eCreatures
     MOB_BLESSED_LOA_SPIRIT = 69480, // Summoned by Mar'li, heals a councillor
     MOB_SHADOWED_LOA_SPIRIT = 69548, // Summoned by Mar'li, kills player
     MOB_TWISTED_FATE_FIRST = 69740, // First Twisted Fate npc to be summoned, will move toward the second and vice-versa
-    MOB_TWISTED_FATE_SECOND = 69746, // Second Twisted Fate npc to be summoned
+    MOB_TWISTED_FATE_SECOND = 69746,// Second Twisted Fate npc to be summoned
+    NPC_QUICKSAND_STALKER = 71787,
 };
  
 enum eSpells
@@ -489,7 +561,7 @@ public:
     void DamageTaken(Unit* pAttacker, uint32& ruiAmount)
     {
         // Heroic only shit..
-        // if (Aura* pAura = me->GetAura(SPELL_DISCHARGE))
+         if (Aura* pAura = me->GetAura(SPELL_DISCHARGE))
 
         if (!me->HasAura(SPELL_POSSESSED))
             return;
@@ -544,8 +616,8 @@ public:
             {
                 pAI->DoAction(ACTION_COUNCILLOR_DIED);
 
-                if (pAI->GetData(0) < 4)
-                    me->ResetLootRecipients();
+                if (pAI->GetData(0) < 4);
+                   // me->ResetLootRecipients();
                 else
                     RewardCurrencyAndUpdateState();
             }
@@ -719,13 +791,13 @@ public:
                 case EVENT_BITING_COLD:
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 80.0f, true))
                         me->CastSpell(target, SPELL_BITING_COLD);
-                    //DoCastAOE(SPELL_BITING_COLD); // Spell is wierd... handle target selection in SpellScript
+                    DoCastAOE(SPELL_BITING_COLD); // Spell is wierd... handle target selection in SpellScript
                     events.ScheduleEvent(EVENT_BITING_COLD, 45 * IN_MILLISECONDS);
                     break;
 
                 case EVENT_FROSTBITE:
                     Talk(TALK_SPECIAL);
-                    //DoCastAOE(SPELL_FROSTBITE); // Handle target selection in SpellScript
+                    DoCastAOE(SPELL_FROSTBITE); // Handle target selection in SpellScript
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 80.0f, true))
                     {
                         me->AddAura(SPELL_FROSTBITE_DUMMY_AURA, target);
@@ -796,8 +868,8 @@ public:
         boss_kazrajin_AI(Creature* pCreature) :
             CouncilBaseAI(pCreature), uiDamagesDoneInPastSecs(0)
         {
-            //me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
-            //SetCombatMovement(false);
+           // me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+            SetCombatMovement(false);
         }
 
         // Override reset to reset the amount of damages received, and the
@@ -853,8 +925,8 @@ public:
                 break;
             }
 
-            //if (me->HasUnitState(UNIT_STATE_CASTING))
-             //   return;
+            if (me->HasUnitState(UNIT_STATE_CASTING))
+                return;
 
             while (uint32 uiEventId = events.ExecuteEvent())
             {
@@ -867,7 +939,7 @@ public:
                         events.RescheduleEvent(EVENT_RECKLESS_CHARGE_PRE_PATH, 20 * IN_MILLISECONDS);
                         return;
                     }
-                    //DoCast(me, SPELL_RECKLESS_CHARGE_PRE_PATH);
+                    DoCast(me, SPELL_RECKLESS_CHARGE_PRE_PATH);
                     me->CastSpell(me, SPELL_RECKLESS_CHARGE, true);
                     me->AddAura(137121, me); // script handler
                     if (Unit* player = SelectTarget(SELECT_TARGET_RANDOM))
@@ -884,7 +956,7 @@ public:
                     if (rand() % 10 > 4)
                         Talk(TALK_KAZRAJIN_CHARGE);
                     me->CastSpell(me, SPELL_RECKLESS_CHARGE_VISUAL, true); // Launch everything
-                    //events.ScheduleEvent(EVENT_RECKLESS_CHARGE_HELPER, 500, 0, 0);
+                    events.ScheduleEvent(EVENT_RECKLESS_CHARGE_HELPER, 500, 0, 0);
                     // Summon npcs for the visual of Reckless Charge while travelling ?
                     // Handle next part in MovementInform.
                     break;
@@ -958,7 +1030,7 @@ public:
 
 
         // Override Damage Taken again to handle the Discharge aura.
-        /*
+        
         void DamageTaken(Unit *pAttacker, uint32 &ruiAmount)
         {
             if(!me->HasAura(SPELL_POSSESSED))
@@ -966,8 +1038,8 @@ public:
 
             if(me->HasAura(SPELL_POSSESSED))
             {
-                if(me->HasAura(SPELL_DISCHARGE))
-                    uiDamagesDoneInPastSecs += ruiAmount;
+                if (me->HasAura(SPELL_DISCHARGE));
+                  //  uiDamagesDoneInPastSecs += ruiAmount;
             }
 
             uiDamageTakenPossessed += ruiAmount;
@@ -978,10 +1050,10 @@ public:
                     DoCast(me, SPELL_LINGERING_PRESENCE);
                 uiDamageTakenPossessed = 0; // Reset in both case to prevent chain call to IsACouncillorAlive
             }
-        }*/
+        }
 
         // Override DoAction again to handle the Discharge Aura.
-        /*
+        
         void DoAction(int32 iAction)
         {
             switch(iAction)
@@ -999,7 +1071,7 @@ public:
         uint32 GetData(uint32 uiIndex) const
         {
             return uiDarkPowerCount;
-        }*/
+        }
 
 
     private:
@@ -1011,16 +1083,16 @@ public:
         void InitStandartEvents()
         {
             darkPowerEvents.Reset();
-            //events.Reset();
+            events.Reset();
 
-            //events.ScheduleEvent(EVENT_RECKLESS_CAHRGE_INITIALIZE, 10 * IN_MILLISECONDS);
+            events.ScheduleEvent(EVENT_RECKLESS_CAHRGE_INITIALIZE, 10 * IN_MILLISECONDS);
         }
 
         void InitPossessedEvents()
         {
-            //events.Reset();
+            events.Reset();
 
-           //events.ScheduleEvent(EVENT_RECKLESS_CAHRGE_INITIALIZE, 10 * IN_MILLISECONDS);
+           events.ScheduleEvent(EVENT_RECKLESS_CAHRGE_INITIALIZE, 10 * IN_MILLISECONDS);
         }
     };
 
@@ -1304,7 +1376,7 @@ public:
                 }
 
                 case EVENT_TWISTED_FATE:
-                    //DoCastAOE(SPELL_TWISTED_FATE); // Automatically handle target selection in the SpellScript
+                    DoCastAOE(SPELL_TWISTED_FATE); // Automatically handle target selection in the SpellScript
                     if (Unit* target = SelectTarget(SELECT_TARGET_FARTHEST, 0, 100.0f, true))
                         target->CastSpell(target, SPELL_TWISTED_FATE_SUMMON_FIRST, true);
                     if (Unit* target = SelectTarget(SELECT_TARGET_NEAREST, 0, 30.0f, true))
@@ -1401,13 +1473,13 @@ public:
         // no longer working, don't know why, handled above
         void InitPossessedEvents()
         {
-            /*events.Reset();
+            events.Reset();
             events.CancelEvent(EVENT_CHECK_POSSESED);
             events.ScheduleEvent(EVENT_WRATH_OF_THE_LOA_DARK, 5 * IN_MILLISECONDS);
             if(IsHeroic())
                 events.ScheduleEvent(EVENT_TWISTED_FATE, 25 * IN_MILLISECONDS);
             else
-                events.ScheduleEvent(EVENT_SHADOWED_LOA_SPIRIT, 20 * IN_MILLISECONDS);*/
+                events.ScheduleEvent(EVENT_SHADOWED_LOA_SPIRIT, 20 * IN_MILLISECONDS);
         }
     };
 
@@ -1675,8 +1747,8 @@ public:
     private:
         EventMap        events;
         InstanceScript* pInstance;
-        /*    protected:
-                ACE_Recursive_Thread_Mutex mutex;*/
+           protected:
+              //  ACE_Recursive_Thread_Mutex *mutex;
 
     };
 
@@ -1974,7 +2046,7 @@ public:
                 {
                     me->RemoveAura(SPELL_QUICKSAND_AT_VISUAL_INIT);
                     me->RemoveAura(SPELL_QUICKSAND_AT_VISUAL);
-                    //me->RemoveAllAuras();
+                    me->RemoveAllAuras();
                     events.ScheduleEvent(EVENT_ACTIVATE_SAND, 4000);
                     events.CancelEvent(EVENT_QUICKSAND_PERIODIC);
                 }
@@ -2083,14 +2155,14 @@ public:
             me->SetReactState(REACT_PASSIVE);
             me->ApplySpellImmune(0, IMMUNITY_ID, 108199, true); // Gorefiend's Grasp
             events.Reset();
-            //me->SetSpeed(MOVE_RUN, 0.5f, true);
-            //me->SetSpeed(MOVE_WALK, 0.5f, true);
+            me->SetSpeed(MOVE_RUN, 0.5f);
+            me->SetSpeed(MOVE_WALK, 0.5f);
         }
 
         void InitList(std::list<ObjectGuid>& list)
         {
             list.push_back(pInstance->GetObjectGuid(BOSS_COUNCIL_FROST_KING_MALAKK));
-            //list.push_back(pInstance->GetData64(BOSS_COUNCIL_HIGH_PRIESTESS_MARLI));
+            list.push_back(pInstance->GetData64(BOSS_COUNCIL_HIGH_PRIESTESS_MARLI));
             list.push_back(pInstance->GetObjectGuid(BOSS_COUNCIL_SUL_THE_SANDCRAWLER));
             list.push_back(pInstance->GetObjectGuid(BOSS_COUNCIL_KAZRAJIN));
         }
@@ -2251,7 +2323,7 @@ public:
         }
 
         // no longer used, i'm using my scripts
-        /*void Move()
+        *void Move()
         {
             if (Player *pTarget = ObjectAccessor::GetPlayer(*me, uiTargetGuid))
             {
@@ -2276,7 +2348,7 @@ public:
 
         void HandleTargetSelection()
         {
-            //DoCast(SPELL_MARKED_SOUL);
+            DoCast(SPELL_MARKED_SOUL);
 
             std::list<Player*> players;
             GetPlayerListInGrid(players, me, 300.f);
@@ -2299,8 +2371,8 @@ public:
 
         void SetTargetGuid(uint64 guid)
         {
-            uiTargetGuid = guid;
-        }*/
+         //   uiTargetGuid = guid;
+        }
 
         void SetGUID(ObjectGuid guid, int32 id = 0)
         {
@@ -2315,16 +2387,16 @@ public:
             {
                 switch (uiEventId)
                 {
-                    //case EVENT_MOVE_COUNCILLOR:
-                   //     Move();
-                   //     break;
+                    case EVENT_MOVE_COUNCILLOR:
+                        //Move();
+                        break;
                 case EVENT_TARGET_A_RANDOM_PLAYER:
                 {
                     if (Unit* player = SelectTarget(SELECT_TARGET_RANDOM, 0, 80.0f, true))
                     {
                         me->AddAura(SPELL_MARKED_SOUL, player);
                         me->AI()->AttackStart(player);
-                        //playerGuid = player->GetGUID();
+                        playerGuid = player->GetGUID();
                         me->AddThreat(player, 999999999.9f);
                         events.ScheduleEvent(EVENT_SHADOWED_GIFT, 20 * IN_MILLISECONDS);
                         events.ScheduleEvent(EVENT_MOVE_TO_PLAYER, 1000, 0, 0);
@@ -2596,7 +2668,7 @@ public:
             {
                 // Create a new TwistedFate_t
             case MOB_TWISTED_FATE_FIRST:
-                //pHelperAI->AddTwistedFate(new TwistedFate_t(pSummoner ? pSummoner->GetGUID() : ObjectGuid(nullptr), me->GetGUID()));
+               // pHelperAI->AddTwistedFate(new TwistedFate_t(pSummoner ? pSummoner->GetGUID() : ObjectGuid(nullptr), me->GetGUID()));
                 DoCastAOE(SPELL_TWISTED_FATE_FORCE_SUMMON_SECOND); // Force the most distant player to summon the second twisted fate
                 break;
 
@@ -2707,7 +2779,7 @@ public:
             }
         }
 
-        /*void HandlePeriodic(AuraEffect const* pAuraEffect)
+        void HandlePeriodic(AuraEffect const* pAuraEffect)
         {
             if(!GetOwner())
                 return;
@@ -2720,13 +2792,13 @@ public:
                 if(pOwner->GetPower(POWER_ENERGY) == 100)
                     pOwner->AI()->DoAction(ACTION_DARK_POWER);
             }
-        }*/
+        }
 
         void Register()
         {
             OnEffectApply += AuraEffectApplyFn(spell_garajal_possessed_AuraScript::HandleApply, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
             OnEffectRemove += AuraEffectRemoveFn(spell_garajal_possessed_AuraScript::HandleRemove, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
-            // OnEffectPeriodic    += AuraEffectPeriodicFn(spell_garajal_possessed_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+             OnEffectPeriodic    += AuraEffectPeriodicFn(spell_garajal_possessed_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
         }
     };
 
@@ -2785,7 +2857,7 @@ public:
 
     class spell_malakk_biting_cold_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_malakk_biting_cold_SpellScript)
+        PrepareSpellScript(spell_malakk_biting_cold_SpellScript);
 
             void HandleEffectHitTarget(SpellEffIndex effIndex)
         {
@@ -2813,7 +2885,7 @@ public:
                 if (Player* player = (*itr)->ToPlayer())
                 {
                     // Check specs
-                    uint32 spec = player->GetSpecializationId();
+                    uint32 spec = player->GetSpecId();
                     bool checkSpec = false;
 
                     switch (spec)
@@ -2840,7 +2912,7 @@ public:
         void Register()
         {
             OnEffectHitTarget += SpellEffectFn(spell_malakk_biting_cold_SpellScript::HandleEffectHitTarget, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
-            //OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_malakk_biting_cold_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_TARGET_ANY);
+            OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_malakk_biting_cold_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_TARGET_ANY);
         }
     };
 
@@ -2920,7 +2992,7 @@ public:
 
     class spell_malakk_frostbite_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_malakk_frostbite_SpellScript)
+        PrepareSpellScript(spell_malakk_frostbite_SpellScript);
 
             // Handler to select target (cause TARGET_UNIT_SRC_AREA_ENTRY doesn't work fine)
             void SelectTarget(std::list<WorldObject*>& targets)
@@ -2949,7 +3021,7 @@ public:
                 if (Player* player = (*itr)->ToPlayer())
                 {
                     // Check specs
-                    uint32 spec = player->GetSpecializationId();
+                    uint32 spec = player->GetSpecId();
                     bool checkSpec = false;
 
                     switch (spec)
@@ -3005,8 +3077,8 @@ public:
 
         void Register()
         {
-            //OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_malakk_frostbite_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENTRY);
-            //OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_malakk_frostbite_SpellScript::SelectTarget, EFFECT_0, TARGET_UNIT_SRC_AREA_ENTRY);
+            OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_malakk_frostbite_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENTRY);
+            OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_malakk_frostbite_SpellScript::SelectTarget, EFFECT_0, TARGET_UNIT_SRC_AREA_ENTRY);
             OnEffectHitTarget += SpellEffectFn(spell_malakk_frostbite_SpellScript::HandleOnHit, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
         }
     };
@@ -3025,7 +3097,7 @@ public:
 
     class spell_malakk_frostbite_allies_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_malakk_frostbite_allies_SpellScript)
+        PrepareSpellScript(spell_malakk_frostbite_allies_SpellScript);
 
             void FilterTargets(std::list<WorldObject*>& targets)
         {
@@ -3093,7 +3165,7 @@ public:
 
     class spell_malakk_body_heat_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_malakk_body_heat_SpellScript)
+        PrepareSpellScript(spell_malakk_body_heat_SpellScript);
 
             void SelectTargets(std::list<WorldObject*>& targets)
         {
@@ -3156,7 +3228,7 @@ public:
 
     class spell_kazrajin_reckless_charge_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_kazrajin_reckless_charge_SpellScript)
+        PrepareSpellScript(spell_kazrajin_reckless_charge_SpellScript);
 
             void HandleCast(SpellEffIndex eff_idx)
         {
@@ -3209,7 +3281,7 @@ public:
                 if (Player* player = (*itr)->ToPlayer())
                 {
                     // Check specs
-                    uint32 spec = player->GetSpecializationId();
+                    uint32 spec = player->GetSpecId();
                     bool checkSpec = false;
 
                     switch (spec)
@@ -3480,7 +3552,7 @@ public:
             else
                 target->CastCustomSpell(caster, SPELL_DISCHARGE_DAMAGES, &damage, NULL, NULL, true);
 
-            //target->CastSpell(caster, SPELL_DISCHARGE_VISUAL, true); //visual target to caster because caster has no target when is stunned
+            target->CastSpell(caster, SPELL_DISCHARGE_VISUAL, true); //visual target to caster because caster has no target when is stunned
         }
 
         void HandleEffectRemove(AuraEffect const* pAuraEffect, AuraEffectHandleModes eMode)
@@ -3496,7 +3568,7 @@ public:
         void Register()
         {
             OnEffectApply += AuraEffectApplyFn(spell_kazrajin_discharge_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
-            //OnEffectPeriodic += AuraEffectPeriodicFn(spell_kazrajin_discharge_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+            OnEffectPeriodic += AuraEffectPeriodicFn(spell_kazrajin_discharge_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
             OnEffectRemove += AuraEffectRemoveFn(spell_kazrajin_discharge_AuraScript::HandleEffectRemove, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
             OnEffectProc += AuraEffectProcFn(spell_kazrajin_discharge_AuraScript::OnProc, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
         }
@@ -3586,7 +3658,7 @@ public:
 
         void Register()
         {
-            //OnEffectHitTarget += SpellEffectFn(spell_quicksand_entrapped_SpellScript::HandleAdditionalSpell, EFFECT_1, SPELL_EFFECT_203); MISSING SPELL_EFFECT_203 FROM FREAKZ FILES
+            OnEffectHitTarget += SpellEffectFn(spell_quicksand_entrapped_SpellScript::HandleAdditionalSpell, EFFECT_1, SPELL_EFFECT_203);// MISSING SPELL_EFFECT_203 FROM FREAKZ FILES
         }
     };
 
@@ -3617,15 +3689,15 @@ public:
             {
                 pCaster->AddAura(SANDSTORM_VISUAL, pCaster);
 
-                //std::list<Creature*> quicksandsList;
+                std::list<Creature*> quicksandsList;
                 std::list<Creature*> livingSandsList;
 
-                //pCaster->GetCreatureListWithEntryInGrid(quicksandsList, NPC_QUICKSAND_STALKER, 500.0f);
+                pCaster->GetCreatureListWithEntryInGrid(quicksandsList, NPC_QUICKSAND_STALKER, 500.0f);
                 pCaster->GetCreatureListWithEntryInGrid(livingSandsList, MOB_LIVING_SAND, 500.0f);
 
-                /*
+                
                 for (Creature *pQuicksand : quicksandsList)
-                pQuicksand->AI()->DoAction(ACTION_CREATE_LIVING_SAND);*/
+                pQuicksand->AI()->DoAction(ACTION_CREATE_LIVING_SAND);
 
                 for (Creature* pLivingSand : livingSandsList)
                     pLivingSand->AI()->DoAction(ACTION_CREATE_LIVING_SAND);
@@ -3653,7 +3725,7 @@ public:
 
     class spell_marli_summon_blessed_loa_spirit_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_marli_summon_blessed_loa_spirit_SpellScript)
+        PrepareSpellScript(spell_marli_summon_blessed_loa_spirit_SpellScript);
 
             void HandleDummy(SpellEffIndex eEffIndex)
         {
@@ -3687,7 +3759,7 @@ public:
 
     class spell_marli_summon_shadowed_loa_spirit_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_marli_summon_shadowed_loa_spirit_SpellScript)
+        PrepareSpellScript(spell_marli_summon_shadowed_loa_spirit_SpellScript);
 
             void HandleDummy(SpellEffIndex eEffIndex)
         {
@@ -3796,7 +3868,7 @@ class spell_marli_twisted_fate_damages : public SpellScriptLoader
 public:
     spell_marli_twisted_fate_damages() : SpellScriptLoader("spell_marli_twisted_fate_damages") { }
 
-    /*class spell_marli_twisted_fate_damages_AuraScript : public AuraScript
+    class spell_marli_twisted_fate_damages_AuraScript : public AuraScript
     {
         PrepareAuraScript(spell_marli_twisted_fate_damages_AuraScript);
 
@@ -3825,9 +3897,9 @@ public:
 
         void Register()
         {
-           // DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_marli_twisted_fate_damages_AuraScript::CalculateAmount, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE);
+            DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_marli_twisted_fate_damages_AuraScript::CalculateAmount, EFFECT_0, SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE);
         }
-    };*/
+    };
 
     class spell_marli_twisted_fate_damages_SpellScript : public SpellScript
     {
@@ -3867,15 +3939,15 @@ public:
         }
     };
 
-    SpellScript* GetSpellScript() const
+    SpellScript* GetSpellScript() 
     {
         return new spell_marli_twisted_fate_damages_SpellScript();
     }
 
-    /*AuraScript *GetAuraScript() const
+    AuraScript *GetAuraScript() const
     {
         return new spell_marli_twisted_fate_damages_AuraScript();
-    }*/
+    }
 };
 
 
@@ -3924,7 +3996,7 @@ public:
 
     class spell_soul_fragment_target_selector_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_soul_fragment_target_selector_SpellScript)
+        PrepareSpellScript(spell_soul_fragment_target_selector_SpellScript);
 
             void SelectTarget(std::list<WorldObject*>& targets)
         {
@@ -4139,7 +4211,7 @@ public:
             Unit* target = GetTarget()->ToPlayer();
             if (!caster || !target)
                 return;
-            //target->CastSpell(target, SPELL_BITING_COLD, true);
+            target->CastSpell(target, SPELL_BITING_COLD, true);
             target->ApplySpellImmune(0, IMMUNITY_ID, 136991, true);
         }
 
@@ -4231,8 +4303,8 @@ public:
             {
             case ACTION_TWISTED_DIED:
             {
-                //events.CancelEvent(EVENT_CAST_DAMAGE_BOTH);
-                //events.ScheduleEvent(EVENT_CAST_DAMAGE_SOLO, 500, 0, 0);
+                events.CancelEvent(EVENT_CAST_DAMAGE_BOTH);
+                events.ScheduleEvent(EVENT_CAST_DAMAGE_SOLO, 500, 0, 0);
                 me->StopMoving();
                 me->AddUnitState(UNIT_STATE_ROOT);
                 break;
@@ -4327,8 +4399,8 @@ public:
             {
             case ACTION_TWISTED_DIED:
             {
-                //events.CancelEvent(EVENT_CAST_DAMAGE_BOTH);
-                //events.ScheduleEvent(EVENT_CAST_DAMAGE_SOLO, 500, 0, 0);
+                events.CancelEvent(EVENT_CAST_DAMAGE_BOTH);
+                events.ScheduleEvent(EVENT_CAST_DAMAGE_SOLO, 500, 0, 0);
                 me->StopMoving();
                 break;
             }
@@ -4611,8 +4683,8 @@ void AddSC_boss_council_of_elders()
     new mob_living_sand();
     new mob_blessed_loa_spirit();
     new mob_shadowed_loa_spirit();
-    //new mob_twisted_fate_helper();
-    //new mob_twisted_fate();
+    new mob_twisted_fate_helper();
+    new mob_twisted_fate();
     new spell_garajal_possessed();
     new spell_malakk_frigid_assault();
     new spell_malakk_biting_cold();
@@ -4620,7 +4692,7 @@ void AddSC_boss_council_of_elders()
     new spell_malakk_frostbite_periodic();
     new spell_malakk_frostbite_allies();
     new spell_malakk_body_heat();
-    //new spell_kazrajin_reckless_charge();
+    new spell_kazrajin_reckless_charge();
     new spell_kazrajin_reckless_charge_targeting();
     new spell_kazrajin_overload();
     new spell_kazrajin_discharge();

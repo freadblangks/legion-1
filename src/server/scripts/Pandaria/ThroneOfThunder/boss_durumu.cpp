@@ -2,6 +2,79 @@
 #include "SpellAuraEffects.h"
 #include "SpellAuraDefines.h"
 #include "throne_of_thunder.h"
+#include "Player.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ScriptMgr.h"
+#include "SpellMgr.h"
+#include "SpellInfo.h"
+#include "ScriptedCreature.h"
+#include "GameObjectAI.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ObjectMgr.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "SpellAuras.h"
+#include "MapManager.h"
+#include "Spell.h"
+#include "Vehicle.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CreatureTextMgr.h"
+#include "MoveSplineInit.h"
+#include "Weather.h"
+#include "GameObjectAI.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ObjectMgr.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "SpellAuras.h"
+#include "MapManager.h"
+#include "Spell.h"
+#include "Vehicle.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CreatureTextMgr.h"
+#include "Weather.h"
+#include <Instances/InstanceScript.h>
+#include <Movement/MotionMaster.h>
+#include "SpellInfo.h"
+#include "Player.h"
+#include "MotionMaster.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "Vehicle.h"
+#include "GameObject.h"
+#include <Instances/InstanceScript.h>
+#include "TemporarySummon.h"
+#include "Position.h"
+#include <Globals/ObjectAccessor.h>
+#include <Maps/Map.cpp>
+#include "MapInstanced.h"
+#include <Instances/InstanceScript.h>
+#include <DungeonFinding/LFGMgr.h>
+#include "LFG.h"
+#include "InstanceScript.h"
+#include "EventMap.h"
+#include <Instances/InstanceScript.h>
+#include <Utilities/EventMap.h>
+#include "GameObject.h"
+#include <zlib.h>
+#include <DetourNode.h>
+#include "Position.h"
+#include "ObjectPosSelector.h"
+#include <Entities/Player/CinematicMgr.h>
+#include "../../../../../dep/CascLib/src/libtomcrypt/src/hashes/md5.c"
 
 Position PlatformCenter = { 5895.829f,  4512.626f, -6.276f, 6.242f };
 
@@ -263,6 +336,7 @@ enum Spells
     SPELL_RED_PREBLIND = 134123,
     SPELL_BLUE_PREBLIND = 134122,
     SPELL_YELLOW_PREBLIND = 134124,
+    MonsterYell,
 };
 
 enum NpcEntry
@@ -545,7 +619,7 @@ public:
             {
             case ACTION_ADD_SPECTRUM:
                 CalculateSpectrum();
-                //events.ScheduleEvent(EVENT_SUMMON_FOGS_CRIMSON_KILLED, 500, 0, 0);
+                events.ScheduleEvent(EVENT_SUMMON_FOGS_CRIMSON_KILLED, 500, 0, 0);
                 break;
             case ACTION_LIGHT_SPECTRUM_DONE:
             {
@@ -694,7 +768,7 @@ public:
             }
            // me->SummonGameObject(GO_WALL_OF_ICE, 5925.18f, 4493.79f, -6.27763f);
            // me->SummonGameObject(GO_WALL_OF_ICE_2, 5862.33f, 4508.2f, -6.27703f, 3.28283f, 0.0f, 0.0f, 0.997507f, -0.0705623f, 0);
-            //me->SummonGameObject(GO_WALL_OF_ICE_1, 5903.09f, 4547.13f, -6.27707f, 1.28039f, 0.0f, 0.0f, 0.597351f, 0.80198f, 0);
+           // me->SummonGameObject(GO_WALL_OF_ICE_1, 5903.09f, 4547.13f, -6.27707f, 1.28039f, 0.0f, 0.0f, 0.597351f, 0.80198f, 0);
         }
 
         void ActivateObjects()
@@ -728,7 +802,7 @@ public:
 
             events.ScheduleEvent(EVENT_SUMMON_MINDS_EYE, 19000, 0, 0);
             events.ScheduleEvent(EVENT_SUMMON_APPRAISIING_EYE, 15000, 0, 0);
-            //events.ScheduleEvent(EVENT_SUMMON_HUNGRY_EYE, 40000, 0, 0);
+            events.ScheduleEvent(EVENT_SUMMON_HUNGRY_EYE, 40000, 0, 0);
             events.ScheduleEvent(EVENT_DISINTEGRATION_BEAM, 2.5 * MINUTE * IN_MILLISECONDS); // 2.5 * MINUTE * IN_MILLISECONDS
             events.ScheduleEvent(EVENT_ADD_WALLS_BEFORE_MAZE, 2.3 * MINUTE * IN_MILLISECONDS);
             events.ScheduleEvent(EVENT_LIGHT_SPECTRUM, 30000, 0, 0);
@@ -838,7 +912,7 @@ public:
             case EVENT_SUMMON_APPRAISIING_EYE:
                 Talk(TALK_GAZE);
                 me->SummonCreature(APPRAYISYING_EYE, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN);
-                //events.ScheduleEvent(EVENT_SUMMON_APPRAISIING_EYE, 15000, 0, 0);
+                events.ScheduleEvent(EVENT_SUMMON_APPRAISIING_EYE, 15000, 0, 0);
                 break;
             case EVENT_SUMMON_MINDS_EYE:
                 if (!colorBlind)
@@ -870,7 +944,7 @@ public:
                 me->AI()->DoAction(ACTION_SPAWN_SPOTS);
                 if (me->GetMap()->IsHeroic())
                     SpawnGaze();
-                //events.ScheduleEvent(EVENT_KEEP_TARGET_MOVER, 500, 0, 0);
+                events.ScheduleEvent(EVENT_KEEP_TARGET_MOVER, 500, 0, 0);
                 events.ScheduleEvent(EVENT_DISINTEGRATION_BEAM_END, 47000);
                 break;
             }
@@ -948,13 +1022,13 @@ public:
             }
             case EVENT_SUMMON_FOGS_AZURE:
             {
-                //uint8 pos = urand(0, 2);
+                uint8 pos = urand(0, 2);
                 me->SummonCreature(AZURE_FOG, 5946.81f, 4499.13f, -6.27f, 2.93f, TEMPSUMMON_DEAD_DESPAWN);
                 break;
             }
             case EVENT_SUMMON_FOGS_AMBER:
             {
-                //uint8 pos = urand(0, 1);
+                uint8 pos = urand(0, 1);
                 me->SummonCreature(AMBER_FOG, 5929.27f, 4474.55f, -6.27f, 2.45f, TEMPSUMMON_DEAD_DESPAWN);
                 break;
             }
@@ -1319,7 +1393,7 @@ public:
                             DoCast(SPELL_FORCE_OF_WILL);
                         }
                     }
-                    //me->CastSpell(player, SPELL_FORCE_OF_WILL);
+                   // me->CastSpell(player, SPELL_FORCE_OF_WILL);
                     me->DespawnOrUnsummon(10000);
                     break;
                 }
@@ -1540,7 +1614,7 @@ public:
 
         void IsSummonedBy(Unit* summoner)
         {
-            //owner = summoner->GetGUID();
+            owner = summoner->GetGUID();
             me->SetInCombatWithZone();
             events.ScheduleEvent(EVENT_START_DEVOUR, 1000, 0, 0);
         }
@@ -1602,7 +1676,7 @@ public:
         bfa_npc_eyebeam_targetAI(Creature* creature) : ScriptedAI(creature)
         {
             //set_speed(0.5f);
-            IMMUNE_PC;
+            //IMMUNE_PC;
             me->SetUnitFlags(UNIT_FLAG_NON_ATTACKABLE);
             me->ApplySpellImmune(0, IMMUNITY_ID, 73680, true); // unleash elements exploits
         }
@@ -1657,67 +1731,67 @@ public:
                     break;
                 case EVENT_1:
                     me->GetMotionMaster()->MovePoint(POINT_1, YellowEyeWay[1]);
-                    //sWorld->SendWorldText(3, "gopoint 1 c");
+                    sWorld->SendWorldText(3, "gopoint 1 c");
                     break;
                 case EVENT_2:
                     me->GetMotionMaster()->MovePoint(POINT_2, YellowEyeWay[2]);
-                    //sWorld->SendWorldText(3, "gopoint 2 c");
+                    sWorld->SendWorldText(3, "gopoint 2 c");
                     break;
                 case EVENT_3:
                     me->GetMotionMaster()->MovePoint(POINT_3, YellowEyeWay[3]);
-                    //sWorld->SendWorldText(3, "go point3 c");
+                    sWorld->SendWorldText(3, "go point3 c");
                     break;
                 case EVENT_4:
                     me->GetMotionMaster()->MovePoint(POINT_4, YellowEyeWay[4]);
-                    //sWorld->SendWorldText(3, "go point 4 c");
+                    sWorld->SendWorldText(3, "go point 4 c");
                     break;
                 case EVENT_5:
                     me->GetMotionMaster()->MovePoint(POINT_5, YellowEyeWay[5]);
-                    //sWorld->SendWorldText(3, "go point 5 c");
+                    sWorld->SendWorldText(3, "go point 5 c");
                     break;
                 case EVENT_6:
                     me->GetMotionMaster()->MovePoint(POINT_6, YellowEyeWay[6]);
-                    //sWorld->SendWorldText(3, "go point 6 c");
+                    sWorld->SendWorldText(3, "go point 6 c");
                     break;
                 case EVENT_7:
                     me->GetMotionMaster()->MovePoint(POINT_7, YellowEyeWay[7]);
-                    //sWorld->SendWorldText(3, "go point 7 c");
+                    sWorld->SendWorldText(3, "go point 7 c");
                     break;
                 case EVENT_8:
                     me->GetMotionMaster()->MovePoint(POINT_8, YellowEyeWay[8]);
-                    //sWorld->SendWorldText(3, "go point 8 c");
+                    sWorld->SendWorldText(3, "go point 8 c");
                     break;
                 case EVENT_1_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_1_REVERSE, YellowEyeWay2[1]);
-                    //sWorld->SendWorldText(3, "gopoint 1 cc");
+                    sWorld->SendWorldText(3, "gopoint 1 cc");
                     break;
                 case EVENT_2_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_2_REVERSE, YellowEyeWay2[2]);
-                    //sWorld->SendWorldText(3, "gopoint 2 cc");
+                    sWorld->SendWorldText(3, "gopoint 2 cc");
                     break;
                 case EVENT_3_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_3_REVERSE, YellowEyeWay2[3]);
-                    //sWorld->SendWorldText(3, "gopoint 3 cc");
+                    sWorld->SendWorldText(3, "gopoint 3 cc");
                     break;
                 case EVENT_4_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_4_REVERSE, YellowEyeWay2[4]);
-                    //sWorld->SendWorldText(3, "gopoint 4 cc");
+                    sWorld->SendWorldText(3, "gopoint 4 cc");
                     break;
                 case EVENT_5_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_5_REVERSE, YellowEyeWay2[5]);
-                    //sWorld->SendWorldText(3, "gopoint 5 cc");
+                    sWorld->SendWorldText(3, "gopoint 5 cc");
                     break;
                 case EVENT_6_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_6_REVERSE, YellowEyeWay2[6]);
-                    //sWorld->SendWorldText(3, "gopoint 6 cc");
+                    sWorld->SendWorldText(3, "gopoint 6 cc");
                     break;
                 case EVENT_7_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_7_REVERSE, YellowEyeWay2[7]);
-                    //sWorld->SendWorldText(3, "gopoint 7 cc");
+                   sWorld->SendWorldText(3, "gopoint 7 cc");
                     break;
                 case EVENT_8_REVERSE:
                     me->GetMotionMaster()->MovePoint(POINT_8_REVERSE, YellowEyeWay2[8]);
-                    //sWorld->SendWorldText(3, "gopoint 8 cc");
+                    sWorld->SendWorldText(3, "gopoint 8 cc");
                     break;
                 }
             }
@@ -1856,7 +1930,7 @@ public:
         bfa_npc_light_spectrum_redAI(Creature* creature) : ScriptedAI(creature)
         {
             me->AddUnitState(UNIT_STATE_ROOT);
-            IMMUNE_NPC;
+           // IMMUNE_NPC;
             me->SetUnitFlags(UNIT_FLAG_NON_ATTACKABLE);
         }
 
@@ -1866,7 +1940,7 @@ public:
         {
             me->SetInCombatWithZone();
             events.ScheduleEvent(EVENT_RED_EYE, 1000, 0, 0);
-            //events.ScheduleEvent(EVENT_CHECK_PLAYERS_FRONT, 12000, 0, 0);
+            events.ScheduleEvent(EVENT_CHECK_PLAYERS_FRONT, 12000, 0, 0);
         }
 
         void Reset()
@@ -1933,12 +2007,12 @@ public:
             for (auto player : PlayerList)
                 if (me->isInFront(player, 3.14f / 6.0f))
                 {
-                    //sWorld->SendWorldText(3, "IN FRONT CHECK ACTIVE");
+                    sWorld->SendWorldText(3, "IN FRONT CHECK ACTIVE");
                     events.CancelEvent(EVENT_DAMAGE_RAID);
                 }
                 else
                 {
-                    //sWorld->SendWorldText(3, "NO PLAYERS IN FRONT");
+                    sWorld->SendWorldText(3, "NO PLAYERS IN FRONT");
                     events.ScheduleEvent(EVENT_DAMAGE_RAID, 500, 0, 0);
                 }
         }
@@ -1960,7 +2034,7 @@ public:
         bfa_npc_light_spectrum_blueAI(Creature* creature) : ScriptedAI(creature)
         {
             me->AddUnitState(UNIT_STATE_ROOT);
-            IMMUNE_NPC;
+            //IMMUNE_NPC;
             me->SetUnitFlags(UNIT_FLAG_NON_ATTACKABLE);
         }
 
@@ -1970,7 +2044,7 @@ public:
         {
             me->SetInCombatWithZone();
             events.ScheduleEvent(EVENT_BLUE_EYE, 1000, 0, 0);
-            //events.ScheduleEvent(EVENT_CHECK_PLAYERS_FRONT, 12000, 0, 0);
+            events.ScheduleEvent(EVENT_CHECK_PLAYERS_FRONT, 12000, 0, 0);
         }
 
         void Reset()
@@ -2037,12 +2111,12 @@ public:
             for (auto player : PlayerList)
                 if (me->isInFront(player, 3.14f / 6.0f))
                 {
-                    //sWorld->SendWorldText(3, "IN FRONT CHECK ACTIVE");
+                    sWorld->SendWorldText(3, "IN FRONT CHECK ACTIVE");
                     events.CancelEvent(EVENT_DAMAGE_RAID);
                 }
                 else
                 {
-                    //sWorld->SendWorldText(3, "NO PLAYERS IN FRONT");
+                    sWorld->SendWorldText(3, "NO PLAYERS IN FRONT");
                     events.ScheduleEvent(EVENT_DAMAGE_RAID, 500, 0, 0);
                 }
         }
@@ -2073,7 +2147,7 @@ public:
         {
             me->SetInCombatWithZone();
             events.ScheduleEvent(EVENT_YELLOW_EYE, 1000, 0, 0);
-            //events.ScheduleEvent(EVENT_CHECK_PLAYERS_FRONT, 12000, 0, 0);
+            events.ScheduleEvent(EVENT_CHECK_PLAYERS_FRONT, 12000, 0, 0);
         }
 
         void Reset()
@@ -2093,7 +2167,7 @@ public:
                 {
                 case EVENT_YELLOW_EYE:
                     me->SummonCreature(YELLOW_EYE_MOVER, 5841.55f, 4517.23f, -6.27f, 6.08f, TEMPSUMMON_MANUAL_DESPAWN);
-                    //events.ScheduleEvent(EVENT_CAST_ONEYE, 200, 0, 0);
+                    events.ScheduleEvent(EVENT_CAST_ONEYE, 200, 0, 0);
                     break;
                 case EVENT_CAST_ONEYE:
                     if (Creature* tarMover = me->FindNearestCreature(YELLOW_EYE_MOVER, 500.0f, true))
@@ -2121,12 +2195,12 @@ public:
             for (auto player : PlayerList)
                 if (me->isInFront(player, 3.14f / 6.0f))
                 {
-                    //sWorld->SendWorldText(3, "IN FRONT CHECK ACTIVE");
+                    sWorld->SendWorldText(3, "IN FRONT CHECK ACTIVE");
                     events.CancelEvent(EVENT_DAMAGE_RAID);
                 }
                 else
                 {
-                    //sWorld->SendWorldText(3, "NO PLAYERS IN FRONT");
+                    sWorld->SendWorldText(3, "NO PLAYERS IN FRONT");
                     events.ScheduleEvent(EVENT_DAMAGE_RAID, 500, 0, 0);
                 }
         }
@@ -2904,7 +2978,7 @@ public:
 
         void OnPeriodic(AuraEffect const* aurEff)
         {
-            /*PreventDefaultAction();
+            PreventDefaultAction();
             Unit* caster = GetCaster();
             if (!caster)
                 return;
@@ -2912,7 +2986,7 @@ public:
             GetPlayerListInGrid(PlayerList, caster, 80.0f);
             for (auto player : PlayerList)
                 if (caster->isInFront(player, M_PI / 2))
-                    caster->Kill(player, false);*/
+                    caster->Kill(player, false);
 
             Unit* durumu = GetCaster();
             Unit* triggerTarget = GetTarget();
@@ -2927,8 +3001,8 @@ public:
                 {
                     Position dur;
                     Position trigger;
-                    //durumu->GetPosition(&dur);
-                    //triggerTarget->GetPosition(&trigger);
+                   // durumu->GetPosition(&dur);
+                   // triggerTarget->GetPosition(&trigger);
                     if (player->IsInBetween(dur, trigger, 3.5f))
                         durumu->Kill(player);
                 }
@@ -3126,7 +3200,7 @@ public:
                 {
                 case EVENT_ADD_VIZUAL:
                     me->AddAura(SPELL_MAZE_VIZUAL, me);
-                    //events.ScheduleEvent(EVENT_CHECK_PLAYERS_AND_MAKE_SAFEZONE, 5000, 0, 0);
+                    events.ScheduleEvent(EVENT_CHECK_PLAYERS_AND_MAKE_SAFEZONE, 5000, 0, 0);
                     break;
                 case EVENT_CHECK_PLAYERS_AND_MAKE_SAFEZONE:
                 {
@@ -3276,10 +3350,10 @@ public:
             if (pSpell->Id == SPELL_DESINTEGRATION_BEAM)
             {
                 events.ScheduleEvent(EVENT_1, 1000); // only clock wise
-                /*if (roll_chance_f(50))
+                if (roll_chance_f(50))
                     events.ScheduleEvent(EVENT_1, 1000, 0, 0);
                 else
-                    events.ScheduleEvent(EVENT_1_REVERSE, 1000, 0, 0);*/
+                    events.ScheduleEvent(EVENT_1_REVERSE, 1000, 0, 0);
             }
         }
 
@@ -3519,7 +3593,7 @@ public:
     {
         bfa_npc_maze_safespot_controlerAI(Creature* creature) : ScriptedAI(creature)
         {
-            //me->SetUnitFlags(UNIT_FLAG_NOT_SELECTABLE);
+            me->SetUnitFlags(UNIT_FLAG_NOT_SELECTABLE);
             me->SetUnitFlags(UNIT_FLAG_NON_ATTACKABLE);
         }
 
@@ -3573,7 +3647,7 @@ public:
                     break;
                 }
                 case EVENT_ADD_VIZUAL:
-                    //sWorld->SendWorldText(3, "new visual add");
+                    sWorld->SendWorldText(3, "new visual add");
                     me->AddAura(SPELL_MAZE_VIZUAL, me);
                     break;
                 case EVENT_CREATE_SAFESPOT:

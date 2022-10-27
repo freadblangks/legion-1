@@ -4,6 +4,71 @@
 #include "GameObjectAI.h"
 #include "SpellAuraDefines.h"
 #include "SpellAuraEffects.h"
+#include "Player.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ScriptMgr.h"
+#include "SpellMgr.h"
+#include "SpellInfo.h"
+#include "ScriptedCreature.h"
+#include "GameObjectAI.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ObjectMgr.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "SpellAuras.h"
+#include "MapManager.h"
+#include "Spell.h"
+#include "Vehicle.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CreatureTextMgr.h"
+#include "MoveSplineInit.h"
+#include "Weather.h"
+#include "GameObjectAI.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "ObjectMgr.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "SpellScript.h"
+#include "SpellAuraEffects.h"
+#include "SpellAuras.h"
+#include "MapManager.h"
+#include "Spell.h"
+#include "Vehicle.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CreatureTextMgr.h"
+#include "Weather.h"
+#include <Instances/InstanceScript.h>
+#include <Movement/MotionMaster.h>
+#include "SpellInfo.h"
+#include "Player.h"
+#include "MotionMaster.h"
+#include "ScriptMgr.h"
+#include "ScriptedCreature.h"
+#include "Vehicle.h"
+#include "GameObject.h"
+#include <Instances/InstanceScript.h>
+#include "TemporarySummon.h"
+#include "Position.h"
+#include <Globals/ObjectAccessor.h>
+#include <Maps/Map.cpp>
+#include "MapInstanced.h"
+#include <Instances/InstanceScript.h>
+#include <DungeonFinding/LFGMgr.h>
+#include "LFG.h"
+#include "InstanceScript.h"
+#include "EventMap.h"
+#include <Instances/InstanceScript.h>
 
 enum eSpells
 {
@@ -593,7 +658,7 @@ public:
             return true;
         }
 
-        void DoAction(int32 iAction) override
+        void DoAction(int32 iAction) 
         {
             switch (iAction)
             {
@@ -782,7 +847,7 @@ public:
                     if (Creature* pDinomancer = me->SummonCreature(MOB_ZANDALARI_DINOMANCER, summonPosition))
                         pDinomancer->GetMotionMaster()->MoveJump(zandalariDinomancersJumpPositions[uiTrashPhase][urand(0, MAX_SUMMON_POSITIONS_BY_PHASE - 1)], 20.0f, 42.0f, MOTION_DINOMANCER_JUMP);
                     //TODO: only one dinomancer per phase
-                    //events.CancelEvent(EVENT_SUMMON_ZANDALARI_DINOMANCER);
+                    events.CancelEvent(EVENT_SUMMON_ZANDALARI_DINOMANCER);
                     break;
                 }
 
@@ -899,7 +964,7 @@ public:
                 if (pWarGodJalak->isDead())
                 {
                     pWarGodJalak->Respawn();
-                    //pWarGodJalak->AI()->EnterEvadeMode();
+                    pWarGodJalak->AI()->EnterEvadeMode();
                 }
             }
 
@@ -1230,15 +1295,15 @@ public:
 
         void EnterEvadeMode(EvadeReason w)
         {
-            //if (me->HasUnitState(UNIT_STATE_CANNOT_TURN))
-              //  me->SetControlled(false, UNIT_STATE_CANNOT_TURN);
+            if (me->HasUnitState(UNIT_STATE_CANNOT_TURN))
+                me->SetControlled(false, UNIT_STATE_CANNOT_TURN);
             float x, y, z, o;
 
             me->GetHomePosition(x, y, z, o);
-            /*
+            
             me->NearTeleportTo(x, y, z, o);
             me->SetFacingTo(o);
-            */
+            
             me->GetMotionMaster()->Clear(false);
             me->GetMotionMaster()->MovePoint(5000, x, y, z);
 
@@ -1317,7 +1382,7 @@ public:
         {
             events.ScheduleEvent(EVENT_TRIPLE_PUNCTURE, 10 * IN_MILLISECONDS);
             events.ScheduleEvent(EVENT_DOUBLE_SWIPE, 15 * IN_MILLISECONDS);
-            //events.ScheduleEvent(EVENT_EVADE_CHECK, 2000);
+            events.ScheduleEvent(EVENT_EVADE_CHECK, 2000);
             m_mBerserkEvents.ScheduleEvent(EVENT_BERSERK, 12 * MINUTE * IN_MILLISECONDS);
 
             if (IsHeroic())
@@ -1860,8 +1925,8 @@ public:
                 }
             }
 
-            //if (uiMovementId == EVENT_CHARGE)
-            //    DoCast(pRendingChargeTarget, SPELL_RENDING_CHARGE_DAMAGES);;
+            if (uiMovementId == EVENT_CHARGE)
+                DoCast(pRendingChargeTarget, SPELL_RENDING_CHARGE_DAMAGES);;
         }
 
         bool HasAuraOfType(Unit* pUnit)
@@ -1869,8 +1934,8 @@ public:
             return (pUnit->HasAuraType(SPELL_AURA_MOD_PACIFY_SILENCE) || pUnit->HasAura(SPELL_STONE_GAZE));
         }
 
-        /* @ RAGELESS nu avem deloc asa ceva CastInterrupted
-        void CastInterrupted(SpellInfo const* spell) override
+        // @ RAGELESS nu avem deloc asa ceva CastInterrupted
+        void CastInterrupted(SpellInfo const* spell) 
         {
             switch (spell->Id)
             {
@@ -1894,7 +1959,7 @@ public:
                 break;
             }
         }
-        */
+        
 
         void UpdateAI(uint32 uiDiff)
         {
@@ -2071,7 +2136,7 @@ public:
         mob_horridon_summons_AI(Creature* pCreature) :
             ScriptedAI(pCreature), pInstance(pCreature->GetInstanceScript()) /*, fSandTrapRadius(0.0f) */
         {
-            // me->SetReactState(REACT_PASSIVE);
+             me->SetReactState(REACT_PASSIVE);
             events.Reset();
         }
 
@@ -2134,7 +2199,7 @@ public:
     private:
         EventMap        events;
         InstanceScript* pInstance;
-        // float           fSandTrapRadius;
+         float           fSandTrapRadius;
     };
 
     CreatureAI* GetAI(Creature* pCreature) const
@@ -2286,26 +2351,26 @@ public:
         {
             events.ScheduleEvent(EVENT_TARGET_A_RANDOM_PLAYER, 500, 0, 0);
             me->SetInCombatWithZone();
-            /*if (Player *pAsPlayer = pSummoner->ToPlayer())
+            if (Player* pAsPlayer = pSummoner->ToPlayer());
             {
-            me->SetPhaseMask(2, true);
-            pAsPlayer->SetPhaseMask(3, true);
-            pTarget = pAsPlayer;
+                //me->SetPhaseMask(2, true);
+                //pAsPlayer->SetPhaseMask(3, true);
+               // pTarget = pAsPlayer;
 
-            DoCast(pTarget, SPELL_DIRE_FIXATION);
-            DoCast(me, SPELL_WEAK_LINK);
-            */
-        }
+               // DoCast(pTarget, SPELL_DIRE_FIXATION);
+                DoCast(me, SPELL_WEAK_LINK);
+
+            };
 
         //failsale?
-        void DamageTaken(Unit* who, uint32& damage)
+            void DamageTaken(Unit * who, uint32 & damage);
         {
             me->CastSpell(me, 140949, true); //knockback spell
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(uint32 diff);
         {
-            events.Update(diff);
+            //events.Update(diff);
 
             while (uint32 eventId = events.ExecuteEvent())
             {
@@ -2313,10 +2378,10 @@ public:
                 {
                 case EVENT_TARGET_A_RANDOM_PLAYER:
                 {
-                    /*if (Creature* horridon = me->FindNearestCreature(BOSS_HORRIDON, 500.0f, true))
+                    if (Creature* horridon = me->FindNearestCreature(BOSS_HORRIDON, 500.0f, true))
                     {
                     if (Unit* possibleTarget = horridon->GetVictim())
-                    continue;*/
+                    continue;
                     std::list<Unit*> targets;
                     SelectTargetList(targets, 5, SELECT_TARGET_RANDOM, 500.0f, true);
                     if (!targets.empty())
@@ -2353,28 +2418,29 @@ public:
                     events.ScheduleEvent(EVENT_DAMAGE_IF_NEARBY, 500, 0, 0);
                     break;
                 }
-                }
+               // }
+             //}
+        }
+
+                void JustDied(Unit * pKiller);
+                {
+                    if (Unit* player = me->GetVictim())
+                    {
+                        if (!player)
+                            return;
+
+                        player->RemoveAura(SPELL_DIRE_FIXATION);
+                    };
             }
         }
 
-        void JustDied(Unit* pKiller)
-        {
-            if (Unit* player = me->GetVictim())
-            {
-                if (!player)
-                    return;
-
-                player->RemoveAura(SPELL_DIRE_FIXATION);
-            }
-        }
-
-    private:
+   // private:
         Player* pTarget;
     };
 
-    CreatureAI* GetAI(Creature* pCreature) const
+            CreatureAI* GetAI(Creature * pCreature);
     {
-        return new mob_direhorn_spirit_AI(pCreature);
+                return;// new mob_direhorn_spirit_AI(pCreature);
     }
 };
 
@@ -2404,7 +2470,7 @@ public:
             me->SetReactState(REACT_PASSIVE);
             me->SetFaction(7);
             me->AddAura(SPELL_LIVING_POISON_PERIODIC, me);
-            //events.ScheduleEvent(EVENT_MOVE, 200 + rand() % 500);
+            events.ScheduleEvent(EVENT_MOVE, 200 + rand() % 500);
         }
 
         // this AI should only move RANDOM so .. we make this simple
@@ -2414,7 +2480,7 @@ public:
         }
 
         // is this a joke or what? this doesn't even working correctly 8-| 
-        /*void DoAction(int32 iAction) override
+        void DoAction(int32 iAction) override
         {
             if (iAction == ACTION_LIVING_POISON_DESPAWN)
             {
@@ -2426,7 +2492,7 @@ public:
 
         void Move()
         {
-            if (Creature* pHorridon = GetHorridon(me))
+            if (Creature* pHorridon = npc_horridon_event_helper::npc_horridon_event_helper_AI::GetHorridon(me))
             {
                 if (Unit* pTarget = pHorridon->AI()->SelectTarget(SELECT_TARGET_RANDOM, 0, 50.f, true))
                 {
@@ -2463,7 +2529,7 @@ public:
                     break;
                 }
             }
-        }*/
+        }
 
     };
 
@@ -2582,7 +2648,7 @@ public:
         void Reset() override
         {
             events.Reset();
-            /*if (Creature* pShaman = GetShaman())
+            if (Creature* pShaman = GetShaman())
             {
                 pShaman->DespawnOrUnsummon();
                 m_shamanGuid = 0;
@@ -2592,8 +2658,8 @@ public:
             {
                 pNewShaman->EnterVehicle(me, 0);
                 pNewShaman->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                m_shamanGuid = pNewShaman->GetGUID();
-            }*/
+               // m_shamanGuid = pNewShaman->GetGUID();
+            }
         }
 
         void JustDied(Unit* pKiller) override
@@ -2608,7 +2674,7 @@ public:
                 DoZoneInCombat(me, 200.f);
                 events.ScheduleEvent(EVENT_SWIPE, 6000 + rand() % 4000);
 
-                /*if (Creature *pHorridon = GetHorridon(me))
+                if (Creature *pHorridon = npc_horridon_event_helper::npc_horridon_event_helper_AI::GetHorridon(me))
                 {
                     if (CreatureAI *pHorridonAI = pHorridon->AI())
                     {
@@ -2619,7 +2685,7 @@ public:
                                 GetShaman()->AI()->AttackStart(pTarget);
                         }
                     }
-                }*/
+                }
             }
         }
 
@@ -2729,7 +2795,7 @@ public:
 
     class spell_horridon_double_swipe_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_horridon_double_swipe_SpellScript)
+        PrepareSpellScript(spell_horridon_double_swipe_SpellScript);
 
             void FilterTargets(std::list<WorldObject*>& targets)
         {
@@ -2764,7 +2830,7 @@ public:
 
     class spell_horridon_chain_lightning_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_horridon_chain_lightning_SpellScript)
+        PrepareSpellScript(spell_horridon_chain_lightning_SpellScript);
 
             void HandleEffectHitTarget(SpellEffIndex effectIndex)
         {
@@ -2805,7 +2871,7 @@ public:
 
         void Register()
         {
-            //OnEffectHitTarget += SpellEffectFn(spell_horridon_chain_lightning_SpellScript::HandleEffectHitTarget, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+            OnEffectHitTarget += SpellEffectFn(spell_horridon_chain_lightning_SpellScript::HandleEffectHitTarget, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
         }
     };
 
@@ -2824,7 +2890,7 @@ public:
 
     class spell_horridon_sand_trap_SpellScript : public SpellScript
     {
-        PrepareSpellScript(spell_horridon_sand_trap_SpellScript)
+        PrepareSpellScript(spell_horridon_sand_trap_SpellScript);
 
             void HandleSelectTargets(std::list<WorldObject*>& targets)
         {
@@ -2904,11 +2970,11 @@ public:
         {
             if (Creature* owner = GetOwner()->ToCreature())
             {
-                //if (HorridonAI* pAI = dynamic_cast<HorridonAI*>(owner->AI()))
-               // {
-               //     owner->SetOrientation(pAI->GetPretdeterminedOrientation());
-              //  }
-                /*
+                if (HorridonAI* pAI = dynamic_cast<HorridonAI*>(owner->AI()))
+                {
+                    owner->SetOrientation(pAI->GetPretdeterminedOrientation());
+                }
+                
                 std::list<Player*> potentials;
                 GetPlayerListInGrid(potentials, owner, 30.f);
 
@@ -2916,7 +2982,7 @@ public:
                 {
                     if (Player* pTarget = Trinity::Containers::SelectRandomContainerElement(potentials))
                         owner->SetOrientation(owner->GetAngle(pTarget));
-                }*/
+                }
 
                 owner->SetControlled(true, UNIT_STATE_CANNOT_TURN);
             }
@@ -2979,7 +3045,7 @@ public:
                 return;
             if (caster->ToCreature() && caster->ToCreature()->AI())
                 caster->ToCreature()->AI()->DoAction(ACTION_DOUBLE_SWIPE);
-            //caster->CastSpell(caster, SPELL_DOUBLE_SWIPE);
+            caster->CastSpell(caster, SPELL_DOUBLE_SWIPE);
         }
 
         void Register()
