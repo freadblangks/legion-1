@@ -79,10 +79,13 @@ IF(WIN32 AND NOT CYGWIN)
     # We are using the libraries located in the VC subdir instead of the parent directory eventhough :
     # libeay32MD.lib is identical to ../libeay32.lib, and
     # ssleay32MD.lib is identical to ../ssleay32.lib
+    # libcrypto64MD.lib is identical to ../libcrypto64.lib, and
+    # libssl64MD.lib is identical to ../libssl64.lib
 
     FIND_LIBRARY(LIB_EAY_DEBUG
       NAMES
         libeay32MDd libeay32
+        libcrypto64MDd libcrypto64
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
@@ -90,6 +93,7 @@ IF(WIN32 AND NOT CYGWIN)
     FIND_LIBRARY(LIB_EAY_RELEASE
       NAMES
         libeay32MD libeay32
+        libcrypto64MD libcrypto64
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
@@ -97,6 +101,7 @@ IF(WIN32 AND NOT CYGWIN)
     FIND_LIBRARY(SSL_EAY_DEBUG
       NAMES
         ssleay32MDd ssleay32 ssl
+        libssl64MDd libssl64 ssl
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
@@ -104,6 +109,7 @@ IF(WIN32 AND NOT CYGWIN)
     FIND_LIBRARY(SSL_EAY_RELEASE
       NAMES
         ssleay32MD ssleay32 ssl
+        libssl64MD libssl64 ssl
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
@@ -157,6 +163,7 @@ IF(WIN32 AND NOT CYGWIN)
     FIND_LIBRARY(SSL_EAY
       NAMES
         ssleay32
+        libssl64
       PATHS
         ${OPENSSL_ROOT_DIR}/lib
         ${OPENSSL_ROOT_DIR}/lib/VC
@@ -167,6 +174,7 @@ IF(WIN32 AND NOT CYGWIN)
   ENDIF(MSVC)
 ELSE(WIN32 AND NOT CYGWIN)
   FIND_LIBRARY(OPENSSL_SSL_LIBRARIES NAMES ssl ssleay32 ssleay32MD)
+  FIND_LIBRARY(OPENSSL_SSL_LIBRARIES NAMES ssl libssl64 libssl64MD)
   FIND_LIBRARY(OPENSSL_CRYPTO_LIBRARIES NAMES crypto)
   MARK_AS_ADVANCED(OPENSSL_CRYPTO_LIBRARIES OPENSSL_SSL_LIBRARIES)
 
@@ -223,7 +231,7 @@ if (OPENSSL_INCLUDE_DIR)
   include(EnsureVersion)
   ENSURE_VERSION_RANGE("${OPENSSL_EXPECTED_VERSION}" "${OPENSSL_VERSION}" "${OPENSSL_MAX_VERSION}" OPENSSL_VERSION_OK)
   if (NOT OPENSSL_VERSION_OK)
-      message(FATAL_ERROR "TrinityCore needs OpenSSL version ${OPENSSL_EXPECTED_VERSION} but found version ${OPENSSL_VERSION}")
+    #  message(FATAL_ERROR "TrinityCore needs OpenSSL version ${OPENSSL_EXPECTED_VERSION} but found version ${OPENSSL_VERSION}")
   endif()
 endif (OPENSSL_INCLUDE_DIR)
 

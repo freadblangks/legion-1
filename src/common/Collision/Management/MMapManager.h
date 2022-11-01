@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <set>
 #include <vector>
+#include <MMapManager.cpp>
 
 //  move map related classes
 namespace MMAP

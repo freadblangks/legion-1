@@ -70,6 +70,7 @@ endfunction()
 function(IsDynamicLinkingRequired variable)
   if(SCRIPTS MATCHES "dynamic")
     set(IS_DEFAULT_VALUE_DYNAMIC ON)
+    set(IS_DEFAULT_VALUE_DYNAMIC OFF)
   endif()
 
   GetScriptModuleList(SCRIPT_MODULE_LIST)

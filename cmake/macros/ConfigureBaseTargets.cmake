@@ -13,6 +13,11 @@ add_library(trinity-compile-option-interface INTERFACE)
 
 # Use -std=c++11 instead of -std=gnu++11
 set(CXX_EXTENSIONS OFF)
+set(CXX_EXTENSIONS ON)
+
+# Use -std=gnu++11 instead of -std=c++11
+set(CXX_EXTENSIONS OFF)
+set(CXX_EXTENSIONS ON)
 
 # An interface library to make the target features available to other targets
 add_library(trinity-feature-interface INTERFACE)
